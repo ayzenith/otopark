@@ -9,7 +9,7 @@
 | Arayüz | **Tailwind CSS 4** + küçük, kendi yazdığımız bileşen kümesi (shadcn/ui tabanlı) |
 | Veritabanı | **PostgreSQL 16** |
 | ORM | **Prisma** |
-| Kimlik doğrulama | **Auth.js (NextAuth v5)** — Credentials sağlayıcı, veritabanı oturumu (DB session) |
+| Kimlik doğrulama | **Kendi yazdığımız oturum katmanı** — veritabanı oturumu (bkz. 1.3.1) |
 | Parola | **Argon2id** (`@node-rs/argon2`) |
 | Doğrulama | **Zod** — aynı şema hem istemcide hem sunucuda |
 | Form | **react-hook-form** + Zod resolver |
@@ -49,11 +49,45 @@ için kritik), tip güvenliği uçtan uca. Prisma'nın karmaşık rapor sorgular
 yetersiz kaldığı yerde `$queryRaw` ile elle yazılmış SQL kullanılacak (finansal
 özetler, dönem karşılaştırmaları).
 
-**Auth.js + Credentials + DB session.** Kullanıcı adı/parola isteniyor, dış kimlik
+**Veritabanı oturumu (JWT değil).** Kullanıcı adı/parola isteniyor, dış kimlik
 sağlayıcı istenmiyor. JWT yerine **veritabanı oturumu** seçildi: patron bir personelin
 hesabını devre dışı bıraktığında oturumu **anında** düşmeli. JWT ile token süresi
 bitene kadar erişim sürerdi — kasa ve tahsilat yetkisi olan bir sistemde bu kabul
 edilemez.
+
+### 1.3.1 Auth.js'ten sapma — Aşama 1'de alınan karar
+
+Bu doküman ilk yazıldığında kimlik doğrulama için **Auth.js (NextAuth v5)**
+planlanmıştı. Aşama 1'de somut bir engelle karşılaşıldı:
+
+> Auth.js'in **Credentials** (kullanıcı adı/parola) sağlayıcısı **veritabanı
+> oturumu stratejisini desteklemiyor**; zorunlu olarak JWT'ye dönüyor.
+
+Bu, yukarıdaki gereksinimi doğrudan ihlal ederdi. Dolayısıyla oturum katmanı
+`src/server/auth/session.ts` içinde **doğrudan yazıldı** (~180 satır).
+
+**Neden bu sapma makul:**
+- İhtiyacımız olan tek akış kullanıcı adı/parola; Auth.js'in asıl değeri olan
+  OAuth sağlayıcıları, e-posta bağlantısı ve hesap birleştirme bu projede
+  kullanılmıyordu.
+- Beta sürümdeki bir pakete (next-auth v5 beta) bağımlılık kalktı.
+- Anlık iptal garantisi artık **test edilebilir**: `tests/integration/oturum.test.ts`
+  hesabın devre dışı bırakıldığı an oturumun düştüğünü kanıtlıyor.
+
+**Ek güvenlik kazanımı:** Çerezdeki oturum jetonunun kendisi değil, **SHA-256
+özeti** saklanıyor. Veritabanı sızsa bile mevcut oturumlar ele geçirilemez.
+Auth.js'in varsayılan davranışında jeton düz metin olarak saklanır.
+
+**Oturum katmanının sağladıkları:**
+
+| Özellik | Davranış |
+|---|---|
+| Jeton | 32 bayt rastgele, base64url; DB'de yalnızca SHA-256 özeti |
+| Çerez | `httpOnly`, `secure` (üretimde), `sameSite=lax`, `path=/` |
+| Süre | 12 saat hareketsizlik; etkin kullanımda kayarak yenilenir |
+| Anlık iptal | Her istekte `isActive` kontrolü; devre dışıysa kullanıcının **tüm** oturumları silinir |
+| Parola değişimi | Tüm oturumlar düşürülür |
+| CSRF | Next.js Server Actions'ın yerleşik origin doğrulaması + `sameSite=lax` |
 
 ## 1.3 Değerlendirilen alternatifler ve neden seçilmedi
 

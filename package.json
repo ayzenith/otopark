@@ -1,0 +1,55 @@
+{
+  "name": "otopark",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Londra Camping Otopark - isletme yonetim sistemi",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:all": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "prisma migrate reset --force",
+    "db:studio": "prisma studio"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "^2.2.1",
+    "@prisma/client": "^6.19.3",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.4.0",
+    "date-fns-tz": "^3.2.0",
+    "next": "^15.5.27",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwind-merge": "^3.7.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "dotenv": "^18.0.5",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.5.27",
+    "postcss": "^8.5.28",
+    "prisma": "^6.19.3",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.3"
+  }
+}

@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Londra Camping Otopark - tasarim tokenlari
+   Olculer ve renkler: docs/04-ekranlar-ve-akislar.md (4.10)
+
+   MOBIL ONCELIKLI: tum olculer once telefon ekrani icin belirlendi.
+   Dokunma hedefi minimum 48px, birincil islem butonlari 64px.
+   ========================================================================== */
+@theme {
+  /* Kurumsal renkler */
+  --color-lacivert-50: #eef2f8;
+  --color-lacivert-100: #d5deec;
+  --color-lacivert-200: #aabdd9;
+  --color-lacivert-300: #7593be;
+  --color-lacivert-400: #3f6396;
+  --color-lacivert-500: #1d4374;
+  --color-lacivert-600: #0b2447;
+  --color-lacivert-700: #091d39;
+  --color-lacivert-800: #07172d;
+  --color-lacivert-900: #050f1e;
+
+  --color-mavi-50: #ecfaff;
+  --color-mavi-100: #d2f2fd;
+  --color-mavi-200: #a9e6fb;
+  --color-mavi-300: #6ed5f6;
+  --color-mavi-400: #2fbce9;
+  --color-mavi-500: #19a7ce;
+  --color-mavi-600: #0f84ab;
+  --color-mavi-700: #11698a;
+
+  /* Durum renkleri - WCAG AA kontrast saglar */
+  --color-basari: #15803d;
+  --color-basari-acik: #dcfce7;
+  --color-uyari: #b45309;
+  --color-uyari-acik: #fef3c7;
+  --color-hata: #b91c1c;
+  --color-hata-acik: #fee2e2;
+  --color-notr: #475569;
+
+  /* Dokunma hedefleri */
+  --spacing-dokunma: 3rem; /* 48px - minimum dokunma hedefi */
+  --spacing-islem: 4rem; /* 64px - birincil islem butonu */
+  --spacing-ikincil: 3.5rem; /* 56px - ikincil buton, alt gezinme */
+
+  --font-mono:
+    ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+}
+
+/* Taban yazi boyutu 16px: iOS'ta input'a dokununca otomatik yakinlastirmayi
+   onler. Daha kucuk taban deger kullanilmayacak. */
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: #f1f5f9;
+  color: var(--color-lacivert-800);
+  /* Yatay kaydirma hicbir ekranda olmayacak. */
+  overflow-x: hidden;
+}
+
+/* Dokunmatik kullanimda gecikmeyi ve istenmeyen secimi azaltir. */
+button,
+a,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Plaka girisi: mono, geniş harf araligi, buyuk punto. */
+.plaka-input {
+  font-family: var(--font-mono);
+  font-size: 1.75rem; /* 28px */
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/* Tutar gosterimi: ekranin en buyuk yazisi. */
+.tutar-buyuk {
+  font-size: 2.75rem; /* 44px */
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.tutar-orta {
+  font-size: 2rem; /* 32px */
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sayisal hizalama: tablolarda ve listelerde rakamlar kaymaz. */
+.rakam {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Alt gezinme cubugu icin guvenli alan dolgusu (iPhone centik/cubuk). */
+.guvenli-alt {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Animasyonlar yalnizca kisa gecisler; gereksiz efekt yok. */
+@media (prefers-reduced-motion: no-preference) {
+  .gecis {
+    transition-property: background-color, border-color, color, opacity, transform;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+  }
+}
+
+/* Odak gostergesi: klavye ile gezinen kullanicilar icin net. */
+:focus-visible {
+  outline: 3px solid var(--color-mavi-500);
+  outline-offset: 2px;
+}
+
+/* Yazdirma: raporlarda arayuz ogeleri gizlenir. */
+@media print {
+  .yazdirma-gizle {
+    display: none !important;
+  }
+}

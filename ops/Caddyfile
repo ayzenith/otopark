@@ -1,0 +1,27 @@
+# Caddy: ters vekil (reverse proxy) + otomatik Let's Encrypt SSL
+# SITE_ADDRESS ortam degiskeninden alan adi okunur.
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	# Guvenlik basliklari
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	reverse_proxy app:3000 {
+		header_up X-Real-IP {remote_host}
+	}
+
+	log {
+		output file /data/erisim.log {
+			roll_size 10MiB
+			roll_keep 10
+		}
+	}
+}

@@ -1,2 +1,45 @@
+# bagimliliklar
+node_modules/
+.pnp
+.pnp.js
+
+# next
+.next/
+out/
+build/
+next-env.d.ts
+
+# ortam degiskenleri - ASLA depoya girmez
+.env
+.env.local
+.env.*.local
+.env.production
+
+# prisma
+prisma/dev.db
+
+# test ciktilari
+coverage/
+playwright-report/
+test-results/
+.vitest/
+
+# isletim sistemi / editor
+.DS_Store
+*.pem
+*.log
+npm-debug.log*
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# yerel gelistirme verisi
+pgdata/
+pgrun/
+
+# teslim paketleri (gecici)
 otopark-dokumanlar.zip
 otopark-dokumanlar.bundle
+
+# typescript
+*.tsbuildinfo

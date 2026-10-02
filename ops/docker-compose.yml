@@ -1,0 +1,85 @@
+# ---------------------------------------------------------------------------
+# Londra Camping Otopark - tek sunucu dagitimi
+#
+# Kullanim:  cd ops && docker compose up -d
+# Gerekli:   ops/.env dosyasi (ops/.env.example'dan kopyalayin)
+# ---------------------------------------------------------------------------
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-otopark}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD zorunludur}
+      POSTGRES_DB: ${POSTGRES_DB:-otopark}
+      # Turkce siralama ve tarih bicimi
+      LANG: tr_TR.utf8
+      TZ: Europe/Istanbul
+    volumes:
+      - postgres-verisi:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-otopark} -d ${POSTGRES_DB:-otopark}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # Veritabani disariya ACILMAZ; yalnizca ic ag.
+    expose:
+      - "5432"
+
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-otopark}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-otopark}?schema=public
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET zorunludur - uretmek icin: openssl rand -base64 32}
+      AUTH_URL: ${AUTH_URL:?AUTH_URL zorunludur - ornek: https://otopark.ornek.com}
+      TZ: Europe/Istanbul
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Caddy bu alan adi icin Let's Encrypt sertifikasini OTOMATIK alir ve yeniler.
+      SITE_ADDRESS: ${SITE_ADDRESS:?SITE_ADDRESS zorunludur - ornek: otopark.ornek.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-verisi:/data
+      - caddy-ayar:/config
+
+  yedek:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:-otopark}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-otopark}
+      TZ: Europe/Istanbul
+      # Yedeklerin sifrelenmesi icin parola (bos birakilirsa sifrelenmez - ONERILMEZ)
+      BACKUP_PASSPHRASE: ${BACKUP_PASSPHRASE:-}
+    volumes:
+      - ./backup.sh:/usr/local/bin/backup.sh:ro
+      - yedekler:/yedekler
+    entrypoint: ["sh", "-c", "apk add --no-cache gnupg >/dev/null 2>&1; while true; do sleep 86400; /usr/local/bin/backup.sh; done"]
+
+volumes:
+  postgres-verisi:
+  caddy-verisi:
+  caddy-ayar:
+  yedekler:

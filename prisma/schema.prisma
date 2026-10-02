@@ -1,0 +1,988 @@
+// Londra Camping Otopark - veritabani semasi
+// Tasarim gerekceleri: docs/02-veritabani-semasi.md
+//
+// Temel kurallar:
+//  - Para alanlari Decimal(12,2); asla Float.
+//  - Zaman alanlari TIMESTAMPTZ (UTC saklanir, arayuzde Europe/Istanbul).
+//  - Finansal satirlar SILINMEZ; VOIDED durumu + gerekce ile iptal edilir.
+//  - Gecmis islemler, fiyat sonradan degisse bile degismez (snapshot).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// ENUM'LAR
+// ---------------------------------------------------------------------------
+
+enum Role {
+  OWNER // isletme sahibi / patron
+  MANAGER // vardiya sorumlusu
+  STAFF // personel
+}
+
+enum ParkingStatus {
+  ACTIVE
+  COMPLETED
+  VOIDED
+}
+
+enum BillingMode {
+  TARIFF
+  SUBSCRIPTION
+  FREE
+  MANUAL_OVERRIDE
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  SUSPENDED
+}
+
+enum SubscriptionPaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+}
+
+enum BillingPeriod {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  CUSTOM
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  OTHER
+}
+
+enum PaymentDirection {
+  IN
+  OUT
+}
+
+enum PaymentSource {
+  PARKING
+  SUBSCRIPTION
+  WASH
+  OTHER_INCOME
+  REFUND
+}
+
+enum RecordStatus {
+  CONFIRMED
+  VOIDED
+}
+
+enum WashStatus {
+  QUEUED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum WashPaymentStatus {
+  UNPAID
+  PAID
+  VOIDED
+}
+
+enum ShiftStatus {
+  OPEN
+  CLOSED
+}
+
+enum DrawerStatus {
+  OPEN
+  CLOSED
+  RECONCILED
+}
+
+enum CashMovementType {
+  DEPOSIT
+  WITHDRAWAL
+  BANK_TRANSFER
+  ADVANCE
+  CORRECTION
+}
+
+enum InventoryMovementType {
+  PURCHASE
+  CONSUMPTION
+  ADJUSTMENT
+  WASTE
+}
+
+enum InventoryUnit {
+  LITRE
+  ADET
+  KG
+}
+
+// ---------------------------------------------------------------------------
+// KIMLIK VE YETKI
+// ---------------------------------------------------------------------------
+
+model User {
+  id                 String  @id @default(cuid())
+  username           String  @unique
+  passwordHash       String
+  fullName           String
+  phone              String?
+  jobTitle           String?
+  role               Role    @default(STAFF)
+  isActive           Boolean @default(true)
+  mustChangePassword Boolean @default(true)
+
+  failedLoginCount Int       @default(0)
+  lockedUntil      DateTime?
+  lastLoginAt      DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdById     String?
+  deactivatedAt   DateTime?
+  deactivatedById String?
+
+  createdBy    User?  @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdUsers User[] @relation("UserCreatedBy")
+
+  sessions           Session[]
+  permissions        UserPermission[] @relation("PermissionOwner")
+  grantedPermissions UserPermission[] @relation("PermissionGrantedBy")
+  employeeProfile    EmployeeProfile? @relation("ProfileOwner")
+  auditLogs          AuditLog[]
+  shifts             Shift[]
+
+  parkingEntries    ParkingSession[] @relation("ParkingEntryUser")
+  parkingExits      ParkingSession[] @relation("ParkingExitUser")
+  collectedPayments Payment[]        @relation("PaymentCollectedBy")
+  assignedWashJobs  WashJob[]        @relation("WashAssignedUser")
+  createdWashJobs   WashJob[]        @relation("WashCreatedBy")
+  relatedExpenses   Expense[]        @relation("ExpenseRelatedUser")
+
+  @@index([isActive])
+  @@index([role])
+}
+
+/// Rolun verdigi taban izinlerin uzerine kullaniciya ozel izin ekler (granted=true)
+/// veya kaldirir (granted=false). Boylece yeni rol tanimlamadan farkli yetki
+/// seviyeleri olusturulabilir.
+model UserPermission {
+  id          String   @id @default(cuid())
+  userId      String
+  permission  String
+  granted     Boolean  @default(true)
+  grantedById String?
+  createdAt   DateTime @default(now())
+  note        String?
+
+  user      User  @relation("PermissionOwner", fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy User? @relation("PermissionGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+
+  @@unique([userId, permission])
+  @@index([userId])
+}
+
+/// Veritabani oturumu. JWT YERINE DB oturumu kullanilir: patron bir hesabi
+/// devre disi biraktiginda oturum ANINDA dusmelidir. JWT'de jeton suresi bitene
+/// kadar erisim surerdi - kasa yetkisi olan bir sistemde kabul edilemez.
+///
+/// GUVENLIK: Cerezdeki jetonun kendisi degil, SHA-256 ozeti saklanir. Boylece
+/// veritabani sizsa bile mevcut oturumlar ele gecirilemez.
+model Session {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  userId     String
+  expires    DateTime
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  ip         String?
+  userAgent  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expires])
+}
+
+/// Maas ve maliyet bilgisi. User sorgularindan tamamen ayri tutulur ki
+/// personnel.cost.view izni olmayan kullaniciya hic select edilmesin.
+model EmployeeProfile {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  hireDate      DateTime?
+  endDate       DateTime?
+  monthlySalary Decimal?  @db.Decimal(12, 2)
+  insuranceCost Decimal?  @db.Decimal(12, 2)
+  mealAllowance Decimal?  @db.Decimal(12, 2)
+  notes         String?
+  updatedAt     DateTime  @updatedAt
+  updatedById   String?
+
+  user User @relation("ProfileOwner", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// Basarisiz giris denemelerinin IP bazli takibi (hiz siniri).
+model LoginAttempt {
+  id       String   @id @default(cuid())
+  username String
+  ip       String?
+  success  Boolean
+  reason   String?
+  at       DateTime @default(now())
+
+  @@index([username, at])
+  @@index([ip, at])
+}
+
+// ---------------------------------------------------------------------------
+// MUSTERI VE ARAC
+// ---------------------------------------------------------------------------
+
+model Customer {
+  id            String    @id @default(cuid())
+  fullName      String
+  phone         String
+  altPhone      String?
+  email         String?
+  isCompany     Boolean   @default(false)
+  companyName   String?
+  taxId         String?
+  notes         String?
+  kvkkConsentAt DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @updatedAt
+
+  vehicles      Vehicle[]
+  subscriptions Subscription[]
+  washJobs      WashJob[]
+
+  @@index([phone])
+  @@index([fullName])
+  @@index([isActive])
+}
+
+/// Fiyatlandirma boyutu. Sabit enum degil tablo: isletme yeni sinif
+/// ekleyebilsin (karavan, cekici gibi).
+model VehicleClass {
+  id        String  @id @default(cuid())
+  code      String  @unique
+  name      String
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  vehicles          Vehicle[]
+  tariffRules       TariffRule[]
+  washPriceVersions WashServicePriceVersion[]
+}
+
+model Vehicle {
+  id              String   @id @default(cuid())
+  plateNormalized String   @unique
+  plateDisplay    String
+  vehicleClassId  String
+  customerId      String?
+  brandModel      String?
+  color           String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  createdById     String?
+  updatedAt       DateTime @updatedAt
+
+  vehicleClass VehicleClass @relation(fields: [vehicleClassId], references: [id])
+  customer     Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  parkingSessions      ParkingSession[]
+  subscriptionVehicles SubscriptionVehicle[]
+  washJobs             WashJob[]
+
+  @@index([customerId])
+  @@index([plateNormalized])
+}
+
+// ---------------------------------------------------------------------------
+// TARIFE (SURUMLU) - fiyat degisikligi her zaman YENI SURUM uretir
+// ---------------------------------------------------------------------------
+
+model TariffPlan {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  priority    Int      @default(0)
+  createdAt   DateTime @default(now())
+  createdById String?
+
+  versions   TariffVersion[]
+  changeLogs TariffChangeLog[]
+
+  @@index([isActive, priority])
+}
+
+model TariffVersion {
+  id            String    @id @default(cuid())
+  tariffPlanId  String
+  versionNo     Int
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  isActive      Boolean   @default(true)
+  changeNote    String?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+
+  tariffPlan      TariffPlan        @relation(fields: [tariffPlanId], references: [id], onDelete: Cascade)
+  rules           TariffRule[]
+  parkingSessions ParkingSession[]
+  changeLogsFrom  TariffChangeLog[] @relation("ChangeFromVersion")
+  changeLogsTo    TariffChangeLog[] @relation("ChangeToVersion")
+
+  @@unique([tariffPlanId, versionNo])
+  @@index([effectiveFrom, effectiveTo])
+}
+
+model TariffRule {
+  id              String  @id @default(cuid())
+  tariffVersionId String
+  vehicleClassId  String? // null = tum siniflar icin genel kural
+
+  freeMinutes           Int     @default(0)
+  freeMinutesDeductible Boolean @default(false)
+  gracePeriodMinutes    Int     @default(0)
+
+  firstPeriodMinutes Int     @default(0)
+  firstPeriodPrice   Decimal @default(0) @db.Decimal(12, 2)
+
+  hourlyPrice           Decimal @default(0) @db.Decimal(12, 2)
+  hourlyRoundingMinutes Int     @default(60)
+
+  dailyPrice    Decimal @default(0) @db.Decimal(12, 2)
+  dailyCapPrice Decimal @default(0) @db.Decimal(12, 2)
+
+  nightFlatPrice   Decimal? @db.Decimal(12, 2)
+  nightStartMinute Int?
+  nightEndMinute   Int?
+
+  weekendMultiplier Decimal? @db.Decimal(6, 3)
+  minCharge         Decimal  @default(0) @db.Decimal(12, 2)
+  isActive          Boolean  @default(true)
+
+  tariffVersion   TariffVersion    @relation(fields: [tariffVersionId], references: [id], onDelete: Cascade)
+  vehicleClass    VehicleClass?    @relation(fields: [vehicleClassId], references: [id], onDelete: SetNull)
+  parkingSessions ParkingSession[]
+
+  @@unique([tariffVersionId, vehicleClassId])
+}
+
+model TariffChangeLog {
+  id            String   @id @default(cuid())
+  tariffPlanId  String
+  fromVersionId String?
+  toVersionId   String
+  changedById   String?
+  changedAt     DateTime @default(now())
+  note          String?
+
+  tariffPlan  TariffPlan     @relation(fields: [tariffPlanId], references: [id], onDelete: Cascade)
+  fromVersion TariffVersion? @relation("ChangeFromVersion", fields: [fromVersionId], references: [id], onDelete: SetNull)
+  toVersion   TariffVersion  @relation("ChangeToVersion", fields: [toVersionId], references: [id], onDelete: Cascade)
+
+  @@index([tariffPlanId, changedAt])
+}
+
+// ---------------------------------------------------------------------------
+// OTOPARK HAREKETLERI
+// ---------------------------------------------------------------------------
+
+model ParkingSession {
+  id              String @id @default(cuid())
+  code            String @unique
+  vehicleId       String
+  plateNormalized String
+  plateDisplay    String
+  vehicleClassId  String
+
+  entryAt      DateTime
+  entryUserId  String
+  entryShiftId String
+  entryNote    String?
+
+  exitAt      DateTime?
+  exitUserId  String?
+  exitShiftId String?
+
+  status         ParkingStatus @default(ACTIVE)
+  billingMode    BillingMode   @default(TARIFF)
+  subscriptionId String?
+
+  tariffVersionId String?
+  tariffRuleId    String?
+  /// Uygulanan kuralin TAM KOPYASI. Yonetici fiyati sonradan degistirse bile
+  /// bu arac giris anindaki tarifeyle ucretlendirilir. (Karar: 02.10.2026)
+  tariffSnapshot  Json?
+
+  durationMinutes  Int?
+  calculatedAmount Decimal? @db.Decimal(12, 2)
+  discountAmount   Decimal? @db.Decimal(12, 2)
+  discountReason   String?
+  discountById     String?
+  payableAmount    Decimal? @db.Decimal(12, 2)
+  collectedAmount  Decimal? @db.Decimal(12, 2)
+
+  voidedAt   DateTime?
+  voidedById String?
+  voidReason String?
+
+  idempotencyKey String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  vehicle       Vehicle        @relation(fields: [vehicleId], references: [id])
+  entryUser     User           @relation("ParkingEntryUser", fields: [entryUserId], references: [id])
+  exitUser      User?          @relation("ParkingExitUser", fields: [exitUserId], references: [id])
+  entryShift    Shift          @relation("ParkingEntryShift", fields: [entryShiftId], references: [id])
+  exitShift     Shift?         @relation("ParkingExitShift", fields: [exitShiftId], references: [id])
+  subscription  Subscription?  @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  tariffVersion TariffVersion? @relation(fields: [tariffVersionId], references: [id], onDelete: SetNull)
+  tariffRule    TariffRule?    @relation(fields: [tariffRuleId], references: [id], onDelete: SetNull)
+  payments      Payment[]
+
+  // NOT: "ayni plakadan ikinci AKTIF giris" engeli kismi tekil indeks ile
+  // migration icinde eklenir:
+  //   CREATE UNIQUE INDEX parking_active_plate_uniq
+  //     ON "ParkingSession"("plateNormalized") WHERE status = 'ACTIVE';
+  @@index([status, entryAt])
+  @@index([plateNormalized, entryAt])
+  @@index([exitAt])
+  @@index([entryShiftId])
+  @@index([exitShiftId])
+  @@index([vehicleId])
+}
+
+model ParkingCapacitySetting {
+  id                     String   @id @default("singleton")
+  totalCapacity          Int      @default(0)
+  reservedForSubscribers Int      @default(0)
+  warnThresholdPercent   Int      @default(90)
+  updatedAt              DateTime @updatedAt
+  updatedById            String?
+}
+
+// ---------------------------------------------------------------------------
+// ABONMAN - fiyat MUSTERIYE OZELDIR (agreedPrice)
+// ---------------------------------------------------------------------------
+
+/// Yalnizca sablon/oneri. Gercek fiyat her zaman Subscription.agreedPrice.
+model SubscriptionType {
+  id                  String   @id @default(cuid())
+  name                String
+  defaultDurationDays Int
+  suggestedPrice      Decimal? @db.Decimal(12, 2)
+  isActive            Boolean  @default(true)
+  notes               String?
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id                 String  @id @default(cuid())
+  code               String  @unique
+  customerId         String
+  subscriptionTypeId String?
+  planLabel          String
+
+  startDate DateTime
+  endDate   DateTime
+
+  /// Musteriye ozel anlasilan ucret. Genel tarifeden BAGIMSIZDIR:
+  /// bir musteri 3.000, digeri 4.000 odeyebilir.
+  agreedPrice Decimal @db.Decimal(12, 2)
+  priceNote   String?
+
+  billingPeriod BillingPeriod             @default(MONTHLY)
+  status        SubscriptionStatus        @default(PENDING)
+  paymentStatus SubscriptionPaymentStatus @default(UNPAID)
+
+  includedVehicleCount Int     @default(1)
+  coveredHoursNote     String?
+  autoRenew            Boolean @default(false)
+
+  cancelledAt   DateTime?
+  cancelledById String?
+  cancelReason  String?
+  managerNotes  String?
+
+  createdAt   DateTime @default(now())
+  createdById String?
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+
+  customer         Customer              @relation(fields: [customerId], references: [id])
+  subscriptionType SubscriptionType?     @relation(fields: [subscriptionTypeId], references: [id], onDelete: SetNull)
+  vehicles         SubscriptionVehicle[]
+  periods          SubscriptionPeriod[]
+  payments         SubscriptionPayment[]
+  parkingSessions  ParkingSession[]
+
+  @@index([status, endDate])
+  @@index([customerId])
+  @@index([paymentStatus])
+}
+
+model SubscriptionVehicle {
+  id             String    @id @default(cuid())
+  subscriptionId String
+  vehicleId      String
+  addedAt        DateTime  @default(now())
+  removedAt      DateTime?
+  addedById      String?
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  vehicle      Vehicle      @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  // NOT: "bir arac ayni anda tek aktif abonmanda" kurali migration icindeki
+  // kismi tekil indeks ile garanti edilir.
+  @@index([subscriptionId])
+  @@index([vehicleId, removedAt])
+}
+
+/// Yenileme tarihcesi. Eski donemin fiyati burada KALICI olarak saklanir;
+/// fiyat sonradan degisse bile gecmis donem degismez.
+model SubscriptionPeriod {
+  id             String   @id @default(cuid())
+  subscriptionId String
+  periodNo       Int
+  startDate      DateTime
+  endDate        DateTime
+  price          Decimal  @db.Decimal(12, 2)
+  note           String?
+  createdAt      DateTime @default(now())
+  createdById    String?
+
+  subscription Subscription          @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  payments     SubscriptionPayment[]
+
+  @@unique([subscriptionId, periodNo])
+}
+
+model SubscriptionPayment {
+  id                   String   @id @default(cuid())
+  subscriptionId       String
+  subscriptionPeriodId String?
+  paymentId            String   @unique
+  amount               Decimal  @db.Decimal(12, 2)
+  createdAt            DateTime @default(now())
+  createdById          String?
+
+  subscription       Subscription        @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  subscriptionPeriod SubscriptionPeriod? @relation(fields: [subscriptionPeriodId], references: [id], onDelete: SetNull)
+  payment            Payment             @relation(fields: [paymentId], references: [id])
+
+  @@index([subscriptionId])
+}
+
+// ---------------------------------------------------------------------------
+// OTO YIKAMA
+// ---------------------------------------------------------------------------
+
+model WashServiceCatalog {
+  id                String   @id @default(cuid())
+  code              String   @unique
+  name              String
+  description       String?
+  estimatedMinutes  Int?
+  isActive          Boolean  @default(true)
+  isPublicOnWebsite Boolean  @default(false)
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+  createdById       String?
+
+  priceVersions WashServicePriceVersion[]
+  washJobItems  WashJobItem[]
+}
+
+model WashServicePriceVersion {
+  id             String    @id @default(cuid())
+  washServiceId  String
+  vehicleClassId String?
+  price          Decimal   @db.Decimal(12, 2)
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  changeNote     String?
+  createdAt      DateTime  @default(now())
+  createdById    String?
+
+  washService  WashServiceCatalog @relation(fields: [washServiceId], references: [id], onDelete: Cascade)
+  vehicleClass VehicleClass?      @relation(fields: [vehicleClassId], references: [id], onDelete: SetNull)
+  washJobItems WashJobItem[]
+
+  @@index([washServiceId, effectiveFrom])
+}
+
+model WashJob {
+  id              String  @id @default(cuid())
+  code            String  @unique
+  vehicleId       String
+  plateNormalized String
+  plateDisplay    String
+  customerId      String?
+  vehicleClassId  String
+
+  status       WashStatus @default(QUEUED)
+  queuedAt     DateTime   @default(now())
+  startedAt    DateTime?
+  completedAt  DateTime?
+  cancelledAt  DateTime?
+  cancelReason String?
+
+  assignedUserId String?
+  createdById    String
+  shiftId        String
+
+  totalAmount     Decimal           @db.Decimal(12, 2)
+  discountAmount  Decimal?          @db.Decimal(12, 2)
+  payableAmount   Decimal           @db.Decimal(12, 2)
+  collectedAmount Decimal?          @db.Decimal(12, 2)
+  paymentStatus   WashPaymentStatus @default(UNPAID)
+
+  notes          String?
+  idempotencyKey String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  vehicle            Vehicle             @relation(fields: [vehicleId], references: [id])
+  customer           Customer?           @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  assignedUser       User?               @relation("WashAssignedUser", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  createdBy          User                @relation("WashCreatedBy", fields: [createdById], references: [id])
+  shift              Shift               @relation(fields: [shiftId], references: [id])
+  items              WashJobItem[]
+  payments           Payment[]
+  inventoryMovements InventoryMovement[]
+
+  @@index([status, queuedAt])
+  @@index([plateNormalized])
+  @@index([paymentStatus])
+}
+
+model WashJobItem {
+  id                        String  @id @default(cuid())
+  washJobId                 String
+  washServiceId             String
+  washServicePriceVersionId String?
+  /// Hizmet adinin ve fiyatinin anlik kopyasi: katalog sonradan degisse bile
+  /// gecmis is emri degismez.
+  serviceNameSnapshot       String
+  unitPrice                 Decimal @db.Decimal(12, 2)
+  quantity                  Int     @default(1)
+  lineTotal                 Decimal @db.Decimal(12, 2)
+
+  washJob      WashJob                  @relation(fields: [washJobId], references: [id], onDelete: Cascade)
+  washService  WashServiceCatalog       @relation(fields: [washServiceId], references: [id])
+  priceVersion WashServicePriceVersion? @relation(fields: [washServicePriceVersionId], references: [id], onDelete: SetNull)
+
+  @@index([washJobId])
+}
+
+model InventoryItem {
+  id           String        @id @default(cuid())
+  name         String
+  unit         InventoryUnit @default(ADET)
+  currentStock Decimal       @default(0) @db.Decimal(12, 3)
+  minStock     Decimal?      @db.Decimal(12, 3)
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+
+  movements InventoryMovement[]
+}
+
+model InventoryMovement {
+  id              String                @id @default(cuid())
+  inventoryItemId String
+  type            InventoryMovementType
+  quantity        Decimal               @db.Decimal(12, 3)
+  unitCost        Decimal?              @db.Decimal(12, 2)
+  expenseId       String?
+  washJobId       String?
+  note            String?
+  createdAt       DateTime              @default(now())
+  createdById     String?
+
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  expense       Expense?      @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  washJob       WashJob?      @relation(fields: [washJobId], references: [id], onDelete: SetNull)
+
+  @@index([inventoryItemId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// ODEME, VARDIYA, KASA, FINANS
+// ---------------------------------------------------------------------------
+
+/// Her tahsilat tek satir. SATIR SILINMEZ: hatali kayit VOIDED yapilir ve
+/// gerekirse reversalOfId ile ters kayit uretilir.
+model Payment {
+  id         String           @id @default(cuid())
+  code       String           @unique
+  amount     Decimal          @db.Decimal(12, 2)
+  method     PaymentMethod
+  /// Kart odemeleri personel tarafindan ELLE kaydedilir. Sistemde POS
+  /// entegrasyonu YOKTUR; bu alan dekont/son dort hane gibi serbest nottur.
+  cardNote   String?
+  direction  PaymentDirection @default(IN)
+  sourceType PaymentSource
+
+  parkingSessionId String?
+  washJobId        String?
+  otherIncomeId    String?
+
+  shiftId             String
+  cashDrawerSessionId String?
+  collectedById       String
+
+  status       RecordStatus @default(CONFIRMED)
+  voidedAt     DateTime?
+  voidedById   String?
+  voidReason   String?
+  reversalOfId String?      @unique
+
+  idempotencyKey String   @unique
+  paidAt         DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  parkingSession      ParkingSession?      @relation(fields: [parkingSessionId], references: [id])
+  washJob             WashJob?             @relation(fields: [washJobId], references: [id])
+  otherIncome         OtherIncome?         @relation(fields: [otherIncomeId], references: [id])
+  shift               Shift                @relation(fields: [shiftId], references: [id])
+  cashDrawerSession   CashDrawerSession?   @relation(fields: [cashDrawerSessionId], references: [id])
+  collectedBy         User                 @relation("PaymentCollectedBy", fields: [collectedById], references: [id])
+  reversalOf          Payment?             @relation("PaymentReversal", fields: [reversalOfId], references: [id])
+  reversedBy          Payment?             @relation("PaymentReversal")
+  subscriptionPayment SubscriptionPayment?
+
+  @@index([paidAt, method])
+  @@index([sourceType, paidAt])
+  @@index([shiftId])
+  @@index([cashDrawerSessionId])
+  @@index([status])
+}
+
+model Shift {
+  id          String      @id @default(cuid())
+  userId      String
+  startedAt   DateTime    @default(now())
+  endedAt     DateTime?
+  openingNote String?
+  closingNote String?
+  status      ShiftStatus @default(OPEN)
+  closedById  String?
+
+  user           User                @relation(fields: [userId], references: [id])
+  drawerSessions CashDrawerSession[]
+  payments       Payment[]
+  washJobs       WashJob[]
+  parkingEntries ParkingSession[]    @relation("ParkingEntryShift")
+  parkingExits   ParkingSession[]    @relation("ParkingExitShift")
+
+  @@index([userId, startedAt])
+  @@index([status])
+}
+
+model CashDrawerSession {
+  id           String   @id @default(cuid())
+  shiftId      String?
+  openedAt     DateTime @default(now())
+  openedById   String
+  openingFloat Decimal  @default(0) @db.Decimal(12, 2)
+
+  closedAt   DateTime?
+  closedById String?
+
+  expectedCash     Decimal? @db.Decimal(12, 2)
+  countedCash      Decimal? @db.Decimal(12, 2)
+  differenceReason String?
+  expectedCard     Decimal? @db.Decimal(12, 2)
+  declaredCard     Decimal? @db.Decimal(12, 2)
+
+  status DrawerStatus @default(OPEN)
+  notes  String?
+
+  shift     Shift?         @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+  payments  Payment[]
+  movements CashMovement[]
+  expenses  Expense[]
+
+  @@index([status, openedAt])
+}
+
+model CashMovement {
+  id                  String           @id @default(cuid())
+  cashDrawerSessionId String
+  type                CashMovementType
+  amount              Decimal          @db.Decimal(12, 2)
+  description         String
+  expenseId           String?
+  status              RecordStatus     @default(CONFIRMED)
+  voidReason          String?
+  createdAt           DateTime         @default(now())
+  createdById         String?
+
+  cashDrawerSession CashDrawerSession @relation(fields: [cashDrawerSessionId], references: [id], onDelete: Cascade)
+  expense           Expense?          @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+
+  @@index([cashDrawerSessionId])
+}
+
+model ExpenseCategory {
+  id        String  @id @default(cuid())
+  code      String  @unique
+  name      String
+  isSystem  Boolean @default(false)
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  expenses Expense[]
+}
+
+model Expense {
+  id                  String        @id @default(cuid())
+  code                String        @unique
+  expenseCategoryId   String
+  amount              Decimal       @db.Decimal(12, 2)
+  expenseDate         DateTime
+  paymentMethod       PaymentMethod @default(CASH)
+  description         String
+  supplierName        String?
+  documentNo          String?
+  relatedUserId       String?
+  cashDrawerSessionId String?
+  attachmentUrl       String?
+
+  status     RecordStatus @default(CONFIRMED)
+  voidedAt   DateTime?
+  voidedById String?
+  voidReason String?
+
+  createdAt   DateTime @default(now())
+  createdById String?
+
+  expenseCategory    ExpenseCategory     @relation(fields: [expenseCategoryId], references: [id])
+  relatedUser        User?               @relation("ExpenseRelatedUser", fields: [relatedUserId], references: [id], onDelete: SetNull)
+  cashDrawerSession  CashDrawerSession?  @relation(fields: [cashDrawerSessionId], references: [id], onDelete: SetNull)
+  cashMovements      CashMovement[]
+  inventoryMovements InventoryMovement[]
+
+  @@index([expenseDate, expenseCategoryId])
+  @@index([status])
+}
+
+model OtherIncome {
+  id          String        @id @default(cuid())
+  code        String        @unique
+  label       String
+  amount      Decimal       @db.Decimal(12, 2)
+  incomeDate  DateTime
+  method      PaymentMethod @default(CASH)
+  description String?
+  status      RecordStatus  @default(CONFIRMED)
+  createdAt   DateTime      @default(now())
+  createdById String?
+
+  payments Payment[]
+
+  @@index([incomeDate])
+}
+
+// ---------------------------------------------------------------------------
+// KURUMSAL WEB SITESI ICERIGI (panelden yonetilir)
+// ---------------------------------------------------------------------------
+
+model SitePage {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  title        String
+  bodyMarkdown String
+  isPublished  Boolean  @default(false)
+  updatedAt    DateTime @updatedAt
+  updatedById  String?
+}
+
+/// Web sitesinde GOSTERILMESI SECILEN fiyatlar. Public taraf asla
+/// Subscription.agreedPrice gibi musteri verisi okumaz.
+model SitePublicPrice {
+  id          String   @id @default(cuid())
+  label       String
+  priceText   String
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  sourceNote  String?
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+}
+
+model SiteGalleryImage {
+  id          String  @id @default(cuid())
+  url         String
+  alt         String
+  sortOrder   Int     @default(0)
+  isPublished Boolean @default(true)
+}
+
+model BusinessSetting {
+  id                   String   @id @default("singleton")
+  businessName         String   @default("Londra Camping Otopark")
+  addressText          String   @default("")
+  mapsUrl              String?
+  latitude             Float?
+  longitude            Float?
+  phone                String   @default("")
+  whatsappPhone        String?
+  workingHoursText     String   @default("")
+  instagramUrl         String?
+  timezone             String   @default("Europe/Istanbul")
+  /// Isletme gununun basladigi saat. Karar 02.10.2026: takvim gunu => 0.
+  businessDayStartHour Int      @default(0)
+  currency             String   @default("TRY")
+  updatedAt            DateTime @updatedAt
+  updatedById          String?
+}
+
+// ---------------------------------------------------------------------------
+// DENETIM KAYITLARI - yalnizca EKLEME yapilir (append-only)
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  at         DateTime @default(now())
+  userId     String?
+  /// Kullanici kaydi degisse bile kim oldugu metin olarak korunur.
+  actorLabel String
+  action     String
+  entityType String
+  entityId   String?
+  before     Json?
+  after      Json?
+  ip         String?
+  userAgent  String?
+  note       String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([at])
+  @@index([entityType, entityId])
+  @@index([userId, at])
+  @@index([action, at])
+}

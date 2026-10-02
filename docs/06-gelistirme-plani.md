@@ -7,7 +7,9 @@ bozulmaz, bilinen eksikler açıkça yazılır. Bir aşama, tamamlanma kriterler
 ## Aşama 0 — Analiz ve tasarım (şu an / bu dokümanlar)
 **Çıktı:** mimari, veri modeli, yetki matrisi, ekran akışları, tarife algoritması, plan.
 **Tamamlanma kriteri:** Doküman 07'deki kritik soruların yanıtlanması ve mimarinin onayı.
-**Durum:** ⏳ Onay bekliyor. Kod yazımı başlamadı.
+**Durum:** ✅ Tamamlandı (02.10.2026). Dört kritik iş kuralı karara bağlandı
+(S5, S7, S9, S10); fiyat değerleri panelden girilebilir olarak kodlanacağı için
+geliştirme bekletilmedi.
 
 ---
 
@@ -23,14 +25,32 @@ bozulmaz, bilinen eksikler açıkça yazılır. Bir aşama, tamamlanma kriterler
 - Mobil kabuk: üst bar, alt gezinme, temel UI bileşenleri (buton, kart, input, sheet, alert)
 - Türkçe biçimleme yardımcıları: para, tarih/saat, süre, plaka normalizasyonu
 
-**Tamamlanma kriterleri**
-- [ ] `docker compose up` ile sıfırdan çalışan ortam
-- [ ] Patron hesabıyla giriş/çıkış çalışıyor, oturum çerezi güvenli
-- [ ] Devre dışı bırakılan kullanıcının oturumu **anında** düşüyor (test)
-- [ ] 5 hatalı denemeden sonra hesap 15 dk kilitleniyor (test)
-- [ ] İzinsiz Server Action çağrısı 403 (test)
-- [ ] Plaka normalizasyonu birim testleri geçiyor
-- [ ] CI yeşil
+**Tamamlanma kriterleri — ✅ TAMAMLANDI (02.10.2026)**
+- [x] Sıfırdan çalışan ortam — `Dockerfile` + `ops/docker-compose.yml` (Postgres + app + Caddy + yedek)
+- [x] Giriş/çıkış çalışıyor, oturum çerezi `httpOnly` + `secure` + `sameSite=lax`
+- [x] Devre dışı bırakılan kullanıcının oturumu **anında** düşüyor — `tests/integration/oturum.test.ts`
+- [x] 5 hatalı denemeden sonra 15 dk kilit — `tests/integration/kimlik-dogrulama.test.ts`
+- [x] İzin altyapısı: `requirePermission()` + yetkisiz girişim denetime yazılıyor
+- [x] Plaka normalizasyonu — 17 birim testi (Türkçe karakter dönüşümü dahil)
+- [x] CI iş akışı yazıldı — lint + typecheck + unit + integration + build + e2e + şema/migration uyum kontrolü
+
+**Ek olarak yapılanlar (planda yoktu, gerekli görüldü)**
+- [x] Veritabanı seviyesinde bütünlük: mükerrer aktif giriş engeli (kısmi tekil
+      indeks), finansal kayıt silme yasağı ve denetim kaydı değişmezliği
+      (PostgreSQL tetikleyicileri) — 22 entegrasyon testi
+- [x] Oturum jetonunun yalnızca SHA-256 özeti saklanıyor
+- [x] Para hesapları kuruş tamsayısı üzerinden (float hatası yok) — testli
+- [x] Yedekleme ve geri yükleme betikleri + `ops/RUNBOOK.md`
+
+**Test sonucu:** 76 birim + 64 entegrasyon + 30 uçtan uca = **170 test geçiyor**
+
+**Bilinen eksikler (Aşama 2'ye devredildi)**
+- Vardiya açma/kapatma arayüzü yok (veri modeli hazır)
+- Plaka girişi ve araç giriş/çıkış butonları ekranda **devre dışı** ve bu durum
+  kullanıcıya açıkça yazıyor — çalışmayan buton gösterip personeli yanıltmamak için
+- Tarife yönetimi arayüzü yok; ücret hesaplama motoru Aşama 2'de yazılacak
+- Gerçek iOS Safari testi yapılmadı (konteynerde yalnızca Chromium var); ekran
+  genişliği testleri Chromium'da 375/393/1280 px'de geçiyor, gerçek cihaz testi Aşama 8'de
 
 ---
 

@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  kontrol:
+    name: Lint · Tip · Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: otopark_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/otopark_test?schema=public
+      DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5432/otopark_test?schema=public
+      AUTH_SECRET: ci-ortami-icin-gecici-sir
+      AUTH_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Bağımlılıkları kur
+        run: npm ci --no-fund --no-audit
+
+      - name: Prisma istemcisini üret
+        run: npx prisma generate
+
+      - name: Migration'ları uygula
+        run: npx prisma migrate deploy
+
+      - name: Migration ile şema uyumlu mu?
+        # Sema degistirildi ama migration uretilmedi ise burada yakalanir.
+        run: npx prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schema-datamodel prisma/schema.prisma --exit-code
+
+      - name: Tip kontrolü
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Birim testleri
+        run: npm run test
+
+      - name: Entegrasyon testleri
+        run: npm run test:integration
+
+      - name: Derleme
+        run: npm run build
+
+      - name: Playwright tarayıcısını kur
+        run: npx playwright install --with-deps chromium
+
+      - name: Uçtan uca testler
+        run: npm run test:e2e
+
+      - name: Test raporunu yükle
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-raporu
+          path: playwright-report/
+          retention-days: 7
