@@ -48,7 +48,7 @@ Ayrıca abonmanlılara ayrılmış sabit yer var mı?
 Yani gün içinde fiyat artarsa içeride olan araçlar eski fiyatla çıkar.
 Onaylıyor musun, yoksa çıkış anındaki tarife mi uygulanmalı?
 
-> **Yanıt:**
+> **Yanıt:** ✅ **KARAR (02.10.2026): Giriş anındaki tarife uygulanır.** Giriş sırasında geçerli kural `tariffSnapshot` olarak park kaydına yazılır; gün içinde fiyat değişse bile içerideki araçlar eski fiyatla çıkar.
 
 ### S6 — Hafta sonu / tatil / sezon farkı var mı?
 Cumartesi-Pazar veya resmî tatillerde farklı fiyat uygulanıyor mu?
@@ -59,7 +59,7 @@ Cumartesi-Pazar veya resmî tatillerde farklı fiyat uygulanıyor mu?
 Gece 00:00'da mı, yoksa vardiya başlangıcında mı (ör. 08:00–08:00)?
 Bu, günlük kasa ve gelir raporlarının doğruluğunu belirler.
 
-> **Yanıt:**
+> **Yanıt:** ✅ **KARAR (02.10.2026): Takvim günü, 00:00 – 00:00 (Europe/Istanbul).** `BusinessSetting.businessDayStartHour = 0`. Alan yapılandırılabilir kalır; ileride gece vardiyası için değiştirilebilir.
 
 ### S8 — İlk patron hesabı
 Kullanıcı adı ne olsun? (Parolayı sistemde ilk girişte sen belirleyeceksin;
@@ -79,14 +79,14 @@ Seçenekler:
 
 Önerim: **(a) + (c)** — personel müşteriyi kapıda tutmaz, patron görür.
 
-> **Yanıt:**
+> **Yanıt:** ✅ **KARAR (02.10.2026): Seçenek (a) + (c).** Abonman geçerli sayılır, personel ekranında "abonman ödemesi alınmamış" uyarısı çıkar ve patron panelindeki uyarı merkezine düşer. Personel müşteriyi kapıda tutmaz.
 
 ### S10 — Abonman park sırasında biterse?
 Araç abonmanlıyken girdi, içerideyken abonman bitti, sonra çıkıyor.
 - **(a)** O park ücretsiz tamamlanır (önerim)
 - **(b)** Abonmanın bittiği andan itibaren ücret işler
 
-> **Yanıt:**
+> **Yanıt:** ✅ **KARAR (02.10.2026): Seçenek (a).** Girişte abonman geçerliyse o park ücretsiz tamamlanır (`billingMode = SUBSCRIPTION` korunur). Sonraki girişler normal tarifeye tabi olur.
 
 ### S11 — Abonman süreleri ve kuralları
 - Hangi süreler sunulacak? (aylık / 3 aylık / 6 aylık / yıllık / haftalık?)
@@ -193,6 +193,7 @@ Aşağıdaki işler **hiçbir yanıta bağlı değil** ve onay verirsen hemen ba
 Yani **S1–S4 ve S13'ün gecikmesi geliştirmeyi durdurmaz**: tarifeler panelden
 girilebilir alanlar olarak kodlanır, sen hazır olduğunda kendi ekranından girersin.
 Ancak **S5, S7, S9, S10 kararları koda gömülen mantığı belirler** — bunları
-Aşama 2 başlamadan önce yanıtlamak gerekir. Yanıt gelmezse önerilen seçenekler
-(S5: girişte sabitlenir · S7: 00:00 · S9: a+c · S10: a) varsayılan alınır ve
-dokümana "onaya tabi varsayım" olarak yazılır.
+Aşama 2 başlamadan önce yanıtlamak gerekir — **bu dördü 02.10.2026'da karara bağlandı**
+(S5: girişte sabitlenir · S7: takvim günü 00:00 · S9: a+c · S10: a). Dolayısıyla
+Aşama 1 ve Aşama 2 için mantıksal engel kalmadı; eksik olan yalnızca fiyat
+**değerleri**, onlar da panelden girilebilir.

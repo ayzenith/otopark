@@ -4,7 +4,9 @@
 
 1. **Para `Decimal(12,2)`**, asla `Float`. Tüm tutarlar TRY.
 2. **Zaman `TIMESTAMPTZ` (UTC saklanır)**, arayüzde `Europe/Istanbul` gösterilir.
-   Günlük raporlar "işletme günü" sınırına göre hesaplanır (bkz. Açık Soru S7).
+   Günlük raporlar **takvim günü (00:00–00:00, Europe/Istanbul)** üzerinden hesaplanır
+   (karar: 02.10.2026). Sınır `BusinessSetting.businessDayStartHour = 0` ile
+   yapılandırılabilir kalır.
 3. **Geçmiş değişmez.** Bir işlem kapandığında uygulanan fiyatın **anlık kopyası**
    (snapshot) işlem satırına yazılır. Yönetici tarifeyi sonradan değiştirirse geçmiş
    tutarlar değişmez.
@@ -283,7 +285,7 @@ Yalnızca bu tablo ve `SitePage` + `isPublicOnWebsite=true` yıkama hizmetleri o
 **`BusinessSetting`** — işletme künyesi
 `id` (tek satır), `businessName`, `addressText`, `mapsUrl`, `latitude`, `longitude`,
 `phone`, `whatsappPhone`, `workingHoursText`, `instagramUrl?`, `timezone`,
-`businessDayStartHour` (gün sınırı, bkz. S7), `currency`, `updatedById`, `updatedAt`.
+`businessDayStartHour` (varsayılan **0** — takvim günü), `currency`, `updatedById`, `updatedAt`.
 
 ### Denetim
 

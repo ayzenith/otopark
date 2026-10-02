@@ -130,7 +130,7 @@ Personel plakayı yazar → [ARAÇ GİRİŞİ]
                        uygulanacak TariffVersion + TariffRule çözümlenir ve
                        tariffSnapshot JSONB olarak **girişte** yazılır
                        (fiyat sonradan değişse bile bu araç giriş anındaki
-                        tarifeyle ücretlendirilir — bkz. Açık Soru S5)
+                        tarifeyle ücretlendirilir — karar: 02.10.2026)
                   ↓
              ✅ Tam ekran onay (1,5 sn) → plaka alanı temizlenir, odak hazır
                  Fiş no: P-260402-0143 · Giriş 14:28 · Araç sınıfı: Otomobil

@@ -1,5 +1,14 @@
 # 5. Tarife Hesaplama ve Abonman Kuralları
 
+## Karara bağlanan kurallar (02.10.2026)
+
+| Konu | Karar |
+|---|---|
+| Hangi tarife uygulanır | **Giriş anındaki tarife** — snapshot girişte yazılır, gün içi fiyat değişikliği içerideki araçları etkilemez |
+| İşletme günü | **Takvim günü 00:00 – 00:00** (Europe/Istanbul) |
+| Ödenmemiş abonmanla giriş | Abonman **geçerli sayılır**; personele uyarı + patron paneline bildirim |
+| Abonman park sırasında biterse | O park **ücretsiz tamamlanır**; sonraki girişler normal tarife |
+
 > **Uyarı:** Bu dokümandaki tüm sayısal örnekler **yalnızca algoritmayı göstermek
 > için uydurulmuş** örneklerdir. Londra Camping Otopark'ın gerçek fiyatları
 > **varsayılmamıştır**; doküman 07'deki sorular yanıtlanınca sisteme girilecektir.
@@ -27,8 +36,8 @@ Araç **girişinde** şu sırayla çözümlenir ve sonuç `tariffSnapshot` olara
 
 **Neden girişte snapshot?** Yönetici gün içinde fiyat değiştirdiğinde, o anda içeride
 olan araçlar giriş anındaki fiyatla ücretlendirilir. Bu hem adil hem de müşteriye
-"girerken şu fiyatı söylemiştiniz" tartışmasını önler. *(Alternatif yaklaşım —
-çıkış anındaki tarife — Açık Soru S5'te onaya sunuluyor.)*
+"girerken şu fiyatı söylemiştiniz" tartışmasını önler.
+**Bu yaklaşım 02.10.2026'da işletme sahibi tarafından onaylandı (S5).**
 
 ## 5.2 Ücret hesaplama algoritması
 
@@ -226,7 +235,7 @@ LIMIT 1;
 | Aktif abonman bulundu | 🟢 **ABONMANLI** + müşteri adı + kalan gün | `SUBSCRIPTION` | 0 ₺, tahsilat ekranı açılmaz |
 | Bitişe ≤ 7 gün | 🟡 "Abonman 5 gün sonra doluyor" | `SUBSCRIPTION` | 0 ₺ |
 | Abonman var ama `endDate` geçmiş | 🟠 **"ABONMAN 28.09'DA BİTTİ — NORMAL TARİFE"** | `TARIFF` | normal hesap |
-| Abonman var ama `paymentStatus = UNPAID` | 🟠 "Abonman ödemesi alınmamış" (davranış S9'da soruluyor) | S9 | S9 |
+| Abonman var ama `paymentStatus = UNPAID` | 🟠 "Abonman ödemesi alınmamış" + patron paneline uyarı | `SUBSCRIPTION` | 0 ₺ |
 | `SUSPENDED` / `CANCELLED` | 🔴 "Abonman iptal/askıda — normal tarife" | `TARIFF` | normal hesap |
 | Abonman yok | — | `TARIFF` | normal hesap |
 
@@ -247,7 +256,7 @@ da raporlanabilir (kaç gün, kaç saat, hangi saatler).
 | Bir abonmanda birden fazla plaka | İzinli, `includedVehicleCount` ile sınır konabilir; aşımda uyarı. |
 | Aynı müşteri hem abonmanlı hem saatlik araç kullanıyor | İzinli; yalnızca abonmana dahil plakalar ücretsiz. |
 | Abonman ortasında plaka değişikliği | Eski `SubscriptionVehicle.removedAt` işaretlenir, yeni satır eklenir; geçmiş korunur. |
-| Abonman bitti ama araç hâlâ içeride | Giriş anındaki `billingMode=SUBSCRIPTION` korunur → o park ücretsiz tamamlanır. Sonraki giriş normal tarifeye tabi. *(Onay bekliyor: S10)* |
+| Abonman bitti ama araç hâlâ içeride | Giriş anındaki `billingMode=SUBSCRIPTION` korunur → o park ücretsiz tamamlanır. Sonraki giriş normal tarifeye tabi. **(Onaylandı: S10)** |
 
 ## 5.7 Test edilecek senaryolar (Aşama 2–3)
 
