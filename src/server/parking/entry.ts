@@ -16,7 +16,7 @@ import { prisma } from "@/server/db";
 import { writeAudit, AUDIT_ACTIONS } from "@/server/audit";
 import { isValidTurkishPlate, normalizePlate, formatPlate } from "@/lib/plate";
 import { cozumleTarife } from "@/server/pricing/resolve";
-import { cozumleAbonman, type AbonmanBilgisi } from "@/server/subscription/resolve";
+import { ABONMAN_BOS, cozumleAbonman, type AbonmanBilgisi } from "@/server/subscription/resolve";
 import { vardiyaZorunlu, IslemHatasi } from "@/server/shift";
 import { parkKodu } from "./codes";
 import type { SessionUser } from "@/server/auth/session";
@@ -294,16 +294,18 @@ async function mevcutIstegiBul(idempotencyKey: string): Promise<GirisSonucu | nu
     plakaGosterim: varOlan.plateDisplay,
     girisAt: varOlan.entryAt,
     aracSinifiAdi: varOlan.vehicle.vehicleClass.name,
+    // Abonman yeniden cozumlenmez: kaydin GIRIS ANINDAKI durumu esastir.
     abonman: {
+      ...ABONMAN_BOS,
       durum: varOlan.billingMode === "SUBSCRIPTION" ? "AKTIF" : "YOK",
       ucretsizMi: varOlan.billingMode === "SUBSCRIPTION",
       subscriptionId: varOlan.subscriptionId,
+      abonmanKodu: varOlan.subscription?.code ?? null,
+      planEtiketi: varOlan.subscription?.planLabel ?? null,
       musteriAdi: varOlan.subscription?.customer.fullName ?? null,
       musteriId: varOlan.subscription?.customer.id ?? null,
-      bitisTarihi: null,
-      kalanGun: null,
-      uyari: null,
-      yoneticiyeBildir: false,
+      baslangicTarihi: varOlan.subscription?.startDate ?? null,
+      bitisTarihi: varOlan.subscription?.endDate ?? null,
     },
     tarifeTanimsiz: varOlan.tariffSnapshot === null && varOlan.billingMode === "TARIFF",
     uyarilar: ["Bu işlem daha önce kaydedilmişti."],

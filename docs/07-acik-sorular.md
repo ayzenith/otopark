@@ -95,7 +95,23 @@ Araç abonmanlıyken girdi, içerideyken abonman bitti, sonra çıkıyor.
 - Abonman fiyatına oto yıkama indirimi gibi bir şey dahil mi?
 - Bir abonmana en fazla kaç plaka eklenebilir?
 
-> **Yanıt:**
+> **Yanıt:** ✅ **KARAR (04.10.2026) — kapsam kuralı:**
+> Abonman **7/24 geçerlidir** ve **sınırsız giriş-çıkış** hakkı verir. Abonman
+> aktif olduğu sürece araç günün herhangi bir saatinde girip çıkabilir; günlük
+> giriş/çıkış sayısında limit yoktur. Veri modeli ileride farklı abonman
+> kurallarına (belirli saat aralığı, hafta içi/hafta sonu ayrımı, giriş sayısı
+> limiti) izin verecek şekilde tasarlandı; bu kurallar **şu anda devre dışıdır**
+> ve arayüzden seçilemez (bkz. `src/server/subscription/rules.ts`).
+>
+> **Hâlâ açık olan kısımlar** (sistemi engellemez, varsayılmadı):
+> - Sunulacak hazır süreler (aylık / 3 aylık / yıllık): süre her abonmanda
+>   **elle girilir**, hazır süre listesi tanımlanmadı. Formda yalnızca takvim
+>   hesabı yapan "+1 ay / +3 ay / +6 ay / +1 yıl" düğmeleri var; hangisinin
+>   kullanılacağına patron karar verir.
+> - Abonman fiyatına oto yıkama indirimi dahil mi: **varsayılmadı**, Aşama 4
+>   (oto yıkama) öncesinde yanıtlanması gerekiyor.
+> - Bir abonmana en fazla kaç plaka: sınır **abonman başına** girilir
+>   (`includedVehicleCount`), genel bir üst sınır tanımlanmadı.
 
 ### S12 — KVKK: müşteri verisi ne kadar saklanacak?
 Abonmanı biten müşterinin adı/telefonu ne kadar süre tutulacak?

@@ -3,11 +3,21 @@ import { hashPassword } from "@/server/auth/password";
 
 export const prisma = new PrismaClient();
 
-/** Testler arasinda veriyi temizler. Silme sirasi yabanci anahtarlara uyar. */
+/**
+ * Testler arasinda veriyi temizler.
+ *
+ * TRUNCATE kullanilir, DELETE DEGIL. Iki nedeni var:
+ *   1. Finansal tablolarda DELETE'i engelleyen tetikleyiciler var
+ *      (BEFORE DELETE). TRUNCATE satir tetikleyicisi calistirmaz, bu yuzden
+ *      "session_replication_role" ile tetikleyici kapatma hilesine gerek
+ *      kalmaz. O hile baglanti bazliydi ve Prisma havuzdan baska bir
+ *      baglanti verdiginde sessizce etkisiz kaliyordu.
+ *   2. Tek ifadede ve cok daha hizli calisir.
+ *
+ * CASCADE, listede olmayan bagimli tablolari da bosaltir; boylece yeni bir
+ * tablo eklendiginde test temizligi sessizce eksik kalmaz.
+ */
 export async function temizle(): Promise<void> {
-  // Tetikleyiciler DELETE'i engelleyen tablolar icin oturum bazli devre disi
-  // birakma: test temizligi disinda ASLA kullanilmaz.
-  await prisma.$executeRawUnsafe("SET session_replication_role = 'replica';");
   const tablolar = [
     "AuditLog", "LoginAttempt", "Session", "SubscriptionPayment", "Payment",
     "CashMovement", "InventoryMovement", "WashJobItem", "WashJob",
@@ -18,10 +28,8 @@ export async function temizle(): Promise<void> {
     "WashServicePriceVersion", "WashServiceCatalog", "InventoryItem",
     "SubscriptionType", "User",
   ];
-  for (const t of tablolar) {
-    await prisma.$executeRawUnsafe(`DELETE FROM "${t}";`);
-  }
-  await prisma.$executeRawUnsafe("SET session_replication_role = 'origin';");
+  const liste = tablolar.map((t) => `"${t}"`).join(", ");
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${liste} RESTART IDENTITY CASCADE;`);
 }
 
 /** Test kullanicisi olusturur. */

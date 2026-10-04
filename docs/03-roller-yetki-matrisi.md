@@ -57,7 +57,8 @@ settings.business.edit   audit.view               user.manage
 | parking.override_price (tutarı elle değiştirme) | ✅ | ❌ | ❌ |
 | subscription.view | ✅ | ✅ | ✅ (salt okunur sorgulama) |
 | subscription.create / edit | ✅ | ✅ | ❌ |
-| **subscription.price.set** (özel fiyat belirleme) | ✅ | ❌ | ❌ |
+| ↳ *not:* abonman **oluşturmak** ücret yazmayı gerektirdiği için `subscription.price.set` de ister | ✅ | ❌ | ❌ |
+| **subscription.price.set** (özel fiyat belirleme **ve abonman tutarını görme**) | ✅ | ❌ | ❌ |
 | subscription.cancel | ✅ | ❌ | ❌ |
 | subscription.payment.collect | ✅ | ✅ | ❌ (izinle açılabilir) |
 | customer.view | ✅ | ✅ | ✅ (ad + plaka + abonman durumu) |
@@ -124,3 +125,22 @@ Aşağıdaki işlemler **istisnasız** `AuditLog`'a yazılır (kim, ne zaman, ö
 
 Patron `yonetim/denetim` ekranından kullanıcıya, tarihe, işlem tipine ve kayda göre
 filtreleyerek bu kayıtları görür. Kayıtlar düzenlenemez ve silinemez.
+
+## 3.6 Aşama 3'te netleşen izin kararları (04.10.2026)
+
+**Abonman ücreti hem yazma hem OKUMA iznine tabidir.** `subscription.price.set`
+izni olmayan kullanıcı abonman tutarını hiçbir ekranda görmez — ne listede, ne
+müşteri profilinde, ne personel sorgu kartında. Gerekçe: fiyat müşteriye özeldir
+("biri 3.000, diğeri 4.000") ve işletme bilgisidir. Personel abonmanın
+**geçerli olup olmadığını** ve **ödeme durumunu** görür; tutarı görmez.
+
+**Abonman oluşturmak için iki izin birlikte gerekir:** `subscription.create`
+**ve** `subscription.price.set`. Çünkü her abonmanın ücreti zorunludur ve
+varsayılanı yoktur — ücret yazamayan kullanıcı abonman da oluşturamaz.
+Yalnızca `create` izni olan kullanıcı ekranda açık bir uyarı görür:
+"Abonman ücreti müşteriye özeldir ve işletme sahibi tarafından girilir."
+
+**Abonman tahsilatını iptal etmek** `cash.void` veya `subscription.cancel`
+izinlerinden birini ister (ikisi de varsayılan olarak yalnızca patronda).
+Tahsilat iptali finansal kaydı değiştirdiği için gerekçe zorunludur ve
+paranın fiilen iade edilip edilmediği **ayrıca** sorulur.

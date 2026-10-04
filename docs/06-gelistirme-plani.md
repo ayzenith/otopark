@@ -110,7 +110,7 @@ geliştirme bekletilmedi.
 
 ---
 
-## Aşama 3 — Abonmanlar, müşteriler, abonmanlı araç listesi
+## Aşama 3 — Abonmanlar, müşteriler, abonmanlı araç listesi ✅ TAMAMLANDI (04.10.2026)
 **Kapsam**
 - Müşteri CRUD + profil (araçlar, park geçmişi, abonmanlar, yıkamalar, ödemeler)
 - Abonman oluşturma, **kişiye özel fiyat**, çoklu plaka, dönem/yenileme geçmişi
@@ -121,12 +121,65 @@ geliştirme bekletilmedi.
 - Patron paneline "yakında bitecek abonman" uyarıları
 
 **Tamamlanma kriterleri**
-- [ ] Üç müşteriye üç farklı fiyat tanımlanıp doğru tahsil edildiği testle doğrulanıyor
-- [ ] Aynı plakanın iki aktif abonmana eklenemediği test
-- [ ] Abonman oluşturmanın **ödeme kaydı üretmediği** test
-- [ ] Yenileme sonrası eski dönem fiyatının değişmediği test
-- [ ] Süresi dolmuş abonmanlı aracın normal tarifeyle ücretlendirildiği test
-- [ ] Çoklu plaka tek müşteri profilinde birleşiyor (E2E)
+- [x] Üç müşteriye üç farklı fiyat tanımlanıp doğru tahsil edildiği testle doğrulanıyor
+- [x] Aynı plakanın iki aktif abonmana eklenemediği test (uygulama **ve** veritabanı tetikleyicisi)
+- [x] Abonman oluşturmanın **ödeme kaydı üretmediği** test
+- [x] Yenileme sonrası eski dönem fiyatının değişmediği test
+- [x] Süresi dolmuş abonmanlı aracın normal tarifeyle ücretlendirildiği test
+- [x] Çoklu plaka tek müşteri profilinde birleşiyor (E2E)
+- [x] Park sırasında abonman bitişinde çıkışın ücretsiz tamamlandığı test (S10)
+- [x] Ödenmemiş abonmanın geçerli kabul edildiği test (S9)
+- [x] Abonmanlı çıkışta ücret hesaplama akışının **hiç açılmadığı** E2E testi
+
+**Test sayıları (04.10.2026)**
+
+| Katman | Aşama 2 sonu | Aşama 3 eklenen | Toplam |
+|---|---:|---:|---:|
+| Birim | 140 | +25 | **165** |
+| Entegrasyon (gerçek PostgreSQL) | 154 | +66 | **220** |
+| Uçtan uca (3 ekran boyutu) | 72 | +66 | **138** |
+| **Toplam** | 366 | +157 | **523** |
+
+Başarısız test yok. `tsc --noEmit`, `npm run lint` ve `npm run build` temiz.
+
+**Aşama 3'te bulunan ve düzeltilen hatalar**
+
+1. **Telefonla müşteri arama çalışmıyordu (gerçek, kullanıcıya dokunan).**
+   Arama sorgusu normalize ediliyor ama veritabanındaki **ham** telefon
+   alanıyla karşılaştırılıyordu. "0532 111 22 33" kaydı, personel
+   "5321112233" yazdığında bulunamıyordu — yani aramanın en çok kullanılacağı
+   biçim çalışmıyordu. `Customer.phoneNormalized` / `altPhoneNormalized`
+   alanları eklendi (indeksli, geçmiş kayıtlar için geri dolduruldu) ve arama
+   bu alanlar üzerinden yapılıyor. Üç yazım biçiminin aynı müşteriyi bulduğu
+   test eklendi.
+2. **Test temizliği sessizce bozulabiliyordu (altyapı).**
+   `temizle()` tetikleyicileri `SET session_replication_role` ile kapatıyordu;
+   bu ayar **bağlantı bazlıdır** ve Prisma havuzdan başka bir bağlantı
+   verdiğinde etkisiz kalıyor, finansal tabloların "silinemez" tetikleyicisi
+   devreye girip hazırlık çöküyordu. Temizlik tek `TRUNCATE ... CASCADE`
+   ifadesine çevrildi: satır tetikleyicisi çalışmaz, çok daha hızlıdır ve
+   bağlantıya bağımlı değildir. Aynı kırılganlık E2E hazırlığında da vardı;
+   orada tek transaction + `SET LOCAL` kullanıldı.
+3. **E2E paketi uzayınca kendi kendini düşürüyordu (test altyapısı).**
+   İki ayrı kırılganlık: (a) park edilmiş fixture aracının süresi **sabit
+   metinle** doğrulanıyordu, paket uzadıkça geçen dakika büyüyüp doğrulama
+   bozuluyordu; (b) Playwright başarısız testten sonra işçi sürecini yeniden
+   başlatıyor ve plaka üreten modül sayacı sıfırlanıyor, aynı plaka ikinci kez
+   üretilip "bu araç zaten otoparkta" hatası kalan testleri zincirleme
+   düşürüyordu. Süre doğrulaması desene çevrildi (tutar zaten sabit), plaka
+   üretimi süreç kimliğinden türetilen tabana bağlandı.
+
+**Aşama 3 sonunda bilinen eksikler**
+
+- Abonman **arayüzünde** kural seçimi yok: tek kural (7/24 sınırsız) kullanılıyor.
+  Diğer kurallar şemada ve hesap mantığında hazır, testli, ama devre dışı (S11).
+- Müşteri profilinde **park geçmişi** sayı olarak görünüyor; tarihli liste ve
+  dışa aktarma Aşama 5'te.
+- Abonman **belgesi/fişi yazdırma** yok (Aşama 7).
+- Otomatik yenileme (`autoRenew`) alanı saklanıyor ama **çalıştıran süreç yok**;
+  yenileme elle yapılır. Zamanlanmış görev Aşama 5'te değerlendirilecek.
+- Süresi yaklaşan abonman uyarısı patron panelinde gösteriliyor; **SMS/WhatsApp
+  bildirimi yok** (S19 yanıtlanmadı).
 
 ---
 

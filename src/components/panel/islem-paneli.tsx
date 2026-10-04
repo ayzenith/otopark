@@ -24,6 +24,8 @@ import { useRouter } from "next/navigation";
 import { Alert, Button, PlakaInput, Rozet } from "@/components/ui";
 import { Tutar } from "./para";
 import { cikisSorgulaAction, cikisYapAction, girisYapAction } from "@/server/actions/park";
+import { abonmanSorgulaAction } from "@/server/actions/abonman";
+import { AbonmanKarti, type AbonmanKartVerisi } from "./abonman-karti";
 import { formatDateTime, formatDuration, formatTime } from "@/lib/datetime";
 
 type Durum =
@@ -31,6 +33,7 @@ type Durum =
   | { ad: "yukleniyor" }
   | { ad: "hata"; mesaj: string; kod?: string; eylem?: Eylem }
   | { ad: "cikisPaneli"; veri: CikisVerisi }
+  | { ad: "abonmanPaneli"; veri: AbonmanPaneliVerisi }
   | { ad: "girisOnay"; veri: GirisOnayVerisi }
   | { ad: "cikisOnay"; veri: CikisOnayVerisi };
 
@@ -38,6 +41,14 @@ type Eylem =
   | { tur: "bicimiZorla" }
   | { tur: "kapasiteyiZorla" }
   | { tur: "cikisaGit" };
+
+interface AbonmanPaneliVerisi {
+  plakaGosterim: string;
+  aracBilgisi: string | null;
+  otoparktaMi: boolean;
+  sahipAdi: string | null;
+  kart: AbonmanKartVerisi;
+}
 
 interface CikisVerisi {
   parkingSessionId: string;
@@ -54,6 +65,8 @@ interface CikisVerisi {
   tarifeSurumNo: number | null;
   ucretsizMi: boolean;
   tarifeTanimsiz: boolean;
+  /** Abonman karti verisi (abonmanli cikista ucret dokumu yerine gosterilir). */
+  abonmanKarti: AbonmanKartVerisi | null;
 }
 
 interface GirisOnayVerisi {
@@ -67,6 +80,7 @@ interface GirisOnayVerisi {
   abonmanlimi: boolean;
   tarifeTanimsiz: boolean;
   uyarilar: string[];
+  abonmanKarti: AbonmanKartVerisi | null;
 }
 
 interface CikisOnayVerisi {
@@ -168,6 +182,31 @@ export function IslemPaneli({
         abonmanlimi: d.abonman.ucretsizMi,
         tarifeTanimsiz: d.tarifeTanimsiz,
         uyarilar: d.uyarilar,
+        abonmanKarti: d.abonman.durum === "YOK" ? null : karta(d.abonman),
+      },
+    });
+  }
+
+  // ---- ABONMAN SORGUSU: plakayi yaz, tek dokunusla gor ----
+  async function abonmanSorgula() {
+    if (!plaka.trim() || mesgul) return;
+    setDurum({ ad: "yukleniyor" });
+
+    const sonuc = await abonmanSorgulaAction({ plaka });
+    if (!sonuc.ok) {
+      setDurum({ ad: "hata", mesaj: sonuc.error, kod: sonuc.code });
+      return;
+    }
+
+    const d = sonuc.data;
+    setDurum({
+      ad: "abonmanPaneli",
+      veri: {
+        plakaGosterim: d.plakaGosterim,
+        aracBilgisi: aracBilgisiMetni(d.aracSinifi, d.markaModel, d.renk),
+        otoparktaMi: d.otoparktaMi,
+        sahipAdi: d.sahipAdi,
+        kart: karta(d.abonman),
       },
     });
   }
@@ -201,6 +240,29 @@ export function IslemPaneli({
         tarifeSurumNo: d.tarifeSurumNo,
         ucretsizMi: d.ucretsizMi,
         tarifeTanimsiz: d.tarifeTanimsiz,
+        abonmanKarti: d.abonman
+          ? {
+              // Cikis aninda abonman park sirasinda bitmis olabilir; S10 geregi
+              // bu cikis yine ucretsizdir, bu yuzden durum AKTIF gosterilir ve
+              // uyari metni durumu aciklar.
+              durum: "AKTIF",
+              ucretsizMi: true,
+              musteriAdi: d.abonman.musteriAdi,
+              musteriTelefonu: d.abonman.musteriTelefonu,
+              abonmanKodu: d.abonman.kod,
+              planEtiketi: d.abonman.planEtiketi,
+              baslangicTarihi: d.abonman.baslangicTarihi,
+              bitisTarihi: d.abonman.bitisTarihi,
+              kalanGun: Math.max(0, d.abonman.kalanGun),
+              odemeDurumu: d.abonman.odemeDurumu,
+              kuralAdi: null,
+              plakalar: [],
+              uyari: d.abonman.parkSirasindaBittiMi
+                ? "Abonman park sırasında doldu. Bu çıkış ücretsiz tamamlanır; " +
+                  "bir sonraki giriş normal tarifeden hesaplanır."
+                : null,
+            }
+          : null,
       },
     });
   }
@@ -244,6 +306,21 @@ export function IslemPaneli({
   }
   if (durum.ad === "cikisOnay") {
     return <CikisOnayEkrani veri={durum.veri} kapat={sifirla} />;
+  }
+
+  // ---- ABONMAN SORGU PANELI ----
+  if (durum.ad === "abonmanPaneli") {
+    return (
+      <AbonmanPaneli
+        veri={durum.veri}
+        mesgul={mesgul}
+        cikisaGit={cikisSorgula}
+        girisAl={() => girisYap()}
+        cikisYetkisi={cikisYetkisi}
+        vardiyaAcik={vardiyaAcik}
+        kapat={() => setDurum({ ad: "bos" })}
+      />
+    );
   }
 
   // ---- CIKIS / TAHSILAT PANELI ----
@@ -337,6 +414,19 @@ export function IslemPaneli({
         </Button>
       </div>
 
+      {/* Abonman sorgusu: plakayı yaz, tek dokunuşla müşteri ve kalan günü gör.
+          Hiçbir şey yazmaz, ücret hesaplamaz. */}
+      <Button
+        variant="sade"
+        size="ikincil"
+        tamGenislik
+        onClick={abonmanSorgula}
+        disabled={mesgul || !plaka.trim()}
+        data-test="abonman-sorgula"
+      >
+        {mesgul ? "…" : "★ ABONMAN SORGULA"}
+      </Button>
+
       {/* Araç sınıfı: normal akışta gizli, tek dokunuşla açılır. Böylece
           olağan giriş 2 dokunuşta kalır. */}
       {aracSiniflari.length > 1 ? (
@@ -394,18 +484,34 @@ function CikisPaneli({
   tahsilEt: (y: "CASH" | "CARD") => void;
   vazgec: () => void;
 }) {
+  // ABONMAN KURALI: aktif abonman kapsamindaki araca UCRET HESAPLAMA AKISI
+  // ACILMAZ. Dokum, tutar kutusu ve nakit/kart butonlari hic cizilmez;
+  // yerine abonman karti ve tek bir "cikisi tamamla" butonu gosterilir.
+  const abonmanli = veri.abonmanKapsaminda;
+
   return (
     <div className="space-y-3" data-test="cikis-paneli">
-      <div className="rounded-2xl border-2 border-lacivert-200 bg-white p-4">
-        <div className="text-center">
-          <div className="font-mono text-3xl font-bold tracking-wider text-lacivert-800">
-            {veri.plakaGosterim}
-          </div>
-          <div className="mt-0.5 text-sm text-slate-500">{veri.aracSinifiAdi}</div>
-        </div>
+      {abonmanli && veri.abonmanKarti ? (
+        <AbonmanKarti
+          veri={veri.abonmanKarti}
+          plakaGosterim={veri.plakaGosterim}
+          aracBilgisi={veri.aracSinifiAdi}
+        />
+      ) : null}
 
-        {veri.abonmanKapsaminda ? (
-          <div className="mt-3 rounded-xl bg-basari-acik px-3 py-2 text-center">
+      <div className="rounded-2xl border-2 border-lacivert-200 bg-white p-4">
+        {!abonmanli ? (
+          <div className="text-center">
+            <div className="font-mono text-3xl font-bold tracking-wider text-lacivert-800">
+              {veri.plakaGosterim}
+            </div>
+            <div className="mt-0.5 text-sm text-slate-500">{veri.aracSinifiAdi}</div>
+          </div>
+        ) : null}
+
+        {/* Abonman kaydı bulunamadıysa (eski kayıt) yine de rozet gösterilir. */}
+        {abonmanli && !veri.abonmanKarti ? (
+          <div className="rounded-xl bg-basari-acik px-3 py-2 text-center">
             <Rozet tur="basari">ABONMAN KAPSAMINDA</Rozet>
             {veri.abonmanMusteriAdi ? (
               <div className="mt-1 text-sm font-semibold text-green-900">
@@ -422,10 +528,10 @@ function CikisPaneli({
           </Alert>
         ) : null}
 
-        <dl className="mt-4 space-y-1.5 text-sm">
+        <dl className={abonmanli ? "space-y-1.5 text-sm" : "mt-4 space-y-1.5 text-sm"}>
           <Satir etiket="Giriş" deger={veri.girisAt} />
           <Satir etiket="Süre" deger={formatDuration(veri.sureDakika)} vurgulu />
-          {veri.tarifeAdi ? (
+          {veri.tarifeAdi && !abonmanli ? (
             <Satir
               etiket="Tarife"
               deger={`${veri.tarifeAdi}${veri.tarifeSurumNo ? ` (s.${veri.tarifeSurumNo})` : ""}`}
@@ -433,8 +539,9 @@ function CikisPaneli({
           ) : null}
         </dl>
 
-        {/* Hesap dökümü: personel müşteriye açıklayabilsin diye şeffaf. */}
-        {veri.dokum.length > 0 && !veri.abonmanKapsaminda ? (
+        {/* Hesap dökümü: personel müşteriye açıklayabilsin diye şeffaf.
+            Abonmanlı araçta hiç çizilmez. */}
+        {veri.dokum.length > 0 && !abonmanli ? (
           <div className="mt-3 rounded-xl bg-slate-50 px-3 py-2">
             <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">
               Hesap
@@ -452,18 +559,28 @@ function CikisPaneli({
           </div>
         ) : null}
 
-        <div className="mt-4 rounded-xl bg-lacivert-600 px-4 py-4 text-center text-white">
-          <div className="text-[11px] font-bold uppercase tracking-wide text-mavi-200">
-            {veri.tutar === 0 ? "Tahsil edilecek tutar yok" : "Tahsil edilecek"}
+        {abonmanli ? (
+          <div
+            className="mt-4 rounded-xl bg-basari px-4 py-4 text-center text-white"
+            data-test="abonman-ucretsiz"
+          >
+            <div className="text-lg font-extrabold">ÜCRET ALINMAZ</div>
+            <div className="mt-0.5 text-sm text-green-50">Abonman kapsamında</div>
           </div>
-          <div className="mt-1" data-test="odenecek-tutar">
-            <Tutar kurus={veri.tutar} boyut="buyuk" />
+        ) : (
+          <div className="mt-4 rounded-xl bg-lacivert-600 px-4 py-4 text-center text-white">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-mavi-200">
+              {veri.tutar === 0 ? "Tahsil edilecek tutar yok" : "Tahsil edilecek"}
+            </div>
+            <div className="mt-1" data-test="odenecek-tutar">
+              <Tutar kurus={veri.tutar} boyut="buyuk" />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* 5. ADIM: nakit veya kart */}
-      {veri.tutar > 0 ? (
+      {/* 5. ADIM: nakit veya kart - yalnızca tahsil edilecek tutar varsa */}
+      {veri.tutar > 0 && !abonmanli ? (
         <div className="grid grid-cols-2 gap-3">
           <Button
             variant="basari"
@@ -501,13 +618,129 @@ function CikisPaneli({
         Vazgeç
       </Button>
 
-      {veri.tutar > 0 ? (
+      {veri.tutar > 0 && !abonmanli ? (
         <p className="pb-2 text-center text-xs text-slate-400">
           Kart ödemeleri elle kaydedilir; sistemde POS bağlantısı yoktur.
         </p>
       ) : null}
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// ABONMAN SORGU PANELI - plakadan musteriye tek dokunus
+// ---------------------------------------------------------------------------
+function AbonmanPaneli({
+  veri,
+  mesgul,
+  cikisaGit,
+  girisAl,
+  cikisYetkisi,
+  vardiyaAcik,
+  kapat,
+}: {
+  veri: AbonmanPaneliVerisi;
+  mesgul: boolean;
+  cikisaGit: () => void;
+  girisAl: () => void;
+  cikisYetkisi: boolean;
+  vardiyaAcik: boolean;
+  kapat: () => void;
+}) {
+  return (
+    <div className="space-y-3" data-test="abonman-paneli">
+      <AbonmanKarti
+        veri={veri.kart}
+        plakaGosterim={veri.plakaGosterim}
+        aracBilgisi={veri.aracBilgisi}
+      />
+
+      {veri.kart.durum === "YOK" && veri.sahipAdi ? (
+        <Alert tur="bilgi" baslik={`Araç kaydı: ${veri.sahipAdi}`}>
+          Müşteri kaydı var ancak abonman yok.
+        </Alert>
+      ) : null}
+
+      {veri.otoparktaMi ? (
+        <Alert tur="bilgi" baslik="Bu araç şu anda otoparkta." />
+      ) : null}
+
+      {/* Sorgudan doğrudan işleme geçiş: personel baştan plaka yazmasın. */}
+      {veri.otoparktaMi ? (
+        <Button
+          variant="ikincil"
+          size="islem"
+          tamGenislik
+          onClick={cikisaGit}
+          disabled={mesgul || !cikisYetkisi}
+          data-test="sorgudan-cikis"
+        >
+          {mesgul ? "…" : "↑ ÇIKIŞ İŞLEMİNE GEÇ"}
+        </Button>
+      ) : (
+        <Button
+          variant="birincil"
+          size="islem"
+          tamGenislik
+          onClick={girisAl}
+          disabled={mesgul || !vardiyaAcik}
+          data-test="sorgudan-giris"
+        >
+          {mesgul ? "…" : "↓ ARAÇ GİRİŞİ AL"}
+        </Button>
+      )}
+
+      <Button variant="sade" size="ikincil" tamGenislik onClick={kapat} disabled={mesgul}>
+        Kapat
+      </Button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// YARDIMCILAR
+// ---------------------------------------------------------------------------
+
+/** Sunucudan gelen abonman bilgisini kart verisine cevirir. */
+function karta(a: {
+  durum: string;
+  ucretsizMi: boolean;
+  musteriAdi: string | null;
+  musteriTelefonu: string | null;
+  abonmanKodu: string | null;
+  planEtiketi: string | null;
+  baslangicTarihi: string | Date | null;
+  bitisTarihi: string | Date | null;
+  kalanGun: number | null;
+  odemeDurumu: "UNPAID" | "PARTIAL" | "PAID" | null;
+  kuralAdi: string | null;
+  plakalar: string[];
+  uyari: string | null;
+}): AbonmanKartVerisi {
+  return {
+    durum: a.durum as AbonmanKartVerisi["durum"],
+    ucretsizMi: a.ucretsizMi,
+    musteriAdi: a.musteriAdi,
+    musteriTelefonu: a.musteriTelefonu,
+    abonmanKodu: a.abonmanKodu,
+    planEtiketi: a.planEtiketi,
+    baslangicTarihi: a.baslangicTarihi,
+    bitisTarihi: a.bitisTarihi,
+    kalanGun: a.kalanGun,
+    odemeDurumu: a.odemeDurumu,
+    kuralAdi: a.kuralAdi,
+    plakalar: a.plakalar,
+    uyari: a.uyari,
+  };
+}
+
+function aracBilgisiMetni(
+  sinif: string | null,
+  markaModel: string | null,
+  renk: string | null,
+): string | null {
+  const parcalar = [sinif, markaModel, renk].filter((p): p is string => Boolean(p));
+  return parcalar.length > 0 ? parcalar.join(" · ") : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -535,16 +768,21 @@ function GirisOnayEkrani({ veri, kapat }: { veri: GirisOnayVerisi; kapat: () => 
       </div>
       <div className="mt-1 text-xs text-green-800">Fiş no: {veri.kod}</div>
 
-      {veri.abonmanlimi ? (
+      {/* Abonman kartı: müşteri adı, tarihler, kalan gün, ödeme durumu.
+          Süresi dolmuş abonmanda da gösterilir - personel müşteriye
+          "abonmanınız bitti, normal tarife uygulanacak" diyebilsin. */}
+      {veri.abonmanKarti ? (
+        <div className="mt-4 text-left">
+          <AbonmanKarti veri={veri.abonmanKarti} />
+        </div>
+      ) : veri.abonmanlimi ? (
         <div className="mt-4">
           <Rozet tur="basari">ABONMANLI</Rozet>
           {veri.abonmanMusteriAdi ? (
             <div className="mt-1 font-semibold text-green-900">{veri.abonmanMusteriAdi}</div>
           ) : null}
         </div>
-      ) : null}
-
-      {veri.abonmanUyari ? (
+      ) : veri.abonmanUyari ? (
         <Alert
           tur={abonmanSorunlu ? "uyari" : "bilgi"}
           baslik={veri.abonmanUyari}

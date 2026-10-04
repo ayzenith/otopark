@@ -213,7 +213,21 @@ Plaka yazılır → [ÇIKIŞ/SORGULA]   (veya aktif listeden karta dokunma)
 ```
 İptal: `[İPTAL]` → sebep zorunlu → `CANCELLED`, ödeme alınmışsa ters kayıt.
 
-## 4.6 Abonman sorgulama (P8)
+## 4.6 Abonman sorgulama (P8) — **uygulandı (Aşama 3)**
+
+Personel ana ekranındaki üçüncü düğme: **★ ABONMAN SORGULA**. Plaka yazılır,
+tek dokunuşla kart açılır. Hiçbir şey yazmaz, ücret hesaplamaz.
+
+Karttan doğrudan işleme geçilir: araç otoparktaysa **"ÇIKIŞ İŞLEMİNE GEÇ"**,
+değilse **"ARAÇ GİRİŞİ AL"** düğmesi çıkar — personel plakayı baştan yazmaz.
+
+**Aktif abonmanlı araçta ücret hesaplama akışı AÇILMAZ:** çıkış panelinde
+hesap dökümü, tutar kutusu ve nakit/kart düğmeleri hiç çizilmez; yerine
+abonman kartı ve tek bir "ÇIKIŞI TAMAMLA" düğmesi gösterilir.
+
+Süresi dolmuş abonmanda kart **kırmızı** çerçeveyle çıkar ve
+**"ABONMAN SÜRESİ DOLMUŞ (tarih) — NORMAL TARİFE UYGULANACAK"** yazar;
+personel müşteriye sürpriz yapmadan durumu söyleyebilir.
 
 Plaka yaz → sonuç kartı:
 - Müşteri adı, telefon (yetkiliyse), abonman türü, başlangıç-bitiş, kalan gün
@@ -221,8 +235,31 @@ Plaka yaz → sonuç kartı:
 - **Ödeme durumu** (yetkiliyse): `ÖDENDİ` / `ÖDENMEDİ`
 - Müşterinin diğer plakaları listelenir
 - Personel burada **düzenleme yapamaz**; yalnızca görür.
+- **Tutar gösterilmez.** Abonman ücreti müşteriye özeldir ve işletme
+  bilgisidir; personel yalnızca `ÖDENDİ / KISMİ / ÖDENMEDİ` görür. Tutarı
+  görmek `subscription.price.set` iznine bağlıdır (varsayılan: patron).
 
-## 4.7 Abonman listesi (Y6) — yönetim
+## 4.7 Abonman listesi (Y6) — yönetim — **uygulandı (Aşama 3)**
+
+Uygulanan sayfalar ve adresleri:
+
+| Ekran | Adres |
+|---|---|
+| Müşteriler (ad/telefon/plaka arama) | `/musteriler` |
+| Müşteri detayı (araçlar + her aracın abonman geçmişi) | `/musteriler/[id]` |
+| Abonmanlar (filtre sekmeleri) | `/abonmanlar` |
+| Abonman detayı (dönemler, araçlar, tahsilat, yenileme, iptal) | `/abonmanlar/[id]` |
+| Abonmanlı araçlar | `/abonmanli-araclar` |
+| Süresi yaklaşanlar | `/abonmanlar?filtre=yaklasan` |
+| Süresi dolanlar | `/abonmanlar?filtre=dolmus` |
+| Ödenmemiş abonmanlar | `/abonmanlar?filtre=odenmemis` |
+| Abonman ödeme geçmişi | `/yonetim/abonman/odemeler` |
+| Patron abonman panosu (hepsine giriş + sayaçlar) | `/yonetim/abonman` |
+
+"Süresi yaklaşanlar / dolanlar / ödenmemişler" ayrı ekranlar yerine **aynı
+listenin kendi adresi olan filtreleri** olarak uygulandı: tek liste bileşeni,
+sekmeler arası geçiş tek dokunuş, bağlantılar paylaşılabilir.
+
 
 - Üstte arama: plaka · müşteri adı · telefon (tek alan, hepsinde arar)
 - Hızlı filtre çipleri: `Aktif` · `7 gün içinde bitecek` · `Süresi dolmuş` · `Ödenmemiş` · `İptal`

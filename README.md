@@ -3,8 +3,23 @@
 Otopark giriş-çıkış, abonman, oto yıkama, kasa, gelir-gider ve kurumsal web
 sitesini tek platformda birleştiren, **mobil öncelikli** işletme yönetim yazılımı.
 
-**Durum: Aşama 1 tamamlandı** — altyapı, veritabanı, kimlik doğrulama, yetki
-kontrolü, denetim kayıtları ve mobil arayüz kabuğu çalışır durumda ve test edildi.
+**Durum: Aşama 3 tamamlandı** (04.10.2026)
+
+| Aşama | Kapsam | Durum |
+|---|---|---|
+| 0 | Mimari, veri modeli, geliştirme planı dokümanları | ✅ |
+| 1 | Altyapı, veritabanı, kimlik doğrulama, yetki, denetim kaydı, mobil kabuk | ✅ |
+| 2 | Tarife sistemi, ücret hesaplama motoru, araç giriş-çıkış, tahsilat | ✅ |
+| 3 | Müşteriler, abonmanlar, dönem/yenileme, abonman tahsilatı, abonmanlı araçlar | ✅ |
+| 4–8 | Oto yıkama, kasa/finans, personel, web sitesi, devreye alma | ⏳ |
+
+**523 test geçiyor** (165 birim · 220 entegrasyon · 138 uçtan uca ×3 ekran boyutu),
+başarısız test yok. Ayrıntı: `docs/06-gelistirme-plani.md`.
+
+**Gerçek işletme fiyatları henüz girilmedi** ve **varsayılmadı**: otopark
+tarifesi, kapasite ve abonman ücretleri patron panelinden girilir. Fiyat
+girilmeden sistem çalışır; ücret hesaplanamayan işlemlerde personele büyük
+uyarı çıkar ve işleme not düşülür. Açık sorular: `docs/07-acik-sorular.md`.
 
 ## Hızlı başlangıç
 

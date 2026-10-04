@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { Alert, Card, CardBody, CardHeader, CardTitle, SayacKarti } from "@/components/ui";
 import { Tutar } from "@/components/panel/para";
 import { prisma } from "@/server/db";
 import { businessDayRange } from "@/lib/datetime";
 import { kapasiteDurumu } from "@/server/parking/entry";
 import { toKurus } from "@/lib/money";
+import { abonmanSayaclari } from "@/server/subscription/queries";
 
 export const metadata = { title: "Yönetim" };
 export const dynamic = "force-dynamic";
@@ -15,7 +17,8 @@ export const dynamic = "force-dynamic";
 export default async function YonetimPaneli() {
   const { start, end } = businessDayRange();
 
-  const [kapasite, bugunGiris, bugunCikis, tahsilat, iptaller, tarifeVar] = await Promise.all([
+  const [kapasite, bugunGiris, bugunCikis, tahsilat, iptaller, tarifeVar, abonman] =
+    await Promise.all([
     kapasiteDurumu(),
     prisma.parkingSession.count({ where: { entryAt: { gte: start, lt: end } } }),
     prisma.parkingSession.count({ where: { exitAt: { gte: start, lt: end }, status: "COMPLETED" } }),
@@ -33,6 +36,7 @@ export default async function YonetimPaneli() {
         tariffPlan: { isActive: true },
       },
     }),
+    abonmanSayaclari(),
   ]);
 
   const nakit = toKurus(tahsilat.find((t) => t.method === "CASH")?._sum.amount ?? 0);
@@ -115,6 +119,35 @@ export default async function YonetimPaneli() {
         </Alert>
       )}
 
+      {abonman.yaklasan > 0 || abonman.odenmemis > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Abonman uyarıları</CardTitle>
+          </CardHeader>
+          <CardBody>
+            <ul className="space-y-2 text-sm">
+              {abonman.yaklasan > 0 ? (
+                <li className="text-uyari">
+                  ⚠{" "}
+                  <Link href="/abonmanlar?filtre=yaklasan" className="underline">
+                    {abonman.yaklasan} abonmanın süresi 7 gün içinde doluyor.
+                  </Link>
+                </li>
+              ) : null}
+              {abonman.odenmemis > 0 ? (
+                <li className="text-uyari">
+                  ⚠{" "}
+                  <Link href="/abonmanlar?filtre=odenmemis" className="underline">
+                    {abonman.odenmemis} abonmanın ödemesi alınmamış.
+                  </Link>{" "}
+                  Abonman geçerli sayılır; giriş engellenmez.
+                </li>
+              ) : null}
+            </ul>
+          </CardBody>
+        </Card>
+      ) : null}
+
       {uzunSureliler > 0 || iptaller > 0 ? (
         <Card>
           <CardHeader>
@@ -135,8 +168,27 @@ export default async function YonetimPaneli() {
         </Card>
       ) : null}
 
-      <Alert tur="bilgi" baslik="Bu panel Aşama 2 kapsamındadır">
-        Abonman, oto yıkama, gelir-gider ve kasa bölümleri Aşama 3-5&apos;te eklenecek.
+      <Card>
+        <CardBody className="pt-4">
+          <Link
+            href="/yonetim/abonman"
+            className="flex min-h-12 items-center justify-between gap-3"
+          >
+            <span className="min-w-0">
+              <span className="block font-bold text-lacivert-700">Abonman yönetimi</span>
+              <span className="block text-sm text-slate-500">
+                Müşteriler, abonmanlar, abonmanlı araçlar, tahsilatlar
+              </span>
+            </span>
+            <span className="rakam shrink-0 rounded-lg bg-slate-100 px-2 py-1 text-sm font-bold text-slate-600">
+              {abonman.aktif}
+            </span>
+          </Link>
+        </CardBody>
+      </Card>
+
+      <Alert tur="bilgi" baslik="Bu panel Aşama 3 kapsamındadır">
+        Oto yıkama, gelir-gider ve kasa bölümleri Aşama 4-5&apos;te eklenecek.
       </Alert>
     </div>
   );

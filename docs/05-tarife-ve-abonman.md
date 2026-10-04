@@ -8,6 +8,7 @@
 | İşletme günü | **Takvim günü 00:00 – 00:00** (Europe/Istanbul) |
 | Ödenmemiş abonmanla giriş | Abonman **geçerli sayılır**; personele uyarı + patron paneline bildirim |
 | Abonman park sırasında biterse | O park **ücretsiz tamamlanır**; sonraki girişler normal tarife |
+| Abonman kapsamı (S11, 04.10.2026) | **7/24 geçerli, sınırsız giriş-çıkış.** Günlük giriş/çıkış sayısında limit yok |
 
 > **Uyarı:** Bu dokümandaki tüm sayısal örnekler **yalnızca algoritmayı göstermek
 > için uydurulmuş** örneklerdir. Londra Camping Otopark'ın gerçek fiyatları
@@ -257,8 +258,8 @@ da raporlanabilir (kaç gün, kaç saat, hangi saatler).
 
 | Durum | Kural |
 |---|---|
-| Aynı plaka iki aktif abonmanda | **Engellenir.** Kayıt sırasında kontrol + DB kısıtı. |
-| Bir müşterinin birden fazla abonmanı | İzinli (farklı araç grupları / farklı dönemler). |
+| Aynı plaka iki aktif abonmanda | **Engellenir.** Uygulama kontrolü + DB kısıtı + DB tetikleyicisi (üç katman). Kuralın tam tanımı: bir aracın aynı anda yalnızca **tek açık abonman bağı** olur — tarihleri çakışmasa bile. |
+| Bir müşterinin birden fazla abonmanı | İzinli (farklı araç grupları). Aynı aracın gelecek dönemi için **ikinci abonman açılmaz**; doğru yol aynı abonmana **yeni dönem** eklemektir (yenileme). |
 | Bir abonmanda birden fazla plaka | İzinli, `includedVehicleCount` ile sınır konabilir; aşımda uyarı. |
 | Aynı müşteri hem abonmanlı hem saatlik araç kullanıyor | İzinli; yalnızca abonmana dahil plakalar ücretsiz. |
 | Abonman ortasında plaka değişikliği | Eski `SubscriptionVehicle.removedAt` işaretlenir, yeni satır eklenir; geçmiş korunur. |
@@ -280,6 +281,45 @@ yapısal kurallar gerekti; bunlar fiyat değil, *davranış* kararlarıdır:
 | Kapasite girilmemiş (0) | Araç girişi **engellenmez**, doluluk gösterilmez | İşletme kapasiteyi girmeden sistemi kullanabilmeli |
 
 Bu kuralların hepsi `tests/unit/ucret-hesaplama.test.ts` içinde test edilir.
+
+### Aşama 3'te eklenen yapısal kararlar (abonman)
+
+| Durum | Davranış | Gerekçe |
+|---|---|---|
+| Abonman ücreti | **Hiçbir yerde ön dolu gelmez**, varsayılanı yoktur | Fiyat müşteriye özeldir; "genel abonman fiyatı" kavramı sistemde yok |
+| Abonman süresi | Bitiş tarihi **boş gelir**; "+1 ay / +3 ay" düğmeleri yalnızca takvim hesabı yapar | Hangi süre sunulacağı karara bağlanmadı (S11) |
+| Yenilemede ücret | Yeni dönemin ücreti **boş gelir**; eski ücret yalnızca bilgi olarak yazılır | "Geçen ay 3.000'di" diye sessizce kopyalanması yanlış kayıt üretir |
+| Bir aracın abonman bağı | Aynı anda **tek açık bağ**; tarihler çakışmasa bile ikinci bağ açılmaz | "Bu plaka hangi abonmanda?" sorusunun tek yanıtı olur; uzatmanın yolu yenilemedir |
+| Süresi dolmuş abonmanın bağı | Yeni abonmana geçişte **otomatik kapatılır** (`removedAt`), **silinmez**, denetime yazılır | Geçmiş korunur, plaka serbest kalır |
+| Dönem fiyatı düzeltme | Yalnızca **son dönem**, gerekçe zorunlu, denetime yazılır | Geçmiş dönem kapanmış muhasebe kaydıdır (kural 6) |
+| Fazla tahsilat | Engellenmez; `PAID` yapılır ve **fazla tutar bildirilir** | Peşin ödeme gerçek bir durumdur; sistem parayı reddetmemeli |
+| Abonman tahsilatı iptali | **İki ayrı yol:** para iade edildiyse ters kayıt (OUT), para el değiştirmediyse `VOIDED` | İkisini birlikte yapmak tutarı iki kez düşürür (Aşama 2'de yaşanan hata) |
+| Abonman ücretinin görünürlüğü | Yalnızca `subscription.price.set` izni olan kullanıcıya (varsayılan: patron) | Müşteriye özel fiyat işletme bilgisidir; personel yalnızca "ödendi / ödenmedi" görür |
+| Durum alanı (`status`) | Ücret hesabı **asla** buna güvenmez; kapsam daima **tarih aralığından** çözümlenir | Durum güncellemesi hiç çalışmasa bile süresi dolmuş abonman normal tarifeye düşer |
+
+Bu kararların hepsi `tests/integration/abonman.test.ts` ve
+`tests/unit/abonman-kurallari.test.ts` içinde test edilir.
+
+## 5.6.2 İleride eklenebilecek abonman kuralları (şu anda devre dışı)
+
+S11 kararı gereği **tek kural** kullanılıyor: `UNLIMITED_7_24`. Veri modeli
+ve hesap mantığı şu kuralları da taşır; şema değişikliği gerekmeden devreye
+alınabilirler ama **arayüzden seçilemezler** ve hiçbir kayıtta kullanılmazlar:
+
+| Kural | Ne yapar | Parametresi |
+|---|---|---|
+| `UNLIMITED_7_24` | **Kullanılan tek kural.** Her zaman kapsamda | — |
+| `TIME_WINDOW` | Belirli saat aralığı (gece yarısını aşan aralık dahil) | başlangıç/bitiş dakikası |
+| `WEEKDAY_ONLY` | Yalnızca hafta içi | — |
+| `WEEKEND_ONLY` | Yalnızca hafta sonu | — |
+| `ENTRY_QUOTA` | Gün/dönem başına giriş sayısı limiti | adet + kapsam |
+
+Kural, abonmanın kendisinde **ve her dönemin kopyasında** saklanır
+(`SubscriptionPeriod.accessRuleKind`): abonmanın kuralı sonradan değişse bile
+geçmiş dönemin kuralı değişmez (kural 6). Kapsam dışı bir an için
+`cozumleAbonman` **normal tarifeyi** uygular ve personele gerekçeyi yazar.
+Yeni kural devreye alınacaksa tek değişiklik noktası `SECILEBILIR_KURALLAR`
+listesidir.
 
 ## 5.7 Test edilecek senaryolar (Aşama 2–3)
 

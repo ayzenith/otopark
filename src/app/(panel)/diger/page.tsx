@@ -19,21 +19,27 @@ export default async function DigerSayfasi() {
   const P = PERMISSIONS;
   const has = (p: string) => user.permissions.has(p);
 
-  const bolumler: { href: string; etiket: string; aciklama: string; asama: string }[] = [];
+  // asama: henuz gelistirilmemis bolumler icin etiket. Hazir bolumlerde bos
+  // birakilir, boylece personel "bu calismiyor mu?" diye tereddut etmez.
+  const bolumler: { href: string; etiket: string; aciklama: string; asama?: string }[] = [];
 
   if (has(P.SUBSCRIPTION_VIEW))
     bolumler.push({
       href: "/abonmanlar",
       etiket: "Abonmanlar",
-      aciklama: "Abonmanlı araç sorgulama ve liste",
-      asama: "Aşama 3",
+      aciklama: "Abonman listesi, dönemler ve tahsilat",
+    });
+  if (has(P.SUBSCRIPTION_VIEW))
+    bolumler.push({
+      href: "/abonmanli-araclar",
+      etiket: "Abonmanlı araçlar",
+      aciklama: "Şu anda kapsamdaki plakalar",
     });
   if (has(P.CUSTOMER_VIEW))
     bolumler.push({
       href: "/musteriler",
       etiket: "Müşteriler",
-      aciklama: "Müşteri profilleri ve geçmişi",
-      asama: "Aşama 3",
+      aciklama: "Müşteri profilleri, araçları ve abonman geçmişi",
     });
   if (has(P.CASH_REPORT_SELF))
     bolumler.push({
@@ -47,14 +53,12 @@ export default async function DigerSayfasi() {
       href: "/tarife",
       etiket: "Fiyat listesi",
       aciklama: "Geçerli otopark ve yıkama fiyatları",
-      asama: "Aşama 2",
     });
   if (user.role === "OWNER")
     bolumler.push({
       href: "/yonetim",
       etiket: "Yönetim paneli",
-      aciklama: "Finans, raporlar, personel, ayarlar",
-      asama: "Aşama 5-6",
+      aciklama: "Abonmanlar, finans, raporlar, ayarlar",
     });
 
   return (
@@ -76,9 +80,11 @@ export default async function DigerSayfasi() {
                     <span className="block font-bold text-lacivert-700">{b.etiket}</span>
                     <span className="block text-sm text-slate-500">{b.aciklama}</span>
                   </span>
-                  <span className="shrink-0 rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-500">
-                    {b.asama}
-                  </span>
+                  {b.asama ? (
+                    <span className="shrink-0 rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-500">
+                      {b.asama}
+                    </span>
+                  ) : null}
                 </Link>
               </CardBody>
             </Card>

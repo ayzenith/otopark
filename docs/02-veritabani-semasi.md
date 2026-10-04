@@ -74,7 +74,12 @@ SitePage / SitePublicPrice          (kurumsal web sitesi içeriği)
 `id`, `fullName`, `phone`, `altPhone`, `email?`, `taxId?` (kurumsal müşteri),
 `isCompany`, `companyName?`, `notes` (yönetici notu), `kvkkConsentAt?`,
 `createdAt`, `createdById`, `isActive`.
-İndeks: `phone`, `fullName` (trigram arama).
+→ `phoneNormalized` / `altPhoneNormalized`: **yalnızca arama için** tutulan,
+rakam dışı karakterler atılmış, ülke kodu ve baştaki sıfır düşürülmüş biçim
+("5321112233"). Ekranda daima kullanıcının girdiği biçim gösterilir. Personel
+telefonu boşluklu, boşluksuz veya +90'lı yazsa da aynı müşteriyi bulur.
+
+İndeks: `phone`, `phoneNormalized`, `altPhoneNormalized`, `fullName`.
 
 **`Vehicle`**
 `id`, `plateNormalized` (**tekil**), `plateDisplay`, `vehicleClassId`,
@@ -159,6 +164,10 @@ başka müşteriye bağlanabilir; değişiklik `AuditLog`'a yazılır.
 `paymentStatus` (`UNPAID | PARTIAL | PAID`),
 `includedVehicleCount`, `coveredHoursNote?`,
 `autoRenew` (varsayılan **false**),
+`accessRuleKind` (`UNLIMITED_7_24 | TIME_WINDOW | WEEKDAY_ONLY | WEEKEND_ONLY | ENTRY_QUOTA`,
+varsayılan **`UNLIMITED_7_24`** — S11 kararı: 7/24, sınırsız giriş-çıkış),
+`accessRule?` (JSONB; yalnızca `UNLIMITED_7_24` dışındaki kurallarda dolu,
+okunurken Zod ile doğrulanır),
 `cancelledAt?`, `cancelledById?`, `cancelReason?`,
 `managerNotes?`,
 `createdAt`, `createdById`, `updatedAt`, `updatedById`.
@@ -166,9 +175,20 @@ başka müşteriye bağlanabilir; değişiklik `AuditLog`'a yazılır.
 
 **`SubscriptionVehicle`** — abonmana dahil plakalar
 `id`, `subscriptionId`, `vehicleId`, `addedAt`, `removedAt?`, `addedById`.
-Kısıt: Bir araç aynı anda yalnızca **bir aktif** abonmanda olabilir
-(`UNIQUE (vehicleId) WHERE removedAt IS NULL AND subscription.status='ACTIVE'`
-— uygulama + exclusion constraint ile; detay doküman 05).
+Kısıt — **üç katman** (detay doküman 05, bölüm 5.6):
+1. Kısmi tekil indeks: `UNIQUE (vehicleId) WHERE removedAt IS NULL`.
+   Yani bir aracın aynı anda yalnızca **tek açık bağı** olur. Bu,
+   "aynı anda iki aktif abonman" yasağından daha katıdır ve bilinçli
+   tercihtir: "bu plaka hangi abonmanda?" sorusunun tek yanıtı olur.
+2. `subscription_vehicle_single_active_trg` tetikleyicisi: bağın ait olduğu
+   abonmanın **durumunu ve tarih aralığını** da kontrol eder, böylece
+   uygulama kodu atlanarak (elle SQL) yazılmaya çalışılsa bile reddedilir.
+3. `subscription_activate_no_conflict_trg`: abonman `ACTIVE` yapılırken
+   araçlarının çakışma kontrolü yeniden yapılır (durum değişimi yoluyla
+   çakışma oluşturulamaz).
+
+Kaldırma işlemi **satırı silmez**, yalnızca `removedAt` doldurur: aracın
+hangi dönemde kimin abonmanında olduğu kalıcı kayıttır.
 
 **`SubscriptionType`** — isteğe bağlı şablon (fiyat **zorunlu değil**)
 `id`, `name`, `defaultDurationDays`, `suggestedPrice?`, `isActive`, `notes`.
@@ -176,8 +196,12 @@ Kısıt: Bir araç aynı anda yalnızca **bir aktif** abonmanda olabilir
 
 **`SubscriptionPeriod`** — yenileme tarihçesi (fiyat geçmişi burada korunur)
 `id`, `subscriptionId`, `periodNo`, `startDate`, `endDate`, `price`,
+`accessRuleKind`, `accessRule?` (**dönemin kural kopyası**),
 `createdAt`, `createdById`, `note`.
 → Müşterinin geçmişte ne ödediği, fiyatı sonradan değişse bile kaybolmaz.
+→ Kural da donduruluyor: abonmanın kuralı sonradan değişse bile geçmiş
+dönemin kuralı değişmez. Yalnızca **son dönemin** fiyatı, gerekçe zorunlu ve
+denetime yazılarak düzeltilebilir; geçmiş dönemler değiştirilemez.
 
 **`SubscriptionPayment`**
 `id`, `subscriptionId`, `subscriptionPeriodId?`, `paymentId`, `amount`,

@@ -24,3 +24,10 @@ export async function tahsilatKodu(db: DbClient, anında = new Date()): Promise<
   const adet = await db.payment.count({ where: { createdAt: { gte: start, lt: end } } });
   return buildCode("T", anında, adet + 1);
 }
+
+/** Abonman kodu: A-261004-0007 */
+export async function abonmanKodu(db: DbClient, anında = new Date()): Promise<string> {
+  const { start, end } = businessDayRange(anında);
+  const adet = await db.subscription.count({ where: { createdAt: { gte: start, lt: end } } });
+  return buildCode("A", anında, adet + 1);
+}

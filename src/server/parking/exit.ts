@@ -26,7 +26,7 @@ import { Prisma, type PaymentMethod } from "@prisma/client";
 import { prisma } from "@/server/db";
 import { writeAudit, AUDIT_ACTIONS } from "@/server/audit";
 import { normalizePlate } from "@/lib/plate";
-import { isWeekend, minuteOfDay } from "@/lib/datetime";
+import { daysBetween, isWeekend, minuteOfDay } from "@/lib/datetime";
 import { clampNonNegative, kurusToDecimalString, toKurus } from "@/lib/money";
 import { hesaplaUcret, odenecekTutar } from "@/server/pricing/calculate";
 import { okuSnapshot } from "@/server/pricing/resolve";
@@ -34,6 +34,20 @@ import { vardiyaZorunlu, IslemHatasi } from "@/server/shift";
 import { tahsilatKodu } from "./codes";
 import type { DokumSatiri } from "@/server/pricing/types";
 import type { SessionUser } from "@/server/auth/session";
+
+export interface CikisAbonmanBilgisi {
+  kod: string;
+  planEtiketi: string;
+  musteriAdi: string;
+  musteriTelefonu: string;
+  baslangicTarihi: Date;
+  bitisTarihi: Date;
+  /** Cikis anina gore kalan gun; negatifse park sirasinda bitmis demektir. */
+  kalanGun: number;
+  odemeDurumu: "UNPAID" | "PARTIAL" | "PAID";
+  /** Park SURERKEN abonman bitti mi? (S10: park yine ucretsiz tamamlanir) */
+  parkSirasindaBittiMi: boolean;
+}
 
 export interface CikisOnizleme {
   parkingSessionId: string;
@@ -47,6 +61,12 @@ export interface CikisOnizleme {
   /** Abonman kapsaminda mi? (giris anindaki billingMode) */
   abonmanKapsaminda: boolean;
   abonmanMusteriAdi: string | null;
+  /**
+   * Abonman detayi (varsa). Personel ekraninda ucret dokumu yerine BU KART
+   * gosterilir: musteri, tarihler, kalan gun, odeme durumu.
+   * TUTAR ICERMEZ - abonman ucreti personel ekraninda gosterilmez.
+   */
+  abonman: CikisAbonmanBilgisi | null;
   tarifeAdi: string | null;
   tarifeSurumNo: number | null;
   dokum: DokumSatiri[];
@@ -71,7 +91,9 @@ export async function cikisOnizleme(plakaVeyaId: string): Promise<CikisOnizleme>
     },
     include: {
       vehicle: { include: { vehicleClass: true } },
-      subscription: { include: { customer: { select: { fullName: true } } } },
+      subscription: {
+        include: { customer: { select: { fullName: true, phone: true } } },
+      },
     },
   });
 
@@ -118,6 +140,20 @@ export async function cikisOnizleme(plakaVeyaId: string): Promise<CikisOnizleme>
     sureDakika: hesap.sureDakika,
     abonmanKapsaminda: kayit.billingMode === "SUBSCRIPTION",
     abonmanMusteriAdi: kayit.subscription?.customer.fullName ?? null,
+    abonman: kayit.subscription
+      ? {
+          kod: kayit.subscription.code,
+          planEtiketi: kayit.subscription.planLabel,
+          musteriAdi: kayit.subscription.customer.fullName,
+          musteriTelefonu: kayit.subscription.customer.phone,
+          baslangicTarihi: kayit.subscription.startDate,
+          bitisTarihi: kayit.subscription.endDate,
+          kalanGun: daysBetween(simdi, kayit.subscription.endDate),
+          odemeDurumu: kayit.subscription.paymentStatus,
+          // S10: park sirasinda bitse bile bu cikis ucretsiz tamamlanir.
+          parkSirasindaBittiMi: kayit.subscription.endDate < simdi,
+        }
+      : null,
     tarifeAdi: hesap.snapshot?.planAdi ?? null,
     tarifeSurumNo: hesap.snapshot?.surumNo ?? null,
     dokum: hesap.dokum,

@@ -19,11 +19,14 @@ export function Alert({
   baslik,
   children,
   className,
+  // Testlerin belirli bir uyariyi secebilmesi icin isteğe bagli kanca.
+  "data-test": dataTest,
 }: {
   tur?: Tur;
   baslik?: string;
   children?: React.ReactNode;
   className?: string;
+  "data-test"?: string;
 }) {
   const stil = STILLER[tur];
   return (
@@ -32,6 +35,7 @@ export function Alert({
       // data-uyari: testlerde Next.js'in kendi route announcer'indan ayirt
       // edilebilmesi icin (o da role="alert" tasiyor).
       data-uyari={tur}
+      data-test={dataTest}
       className={cn("flex gap-3 rounded-xl border-2 px-4 py-3", stil.kutu, className)}
     >
       <span aria-hidden className="shrink-0 pt-0.5 text-lg font-bold leading-none">
