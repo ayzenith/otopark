@@ -1,6 +1,8 @@
 import { Alert, Card, CardBody, CardHeader, CardTitle } from "@/components/ui";
 import { Tutar } from "@/components/panel/para";
 import { gecerliTarifeler } from "@/server/pricing/admin";
+import { yikamaFiyatTablosu } from "@/server/wash/pricing";
+import { formatKurusPlain } from "@/lib/money";
 import { formatDateTime, formatDuration } from "@/lib/datetime";
 
 export const metadata = { title: "Fiyat listesi" };
@@ -8,11 +10,22 @@ export const dynamic = "force-dynamic";
 
 /** Personelin musteriye fiyat soyleyebilmesi icin SALT OKUNUR liste. */
 export default async function TarifeSayfasi() {
-  const tarifeler = await gecerliTarifeler();
+  const [tarifeler, yikama] = await Promise.all([gecerliTarifeler(), yikamaFiyatTablosu()]);
+
+  // Fiyati girilmis yikama hizmetleri (tamamen bos olanlar listeye girmez).
+  const yikamaHizmetleri = yikama.hizmetler.filter(
+    (h) =>
+      h.aktif &&
+      (h.genelFiyatKurus !== null || Object.values(h.sinifFiyatlari).some((f) => f !== null)),
+  );
 
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-extrabold text-lacivert-700">Geçerli fiyatlar</h1>
+
+      <h2 className="text-[13px] font-bold uppercase tracking-wide text-slate-600">
+        Otopark
+      </h2>
 
       {tarifeler.length === 0 ? (
         <Alert tur="uyari" baslik="Henüz tarife girilmemiş">
@@ -78,6 +91,63 @@ export default async function TarifeSayfasi() {
             </CardBody>
           </Card>
         ))
+      )}
+
+      {/* ---- OTO YIKAMA ----
+          Otopark tarifesinden AYRI bolum: yikamada fiyat arac tipine gore
+          degisir, otoparkta degismez. */}
+      <h2 className="pt-2 text-[13px] font-bold uppercase tracking-wide text-slate-600">
+        Oto yıkama
+      </h2>
+
+      {yikamaHizmetleri.length === 0 ? (
+        <Alert tur="uyari" baslik="Yıkama fiyatları girilmemiş">
+          Fiyatlar patron tarafından girilecek. Girilmeden önce yıkama 0 ₺ olarak kaydedilir.
+        </Alert>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="normal-case tracking-normal text-lacivert-700">
+              Yıkama hizmetleri
+            </CardTitle>
+            <p className="mt-0.5 text-xs text-slate-400">
+              Yıkama ücreti araç tipine göre değişir.
+            </p>
+          </CardHeader>
+          <CardBody>
+            <ul className="space-y-3" data-test="yikama-fiyat-listesi">
+              {yikamaHizmetleri.map((h) => (
+                <li key={h.id} className="rounded-xl bg-slate-50 px-3 py-2.5">
+                  <div className="font-bold text-lacivert-700">
+                    {h.ad}
+                    {h.tahminiDakika ? (
+                      <span className="ml-2 text-xs font-normal text-slate-400">
+                        ~{h.tahminiDakika} dk
+                      </span>
+                    ) : null}
+                  </div>
+                  <dl className="mt-1.5 space-y-1 text-sm">
+                    {yikama.siniflar
+                      .filter((s) => h.sinifFiyatlari[s.id] !== null)
+                      .map((s) => (
+                        <Satir
+                          key={s.id}
+                          etiket={s.ad}
+                          deger={`${formatKurusPlain(h.sinifFiyatlari[s.id]!)} ₺`}
+                        />
+                      ))}
+                    {h.genelFiyatKurus !== null ? (
+                      <Satir
+                        etiket="Diğer tipler"
+                        deger={`${formatKurusPlain(h.genelFiyatKurus)} ₺`}
+                      />
+                    ) : null}
+                  </dl>
+                </li>
+              ))}
+            </ul>
+          </CardBody>
+        </Card>
       )}
     </div>
   );

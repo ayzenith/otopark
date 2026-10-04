@@ -31,3 +31,10 @@ export async function abonmanKodu(db: DbClient, anında = new Date()): Promise<s
   const adet = await db.subscription.count({ where: { createdAt: { gte: start, lt: end } } });
   return buildCode("A", anında, adet + 1);
 }
+
+/** Yikama is emri kodu: Y-261004-0012 */
+export async function yikamaKodu(db: DbClient, anında = new Date()): Promise<string> {
+  const { start, end } = businessDayRange(anında);
+  const adet = await db.washJob.count({ where: { createdAt: { gte: start, lt: end } } });
+  return buildCode("Y", anında, adet + 1);
+}

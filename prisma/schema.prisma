@@ -316,9 +316,20 @@ model VehicleClass {
   sortOrder Int     @default(0)
   isActive  Boolean @default(true)
 
+  /// STANDART OTOPARK TARIFESINE DAHIL DEGIL.
+  ///
+  /// Karar (04.10.2026): karavanlar normal otopark tarifesine dahil degildir;
+  /// ayri bolum ve ayri fiyatlandirma olarak tasarlanacak. Bu alan true ise
+  /// tarife cozumleyici GENEL kurala (vehicleClassId = null) DUSMEZ: yalnizca
+  /// o sinifa ozel yazilmis kural gecerlidir. Sinifa ozel kural yoksa ucret
+  /// hesaplanamaz ve islem "tarife tanimsiz" olarak isaretlenir - sessizce
+  /// otomobil fiyatindan ucretlendirilmez.
+  excludeFromStandardTariff Boolean @default(false)
+
   vehicles          Vehicle[]
   tariffRules       TariffRule[]
   washPriceVersions WashServicePriceVersion[]
+  washJobs          WashJob[]
 }
 
 model Vehicle {
@@ -402,6 +413,16 @@ model TariffRule {
   hourlyRoundingMinutes Int     @default(60)
 
   dailyPrice    Decimal @default(0) @db.Decimal(12, 2)
+  /// 24 SAAT SONRASI EK BLOK UCRETI.
+  ///
+  /// Karar (04.10.2026): ilk 24 saat saatlik kademeden hesaplanir ve gunluk
+  /// ust limitle sinirlanir; 24 saatten sonra BASLAYAN her 24 saatlik blok
+  /// icin bu tutar SABIT olarak eklenir (orantili bolunmez).
+  ///
+  /// 0 ise bu model kapalidir ve tam gunler dailyPrice/dailyCapPrice
+  /// uzerinden orantili hesaplanir (Asama 2 davranisi).
+  extraDayBlockPrice Decimal @default(0) @db.Decimal(12, 2)
+
   dailyCapPrice Decimal @default(0) @db.Decimal(12, 2)
 
   nightFlatPrice   Decimal? @db.Decimal(12, 2)
@@ -706,7 +727,10 @@ model WashJob {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  vehicle            Vehicle             @relation(fields: [vehicleId], references: [id])
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+  /// Yikama fiyati ARAC SINIFINA baglidir; sinif bu yuzden is emrinde
+  /// dogrudan tutulur ve yabanci anahtarla korunur.
+  vehicleClass       VehicleClass        @relation(fields: [vehicleClassId], references: [id])
   customer           Customer?           @relation(fields: [customerId], references: [id], onDelete: SetNull)
   assignedUser       User?               @relation("WashAssignedUser", fields: [assignedUserId], references: [id], onDelete: SetNull)
   createdBy          User                @relation("WashCreatedBy", fields: [createdById], references: [id])

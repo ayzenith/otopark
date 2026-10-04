@@ -183,25 +183,84 @@ Başarısız test yok. `tsc --noEmit`, `npm run lint` ve `npm run build` temiz.
 
 ---
 
-## Aşama 4 — Oto yıkama
+## Aşama 4 — Oto yıkama ✅ TAMAMLANDI (04.10.2026)
 **Kapsam**
 - Yıkama hizmet kataloğu + sürümlü fiyat (araç sınıfı bazlı)
 - Yıkama işi: sırada → yıkamada → tamamlandı / iptal; çoklu hizmet satırı
 - Mobil yıkama kuyruğu ve tek dokunuşla durum değiştirme
 - Tahsilat (nakit/kart) ve "tahsilatsız tamamla" durumu
 - Günlük/aylık yıkama listeleri, hizmet bazlı ciro, personel işlem sayısı
-- Malzeme stok kartı ve tüketim/alış hareketleri, alışların gidere bağlanması
+- ~~Malzeme stok kartı ve tüketim/alış hareketleri, alışların gidere bağlanması~~
+  → **Aşama 5'e taşındı** (gerekçe aşağıda)
 
 **Tamamlanma kriterleri**
-- [ ] Fiyat değişikliğinin geçmiş yıkama tutarlarını etkilemediği test
-- [ ] Durum geçişlerinin yalnızca geçerli yönde yapılabildiği test
-- [ ] Tahsil edilmemiş yıkamaların yönetim ekranında listelendiği E2E
-- [ ] Stok hareketi ↔ gider ilişkisinin doğru kurulduğu test
+- [x] Fiyat değişikliğinin geçmiş yıkama tutarlarını etkilemediği test
+- [x] Durum geçişlerinin yalnızca geçerli yönde yapılabildiği test
+- [x] Tahsil edilmemiş yıkamaların yönetim ekranında listelendiği E2E
+- [ ] ~~Stok hareketi ↔ gider ilişkisinin doğru kurulduğu test~~ → **Aşama 5**
+      (gider modülü orada geliyor; stok alışını gidere bağlamak onu gerektirir)
+
+---
+
+**Aşama 4'te eklenen kararlar (04.10.2026)**
+
+| Karar | Uygulama |
+|---|---|
+| Otopark tarifesi (0–1 sa 100 ₺ … 24 sa sonrası +600 ₺) | `extraDayBlockPrice` alanı + motorda "ek gün bloğu" modeli; `tests/unit/gercek-tarife.test.ts` bant bant doğrular |
+| Gece tarifesi yok, hafta sonu farkı yok | Alanlar boş bırakılır, kurallar hiç devreye girmez (testli) |
+| Otoparkta araç sınıfı farkı yok | Tek genel kural (`vehicleClassId = null`) |
+| **Karavan normal tarifenin dışında** | `VehicleClass.excludeFromStandardTariff`; çözümleyici genel kurala düşmez, personele açık uyarı |
+| Araç tipine göre fiyat **yalnızca yıkamada** | Ayrı tablo, ayrı servis, ayrı ekran; ayrılık testle kanıtlı |
+| Abonmanın yıkama indirimi yok | Yıkama fiyatlandırması abonman tablolarına hiç bakmaz (testli) |
+| Standart abonman 1 ay | Arayüzde tek süre seçeneği, bitiş +1 ay ön dolu |
+| Fiyatlar koda sabitlenmez | `npm run fiyatlar:kur` veritabanına **veri** yazar; mevcut fiyatları ezmez |
+
+**Test sayıları (04.10.2026)**
+
+| Katman | Aşama 3 sonu | Aşama 4 eklenen | Toplam |
+|---|---:|---:|---:|
+| Birim | 165 | +26 | **191** |
+| Entegrasyon (gerçek PostgreSQL) | 220 | +67 | **287** |
+| Uçtan uca (3 ekran boyutu) | 138 | +54 | **192** |
+| **Toplam** | 523 | +147 | **670** |
+
+Başarısız test yok. `tsc --noEmit`, `npm run lint`, `npm run build` temiz.
+
+**Aşama 4'te düzeltilen hatalar**
+
+Bu aşamada **ürün kodunda hata bulunmadı**; bulunan dört sorun test
+doğrulamalarındaydı ve hepsi şu ortak kök nedenden geliyordu: *testler ürünün
+doğru davranışını yanlış varsaymıştı.*
+
+1. Tahsilat tamamlanınca tahsilat formu (ve içindeki başarı uyarısı) **kapanıyor** —
+   doğru davranış; test geçici uyarıyı bekliyordu. Kalıcı sonuç doğrulanacak
+   şekilde değiştirildi.
+2. Kuyruk boşalınca liste öğesi **hiç çizilmiyor**; Playwright'ın
+   `not.toContainText` doğrulaması var olmayan öğede başarısız olur.
+   `toHaveCount(0)` kullanıldı.
+3. Veritabanı üç Playwright projesi arasında paylaşıldığı için "kuyruk boş"
+   varsayımı geçersiz; doğrulama **o plakanın satırı** üzerine daraltıldı.
+4. `VehicleClass` test temizliğinde silinmiyordu; bir testte eklenen araç tipi
+   sonraki koşuda "kod zaten kullanılıyor" hatası veriyordu. Tablo temizlik
+   listesine eklendi.
+
+**Aşama 4 sonunda bilinen eksikler**
+
+- **Malzeme stoğu Aşama 5'e bırakıldı.** `InventoryItem` / `InventoryMovement`
+  tabloları hazır, ama planın "alışların gidere bağlanması" maddesi Gelir-Gider
+  modülünü gerektiriyor ve o Aşama 5'te geliyor. Stok hareketini şimdi, gider
+  bağını sonra yapmak yarım bir muhasebe kaydı üretirdi.
+- Yıkama **fişi/belgesi yazdırma** yok (Aşama 7).
+- Yıkama **süre hedefi / SLA** tanımlanmadı.
+- Karavan otopark ücreti, motor yıkama ücreti ve diğer yıkama hizmetlerinin
+  fiyatları **belirlenmedi** (bilinçli olarak boş).
 
 ---
 
 ## Aşama 5 — Kasa, gelir-gider, finansal raporlar
 **Kapsam**
+- **(Aşama 4'ten taşındı)** Malzeme stok kartı, tüketim/alış hareketleri ve
+  alışların gidere bağlanması — gider modülüyle birlikte yapılacak
 - Kasa oturumu: açılış nakdi, beklenen/sayılan, fark + zorunlu açıklama, mutabakat
 - Vardiya bazlı ve personel bazlı tahsilat raporları
 - Nakit/kart ayrımı, kasa hareketleri (avans, bankaya yatırma, düzeltme)

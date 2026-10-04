@@ -177,6 +177,7 @@ export default async function TarifelerSayfasi() {
                     saatYuvarlamaDakika: r.hourlyRoundingMinutes,
                     gunlukUcretKurus: toKurus(r.dailyPrice),
                     gunlukUstLimitKurus: toKurus(r.dailyCapPrice),
+                    ekGunBlokUcretKurus: toKurus(r.extraDayBlockPrice),
                     geceSabitUcretKurus:
                       r.nightFlatPrice === null ? null : toKurus(r.nightFlatPrice),
                     geceBaslangicDakika: r.nightStartMinute,

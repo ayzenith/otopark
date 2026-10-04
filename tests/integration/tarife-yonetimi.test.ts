@@ -39,6 +39,7 @@ function bosKural(ek: Partial<KuralGirdi> = {}): KuralGirdi {
     saatYuvarlamaDakika: 60,
     gunlukUcret: 0,
     gunlukUstLimit: 0,
+    ekGunBlokUcret: 0,
     geceSabitUcret: null,
     geceBaslangicDakika: null,
     geceBitisDakika: null,
@@ -288,7 +289,9 @@ describe("tarife çözümleme", () => {
     const sonuc = await cozumleTarife(sinifId, new Date());
     expect(sonuc).not.toBeNull();
     expect(sonuc!.snapshot.saatlikUcret).toBe(2500);
-    expect(sonuc!.snapshot.surum).toBe(1);
+    // Snapshot bicim surumu 2 (04.10.2026: ekGunBlokUcret alani eklendi).
+    // Surum 1 snapshot'larin okunmaya devam ettigi birim testlerle dogrulanir.
+    expect(sonuc!.snapshot.surum).toBe(2);
   });
 
   it("hiç tarife yoksa null döner (hata değil)", async () => {
@@ -346,8 +349,17 @@ describe("tarife çözümleme", () => {
 
 describe("tarife önizlemesi", () => {
   it("patron fiyat değişikliğinin etkisini görebilir", async () => {
-    const eski = tarifeOnizleme(bosKural({ ilkBlokDakika: 60, ilkBlokUcret: 4000, saatlikUcret: 2500 }));
-    const yeni = tarifeOnizleme(bosKural({ ilkBlokDakika: 60, ilkBlokUcret: 5000, saatlikUcret: 3000 }));
+    // Ornek sureler ACIKCA verilir: onizlemenin varsayilan listesi degisse
+    // bile bu test kirilmaz.
+    const ornekler = [192];
+    const eski = tarifeOnizleme(
+      bosKural({ ilkBlokDakika: 60, ilkBlokUcret: 4000, saatlikUcret: 2500 }),
+      ornekler,
+    );
+    const yeni = tarifeOnizleme(
+      bosKural({ ilkBlokDakika: 60, ilkBlokUcret: 5000, saatlikUcret: 3000 }),
+      ornekler,
+    );
 
     const eski3Saat = eski.find((o) => o.dakika === 192)!;
     const yeni3Saat = yeni.find((o) => o.dakika === 192)!;

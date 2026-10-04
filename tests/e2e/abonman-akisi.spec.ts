@@ -272,7 +272,7 @@ test.describe("patron: müşteri ve abonman yönetimi", () => {
     await expect(page.getByText(bicimle(ikinci)).first()).toBeVisible();
   });
 
-  test("abonman ücreti ÖN DOLU GELMEZ: genel abonman fiyatı yoktur", async ({
+  test("abonman ücreti ÖN DOLU GELMEZ ama SÜRE 1 ay ön dolu gelir", async ({
     page,
   }, testInfo) => {
     const ad = musteriAdiUret(testInfo.project.name, "Fiyat Kontrol");
@@ -283,10 +283,25 @@ test.describe("patron: müşteri ve abonman yönetimi", () => {
     await page.getByTestId("yeni-abonman").click();
     await expect(page.getByTestId("abonman-ucret")).toBeVisible({ timeout: 15_000 });
 
-    // Ucret alani BOS: sistem fiyat varsaymaz.
+    // Ucret alani BOS: fiyat musteriye ozeldir, sistem varsaymaz.
     await expect(page.getByTestId("abonman-ucret")).toHaveValue("");
-    // Bitis tarihi de bos: sure de varsayilmaz.
-    await expect(page.getByTestId("abonman-bitis")).toHaveValue("");
+
+    // SURE ise karara baglandi (04.10.2026): standart abonman 1 ay.
+    // Bitis tarihi baslangictan +1 ay ON DOLU gelir.
+    const baslangic = await page.getByTestId("abonman-baslangic").inputValue();
+    const bitis = await page.getByTestId("abonman-bitis").inputValue();
+    expect(bitis).not.toBe("");
+    const bir = new Date(`${baslangic}T00:00:00Z`);
+    const iki = new Date(`${bitis}T00:00:00Z`);
+    const aradakiGun = Math.round((iki.getTime() - bir.getTime()) / 86_400_000);
+    expect(aradakiGun).toBeGreaterThanOrEqual(28);
+    expect(aradakiGun).toBeLessThanOrEqual(31);
+
+    // Arayuzde yalnizca 1 aylik sure secenegi sunulur.
+    await expect(page.getByTestId("sure-1-ay")).toBeVisible();
+    await expect(page.getByTestId("sure-3-ay")).toHaveCount(0);
+    await expect(page.getByTestId("sure-12-ay")).toHaveCount(0);
+
     await expect(page.getByText(/bu müşteriye özeldir/i)).toBeVisible();
   });
 

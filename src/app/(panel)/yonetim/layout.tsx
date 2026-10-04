@@ -15,25 +15,24 @@ export default async function YonetimLayout({ children }: { children: React.Reac
 
   return (
     <div className="space-y-4">
+      {/* Sekmeler sarmalanir: mobilde yatay kaydirma olmaz. */}
       <nav aria-label="Yönetim" className="flex flex-wrap gap-2">
-        <Link
-          href="/yonetim"
-          className="flex h-12 items-center rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-lacivert-700"
-        >
-          Panel
-        </Link>
-        <Link
-          href="/yonetim/ayarlar/tarifeler"
-          className="flex h-12 items-center rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-lacivert-700"
-        >
-          Tarifeler
-        </Link>
-        <Link
-          href="/yonetim/ayarlar/isletme"
-          className="flex h-12 items-center rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-lacivert-700"
-        >
-          İşletme
-        </Link>
+        {[
+          { href: "/yonetim", etiket: "Panel" },
+          { href: "/yonetim/abonman", etiket: "Abonman" },
+          { href: "/yonetim/yikama", etiket: "Yıkama" },
+          { href: "/yonetim/ayarlar/tarifeler", etiket: "Tarifeler" },
+          { href: "/yonetim/ayarlar/yikama", etiket: "Yıkama fiyatları" },
+          { href: "/yonetim/ayarlar/isletme", etiket: "İşletme" },
+        ].map((s) => (
+          <Link
+            key={s.href}
+            href={s.href}
+            className="flex h-12 items-center rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-lacivert-700"
+          >
+            {s.etiket}
+          </Link>
+        ))}
       </nav>
       {children}
     </div>

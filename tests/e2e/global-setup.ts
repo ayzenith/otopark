@@ -76,6 +76,19 @@ export function abonmanPlakalari(projeAdi: string) {
   return kayit;
 }
 
+/**
+ * OTO YIKAMA FIXTURE'LARI.
+ *
+ * DIKKAT: Buradaki fiyatlar YALNIZCA TEST icindir; isletmenin gercek yikama
+ * fiyatlari DEGILDIR.
+ *
+ * E2E_YIKAMA_ANA  : fiyati OTOMOBIL ve SUV icin tanimli hizmet
+ * E2E_YIKAMA_EK   : fiyati HIC tanimli olmayan hizmet (onay akisini test eder)
+ */
+export const E2E_YIKAMA_ANA = { kod: "E2E_IC_DIS", ad: "E2E İç Dış Yıkama" };
+export const E2E_YIKAMA_EK = { kod: "E2E_MOTOR", ad: "E2E Motor Yıkama" };
+export const E2E_YIKAMA_FIYAT = { otomobilKurus: 600_00, suvKurus: 700_00 };
+
 export function parkEdilmisPlaka(projeAdi: string): string {
   const plaka = E2E_PARK_EDILMIS_PLAKALAR[projeAdi];
   if (!plaka) throw new Error(`Bu proje için park edilmiş araç tanımlı değil: ${projeAdi}`);
@@ -98,6 +111,13 @@ export default async function globalSetup() {
       where: { code: "OTOMOBIL" },
       update: {},
       create: { code: "OTOMOBIL", name: "Otomobil", sortOrder: 20 },
+    });
+
+    // Yikamada fiyat ARAC TIPINE gore degisir: ikinci bir tip gerekli.
+    const suv = await prisma.vehicleClass.upsert({
+      where: { code: "SUV" },
+      update: {},
+      create: { code: "SUV", name: "SUV / Arazi", sortOrder: 30 },
     });
 
     // Personel ve patron
@@ -199,6 +219,33 @@ export default async function globalSetup() {
         `DELETE FROM "Subscription" WHERE "customerId" IN
            (SELECT id FROM "Customer" WHERE "fullName" LIKE 'E2E %')`,
       );
+      // Yikama: test plakalarinin is emirleri ve tahsilatlari
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "Payment" WHERE "washJobId" IN
+           (SELECT id FROM "WashJob" WHERE "plateNormalized" LIKE '34Z%')`,
+      );
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "WashJobItem" WHERE "washJobId" IN
+           (SELECT id FROM "WashJob" WHERE "plateNormalized" LIKE '34Z%')`,
+      );
+      await tx.$executeRawUnsafe(`DELETE FROM "WashJob" WHERE "plateNormalized" LIKE '34Z%'`);
+      // E2E yikama hizmetleri ve fiyat surumleri (kodu E2E_ ile baslayanlar)
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "WashServicePriceVersion" WHERE "washServiceId" IN
+           (SELECT id FROM "WashServiceCatalog" WHERE "code" LIKE 'E2E_%')`,
+      );
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "WashJobItem" WHERE "washServiceId" IN
+           (SELECT id FROM "WashServiceCatalog" WHERE "code" LIKE 'E2E_%')`,
+      );
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "WashJob" WHERE id IN
+           (SELECT "washJobId" FROM "WashJobItem" wi
+            JOIN "WashServiceCatalog" c ON c.id = wi."washServiceId"
+            WHERE c."code" LIKE 'E2E_%')`,
+      );
+      await tx.$executeRawUnsafe(`DELETE FROM "WashServiceCatalog" WHERE "code" LIKE 'E2E_%'`);
+
       await tx.$executeRawUnsafe(`DELETE FROM "Vehicle" WHERE "plateNormalized" LIKE '34Z%'`);
       await tx.$executeRawUnsafe(`DELETE FROM "Customer" WHERE "fullName" LIKE 'E2E %'`);
     });
@@ -401,6 +448,44 @@ export default async function globalSetup() {
         },
       });
     }
+    // ----------------------------------------------------------------------
+    // OTO YIKAMA FIXTURE'LARI
+    // ----------------------------------------------------------------------
+    const anaHizmet = await prisma.washServiceCatalog.create({
+      data: {
+        code: E2E_YIKAMA_ANA.kod,
+        name: E2E_YIKAMA_ANA.ad,
+        estimatedMinutes: 40,
+        sortOrder: 10,
+      },
+    });
+    const gecerlilik = new Date(Date.now() - 3600_000);
+    await prisma.washServicePriceVersion.createMany({
+      data: [
+        {
+          washServiceId: anaHizmet.id,
+          vehicleClassId: sinif.id,
+          price: (E2E_YIKAMA_FIYAT.otomobilKurus / 100).toFixed(2),
+          effectiveFrom: gecerlilik,
+        },
+        {
+          washServiceId: anaHizmet.id,
+          vehicleClassId: suv.id,
+          price: (E2E_YIKAMA_FIYAT.suvKurus / 100).toFixed(2),
+          effectiveFrom: gecerlilik,
+        },
+      ],
+    });
+
+    // Fiyati HIC tanimli olmayan ek hizmet: onay akisini test eder.
+    await prisma.washServiceCatalog.create({
+      data: {
+        code: E2E_YIKAMA_EK.kod,
+        name: E2E_YIKAMA_EK.ad,
+        estimatedMinutes: 20,
+        sortOrder: 20,
+      },
+    });
   } finally {
     await prisma.$disconnect();
   }

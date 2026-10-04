@@ -21,14 +21,26 @@ o alanlar panelden düzenlenebilir olarak kodlanır, yalnızca başlangıç değ
 - Günlük üst limit var mı? (ör. "ne kadar kalırsa kalsın bir günde en fazla 300 ₺")
 - Asgari ücret var mı?
 
-> **Yanıt:**
+> **Yanıt:** ✅ **KARAR (04.10.2026).** Tarife tam olarak verildi:
+> 0–1 saat 100 ₺, sonra her saat +50 ₺ (1–2 sa 150, 2–3 sa 200 … 8–9 sa 500),
+> 9–24 saat 500 ₺ sabit, 24 saatten sonra **başlayan her 24 saat** +600 ₺.
+> Ücretsiz süre yok. Değerler `docs/05` bölüm 0.1'de tablo hâlinde ve
+> `tests/unit/gercek-tarife.test.ts` içinde bant bant testli. Koda sabit
+> değildir: veritabanında sürümlü tutulur, panelden değiştirilir.
 
 ### S2 — Hangi araç sınıfları var ve fiyatları farklı mı?
 Otomobil / SUV / minibüs / kamyonet / motosiklet / karavan / çekici?
 "Londra Camping" adı karavan ve çekici park hizmeti de olabileceğini düşündürüyor —
 öyleyse bu sınıfların fiyatı ve kuralları (uzun dönem park?) farklı mı?
 
-> **Yanıt:**
+> **Yanıt:** ✅ **KARAR (04.10.2026).**
+> **Normal otoparkta araç sınıfına göre fiyat farkı YOKTUR** — tek genel kural
+> uygulanır. **Araç tipine göre fiyatlandırma YALNIZCA oto yıkamada vardır**
+> (Otomobil 600 ₺, SUV 700 ₺, Motosiklet 400 ₺ başlangıç değerleri; panelden
+> değiştirilir, yeni tip eklenebilir).
+> **Karavan ayrı:** normal otopark tarifesinin dışındadır
+> (`excludeFromStandardTariff`), fiyatı **henüz belirlenmedi** ve kendi kuralı
+> girilene kadar çıkışta ücret hesaplanmaz, personele açık uyarı çıkar.
 
 ### S3 — Otopark kapasitesi kaç araç?
 Ayrıca abonmanlılara ayrılmış sabit yer var mı?
@@ -41,7 +53,11 @@ Ayrıca abonmanlılara ayrılmış sabit yer var mı?
 - Gece tarifesi normal hesapla karşılaştırılıp **avantajlı olan** mı uygulanacak,
   yoksa gece aralığında **her zaman** gece tarifesi mi geçerli?
 
-> **Yanıt:**
+> **Yanıt:** ✅ **KARAR (04.10.2026): GECE TARİFESİ YOK.**
+> Gece giren araç gündüzle aynı ücreti öder. Hesaplama motorundaki gece
+> tarifesi mantığı yerinde duruyor ama gece ücreti girilmediği için **hiç
+> devreye girmez** (testle doğrulanıyor). İleride istenirse panelden girilmesi
+> yeterlidir.
 
 ### S5 — Tarife, girişte mi çıkışta mı sabitlenir?
 Önerim: **giriş anındaki tarife** (müşteriye söylenen fiyat budur).
@@ -53,7 +69,10 @@ Onaylıyor musun, yoksa çıkış anındaki tarife mi uygulanmalı?
 ### S6 — Hafta sonu / tatil / sezon farkı var mı?
 Cumartesi-Pazar veya resmî tatillerde farklı fiyat uygulanıyor mu?
 
-> **Yanıt:**
+> **Yanıt:** ✅ **KARAR (04.10.2026): HAFTA SONU FARKI YOK.**
+> Cumartesi ile pazartesi aynı ücret. Hafta sonu katsayısı alanı boş kalır ve
+> kural devreye girmez (testle doğrulanıyor). Sezon farkı sorulmadı; ileride
+> gerekirse yeni tarife sürümü açılarak uygulanabilir.
 
 ### S7 — "Günlük" rapor hangi saatte başlar?
 Gece 00:00'da mı, yoksa vardiya başlangıcında mı (ör. 08:00–08:00)?
@@ -103,15 +122,18 @@ Araç abonmanlıyken girdi, içerideyken abonman bitti, sonra çıkıyor.
 > limiti) izin verecek şekilde tasarlandı; bu kurallar **şu anda devre dışıdır**
 > ve arayüzden seçilemez (bkz. `src/server/subscription/rules.ts`).
 >
-> **Hâlâ açık olan kısımlar** (sistemi engellemez, varsayılmadı):
-> - Sunulacak hazır süreler (aylık / 3 aylık / yıllık): süre her abonmanda
->   **elle girilir**, hazır süre listesi tanımlanmadı. Formda yalnızca takvim
->   hesabı yapan "+1 ay / +3 ay / +6 ay / +1 yıl" düğmeleri var; hangisinin
->   kullanılacağına patron karar verir.
-> - Abonman fiyatına oto yıkama indirimi dahil mi: **varsayılmadı**, Aşama 4
->   (oto yıkama) öncesinde yanıtlanması gerekiyor.
-> - Bir abonmana en fazla kaç plaka: sınır **abonman başına** girilir
->   (`includedVehicleCount`), genel bir üst sınır tanımlanmadı.
+> ✅ **KARAR (04.10.2026) — süre:** Standart abonman **1 AYDIR** ve şu anda
+> **yalnızca 1 aylık** abonman vardır. Arayüzde tek süre seçeneği sunulur,
+> bitiş tarihi +1 ay ön dolu gelir. İleride farklı süreler eklenebilir; veri
+> modeli herhangi bir aralığı destekler.
+>
+> ✅ **KARAR (04.10.2026) — yıkama indirimi:** Abonmanın oto yıkamada indirimi
+> **YOKTUR.** Yıkama fiyatlandırması abonman tablolarına hiç bakmaz; abonmanlı
+> müşterinin yıkama ücreti abonmansızla aynıdır (testle doğrulanıyor).
+>
+> **Hâlâ açık** (sistemi engellemez): bir abonmana en fazla kaç plaka
+> eklenebileceği. Sınır **abonman başına** girilir (`includedVehicleCount`);
+> genel bir üst sınır tanımlanmadı.
 
 ### S12 — KVKK: müşteri verisi ne kadar saklanacak?
 Abonmanı biten müşterinin adı/telefonu ne kadar süre tutulacak?
@@ -132,7 +154,19 @@ Hizmet adları ve fiyatları (araç sınıfına göre değişiyorsa her sınıf 
 - Pasta cila: ?
 - Diğer / ek hizmetler (motor yıkama, koltuk yıkama, seramik kaplama…): ?
 
-> **Yanıt:**
+> **Yanıt:** ✅ **KISMİ KARAR (04.10.2026).**
+> **İç Dış Yıkama** fiyatları araç tipine göre verildi: Otomobil 600 ₺,
+> SUV 700 ₺, Motosiklet 400 ₺. Bunlar başlangıç değerleridir ve panelden
+> değiştirilir.
+>
+> **Ek hizmetler panelden yönetilir:** patron yeni hizmet ekleyebilir
+> (motor yıkama, pasta cila, koltuk yıkama…) ve her birinin fiyatını araç tipi
+> bazında girebilir. **Motor Yıkama** hizmeti oluşturuldu ama **ücreti
+> belirlenmedi** — fiyatsız hizmet 0 ₺'ye çevrilmez; personel ekranında
+> "fiyat girilmemiş" yazar ve kayıt için açık onay istenir.
+>
+> **Hâlâ açık:** iç temizlik, detaylı temizlik, pasta cila gibi diğer
+> hizmetlerin adları ve fiyatları; karavan yıkama ücreti.
 
 ### S14 — Yıkamayı kim yapıyor?
 Personel mi, dışarıdan anlaşmalı ekip mi? Yıkayan kişiye prim/yüzde veriliyor mu?
@@ -208,6 +242,12 @@ Aşağıdaki işler **hiçbir yanıta bağlı değil** ve onay verirsen hemen ba
 
 Yani **S1–S4 ve S13'ün gecikmesi geliştirmeyi durdurmaz**: tarifeler panelden
 girilebilir alanlar olarak kodlanır, sen hazır olduğunda kendi ekranından girersin.
+
+> **Güncelleme (04.10.2026):** S1, S2, S4, S6, S11 karara bağlandı; S13 kısmen
+> yanıtlandı. Verilen fiyatlar `npm run fiyatlar:kur` ile veritabanına **veri
+> olarak** yazıldı; koda sabitlenmedi. Hâlâ açık ve **varsayılmayan** fiyatlar:
+> karavan otopark ücreti, motor yıkama ücreti, diğer yıkama hizmetleri,
+> otopark kapasitesi (S3).
 Ancak **S5, S7, S9, S10 kararları koda gömülen mantığı belirler** — bunları
 Aşama 2 başlamadan önce yanıtlamak gerekir — **bu dördü 02.10.2026'da karara bağlandı**
 (S5: girişte sabitlenir · S7: takvim günü 00:00 · S9: a+c · S10: a). Dolayısıyla

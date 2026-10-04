@@ -54,6 +54,7 @@ export function hesaplaUcret(girdi: HesapGirdisi): UcretSonucu {
     s.saatlikUcret === 0 &&
     s.gunlukUcret === 0 &&
     s.gunlukUstLimit === 0 &&
+    s.ekGunBlokUcret === 0 &&
     s.asgariUcret === 0 &&
     (s.geceSabitUcret ?? 0) === 0;
 
@@ -88,80 +89,82 @@ export function hesaplaUcret(girdi: HesapGirdisi): UcretSonucu {
     dokum.push({ aciklama: `Ücretsiz ${s.ucretsizDakika} dk düşüldü`, tutar: 0 });
   }
 
-  // --- ADIM 3: TAM GUNLERI AYIR ---
-  const tamGun = Math.floor(ucretliDakika / 1440);
-  const artanDakika = ucretliDakika % 1440;
-
-  /**
-   * Bir tam gunun fiyati.
-   *
-   * YAPISAL KARAR (fiyat varsayimi DEGIL): patron gunluk ucreti girmemisse
-   * tam gunler, bir gun boyunca islemis saatlik ucretten hesaplanir. Boylece
-   * yalnizca saatlik ucret girilmis bir tarifede 26 saatlik park yine dogru
-   * ucretlendirilir. Gunluk ust limit varsa o da sinir olarak uygulanir.
-   */
-  let gunlukBirimUcret: number;
-  if (s.gunlukUcret > 0) {
-    gunlukBirimUcret = s.gunlukUcret;
-  } else if (s.gunlukUstLimit > 0) {
-    gunlukBirimUcret = s.gunlukUstLimit;
-    if (tamGun > 0) uygulananKurallar.push("gunluk_ucret_yerine_ust_limit");
-  } else {
-    gunlukBirimUcret = birGunlukSaatlikUcret(s);
-    if (tamGun > 0) uygulananKurallar.push("gunluk_ucret_yerine_saatlik");
-  }
-
+  // --- ADIM 3-4: GUNLER VE ARTAN SURE ---
+  //
+  // IKI MODEL VAR. Hangisinin uygulandigini snapshot soyler; ikisi de
+  // patronun panelden girdigi degerlerden cikar, kodda sabit fiyat yoktur.
+  //
+  // A) EK GUN BLOGU MODELI (ekGunBlokUcret > 0) - isletmenin 04.10.2026
+  //    kararindaki model: ilk 24 saat saatlik kademeden hesaplanir ve gunluk
+  //    ust limitle sinirlanir; 24 saatten sonra BASLAYAN her 24 saatlik blok
+  //    icin sabit ucret eklenir. 24 sa 1 dk, bir ek blok baslatmis sayilir.
+  //
+  // B) ORANTILI TAM GUN MODELI (ekGunBlokUcret = 0) - Asama 2 davranisi:
+  //    tam gunler gunluk ucretten, artan sure saatlik kademeden hesaplanir.
   let tutar = 0;
-  if (tamGun > 0) {
-    const gunTutari = tamGun * gunlukBirimUcret;
-    tutar += gunTutari;
-    dokum.push({
-      aciklama: `${tamGun} tam gün × ${kurusMetin(gunlukBirimUcret)}`,
-      tutar: gunTutari,
-    });
+
+  if (s.ekGunBlokUcret > 0) {
+    // --- MODEL A ---
+    const ilkGunDakika = Math.min(ucretliDakika, 1440);
+    const ilkGunTutari = ustLimitUygula(s, kademeliTutar(s, ilkGunDakika, dokum), dokum, uygulananKurallar);
+    tutar += ilkGunTutari;
+
+    const asanDakika = Math.max(0, ucretliDakika - 1440);
+    if (asanDakika > 0) {
+      // BASLAYAN blok tam sayilir: 24 sa 1 dk -> 1 blok, 48 sa 1 dk -> 2 blok.
+      const blok = Math.ceil(asanDakika / 1440);
+      const blokTutari = blok * s.ekGunBlokUcret;
+      tutar += blokTutari;
+      dokum.push({
+        aciklama:
+          blok === 1
+            ? `24 saat sonrası ek gün × ${kurusMetin(s.ekGunBlokUcret)}`
+            : `24 saat sonrası ${blok} ek gün × ${kurusMetin(s.ekGunBlokUcret)}`,
+        tutar: blokTutari,
+      });
+      uygulananKurallar.push("ek_gun_blogu");
+    }
+  } else {
+    // --- MODEL B ---
+    const tamGun = Math.floor(ucretliDakika / 1440);
+    const artanDakika = ucretliDakika % 1440;
+
+    /**
+     * Bir tam gunun fiyati.
+     *
+     * YAPISAL KARAR (fiyat varsayimi DEGIL): patron gunluk ucreti girmemisse
+     * tam gunler, bir gun boyunca islemis saatlik ucretten hesaplanir. Boylece
+     * yalnizca saatlik ucret girilmis bir tarifede 26 saatlik park yine dogru
+     * ucretlendirilir. Gunluk ust limit varsa o da sinir olarak uygulanir.
+     */
+    let gunlukBirimUcret: number;
+    if (s.gunlukUcret > 0) {
+      gunlukBirimUcret = s.gunlukUcret;
+    } else if (s.gunlukUstLimit > 0) {
+      gunlukBirimUcret = s.gunlukUstLimit;
+      if (tamGun > 0) uygulananKurallar.push("gunluk_ucret_yerine_ust_limit");
+    } else {
+      gunlukBirimUcret = birGunlukSaatlikUcret(s);
+      if (tamGun > 0) uygulananKurallar.push("gunluk_ucret_yerine_saatlik");
+    }
+
+    if (tamGun > 0) {
+      const gunTutari = tamGun * gunlukBirimUcret;
+      tutar += gunTutari;
+      dokum.push({
+        aciklama: `${tamGun} tam gün × ${kurusMetin(gunlukBirimUcret)}`,
+        tutar: gunTutari,
+      });
+    }
+
+    const artanTutar = ustLimitUygula(
+      s,
+      kademeliTutar(s, artanDakika, dokum),
+      dokum,
+      uygulananKurallar,
+    );
+    tutar += artanTutar;
   }
-
-  // --- ADIM 4: ARTAN SUREYI HESAPLA ---
-  let artanTutar = 0;
-  let kalan = artanDakika;
-
-  // 4a) Ilk blok
-  if (s.ilkBlokDakika > 0 && s.ilkBlokUcret > 0 && kalan > 0) {
-    artanTutar += s.ilkBlokUcret;
-    dokum.push({
-      aciklama: `İlk ${s.ilkBlokDakika} dk`,
-      tutar: s.ilkBlokUcret,
-    });
-    kalan = Math.max(0, kalan - s.ilkBlokDakika);
-  }
-
-  // 4b) Saatlik
-  if (kalan > 0 && s.saatlikUcret > 0) {
-    const birim = s.saatYuvarlamaDakika;
-    const adet = Math.ceil(kalan / birim);
-    const saatTutari = adet * s.saatlikUcret;
-    artanTutar += saatTutari;
-    dokum.push({
-      aciklama:
-        birim === 60
-          ? `${adet} saat × ${kurusMetin(s.saatlikUcret)}`
-          : `${adet} × ${birim} dk × ${kurusMetin(s.saatlikUcret)}`,
-      tutar: saatTutari,
-    });
-  }
-
-  // 4c) Gunluk ust limit - artan sureye uygulanir
-  const etkinUstLimit = s.gunlukUstLimit > 0 ? s.gunlukUstLimit : s.gunlukUcret > 0 ? s.gunlukUcret : 0;
-  if (etkinUstLimit > 0 && artanTutar > etkinUstLimit) {
-    dokum.push({
-      aciklama: `Günlük üst limit uygulandı (${kurusMetin(etkinUstLimit)})`,
-      tutar: etkinUstLimit - artanTutar,
-    });
-    artanTutar = etkinUstLimit;
-    uygulananKurallar.push("gunluk_ust_limit");
-  }
-
-  tutar += artanTutar;
 
   // --- ADIM 5: GECE TARIFESI ---
   // Giris ve cikis tamamen gece araliginda ise, gece sabit ucreti AVANTAJLIYSA
@@ -220,6 +223,69 @@ export function hesaplaUcret(girdi: HesapGirdisi): UcretSonucu {
     tarifeTanimsiz: false,
     uygulananKurallar,
   };
+}
+
+/**
+ * Saatlik kademenin bir sure icin tutari: ilk blok + baslayan saatler.
+ * Dokum satirlarini da yazar, boylece personel hesabi musteriye aciklayabilir.
+ *
+ * 0 dakika icin 0 doner ve dokuma satir yazmaz.
+ */
+function kademeliTutar(s: TarifeSnapshot, dakika: number, dokum: DokumSatiri[]): number {
+  if (dakika <= 0) return 0;
+
+  let tutar = 0;
+  let kalan = dakika;
+
+  // Ilk blok
+  if (s.ilkBlokDakika > 0 && s.ilkBlokUcret > 0) {
+    tutar += s.ilkBlokUcret;
+    dokum.push({ aciklama: `İlk ${s.ilkBlokDakika} dk`, tutar: s.ilkBlokUcret });
+    kalan = Math.max(0, kalan - s.ilkBlokDakika);
+  }
+
+  // Saatlik (baslayan birim tam sayilir)
+  if (kalan > 0 && s.saatlikUcret > 0) {
+    const birim = s.saatYuvarlamaDakika;
+    const adet = Math.ceil(kalan / birim);
+    const saatTutari = adet * s.saatlikUcret;
+    tutar += saatTutari;
+    dokum.push({
+      aciklama:
+        birim === 60
+          ? `${adet} saat × ${kurusMetin(s.saatlikUcret)}`
+          : `${adet} × ${birim} dk × ${kurusMetin(s.saatlikUcret)}`,
+      tutar: saatTutari,
+    });
+  }
+
+  return tutar;
+}
+
+/**
+ * Gunluk ust limiti uygular.
+ *
+ * YAPISAL KARAR: ust limit girilmemisse gunluk ucret sinir olarak kullanilir;
+ * boylece kismi bir gun hicbir zaman tam gunden pahali olmaz.
+ */
+function ustLimitUygula(
+  s: TarifeSnapshot,
+  tutar: number,
+  dokum: DokumSatiri[],
+  uygulananKurallar: string[],
+): number {
+  const etkinUstLimit =
+    s.gunlukUstLimit > 0 ? s.gunlukUstLimit : s.gunlukUcret > 0 ? s.gunlukUcret : 0;
+
+  if (etkinUstLimit > 0 && tutar > etkinUstLimit) {
+    dokum.push({
+      aciklama: `Günlük üst limit uygulandı (${kurusMetin(etkinUstLimit)})`,
+      tutar: etkinUstLimit - tutar,
+    });
+    uygulananKurallar.push("gunluk_ust_limit");
+    return etkinUstLimit;
+  }
+  return tutar;
 }
 
 /**

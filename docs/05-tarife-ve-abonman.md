@@ -9,10 +9,109 @@
 | Ödenmemiş abonmanla giriş | Abonman **geçerli sayılır**; personele uyarı + patron paneline bildirim |
 | Abonman park sırasında biterse | O park **ücretsiz tamamlanır**; sonraki girişler normal tarife |
 | Abonman kapsamı (S11, 04.10.2026) | **7/24 geçerli, sınırsız giriş-çıkış.** Günlük giriş/çıkış sayısında limit yok |
+| Abonman süresi (04.10.2026) | **1 ay.** Şu anda tek süre seçeneği |
+| Abonmanın yıkama indirimi (04.10.2026) | **YOK.** Yıkama ücreti abonmandan etkilenmez |
+| Otoparkta araç sınıfı farkı (04.10.2026) | **YOK.** Tip farkı yalnızca yıkamada |
+| Karavan (04.10.2026) | **Normal tarifenin dışında.** Fiyatı belirlenmedi |
 
-> **Uyarı:** Bu dokümandaki tüm sayısal örnekler **yalnızca algoritmayı göstermek
-> için uydurulmuş** örneklerdir. Londra Camping Otopark'ın gerçek fiyatları
-> **varsayılmamıştır**; doküman 07'deki sorular yanıtlanınca sisteme girilecektir.
+> **Uyarı:** Bu dokümandaki sayısal örneklerin bir kısmı **yalnızca algoritmayı
+> göstermek için uydurulmuş** örneklerdir. Gerçek fiyatlar aşağıdaki
+> "0. İşletmenin gerçek fiyatları" bölümünde ayrıca işaretlenmiştir.
+
+## 0. İşletmenin gerçek fiyatları (karar: 04.10.2026)
+
+Bu bölümdeki değerler **işletme sahibinin verdiği gerçek fiyatlardır.**
+**Koda sabitlenmemiştir:** veritabanında sürümlü kayıt olarak tutulur ve patron
+panelinden değiştirilir. `npm run fiyatlar:kur` komutu bunları ilk kurulumda
+veritabanına **veri olarak** yazar (mevcut fiyatları ezmez).
+
+### 0.1 Normal otopark tarifesi
+
+| Süre | Ücret |
+|---|---:|
+| 0–1 saat | 100 ₺ |
+| 1–2 saat | 150 ₺ |
+| 2–3 saat | 200 ₺ |
+| 3–4 saat | 250 ₺ |
+| 4–5 saat | 300 ₺ |
+| 5–6 saat | 350 ₺ |
+| 6–7 saat | 400 ₺ |
+| 7–8 saat | 450 ₺ |
+| 8–9 saat | 500 ₺ |
+| 9–24 saat | 500 ₺ |
+| 24 saatten sonra **her ek 24 saat** | +600 ₺ |
+
+**Motor parametrelerine dönüşümü** (panelde girilen alanlar):
+
+| Alan | Değer |
+|---|---:|
+| İlk blok | 60 dk / 100 ₺ |
+| Saatlik ücret | 50 ₺ (başlayan saat tam sayılır) |
+| Günlük üst limit | 500 ₺ |
+| 24 sa sonrası her ek gün | 600 ₺ |
+
+- **Gece tarifesi YOK.** (S4 kapandı.)
+- **Hafta sonu farkı YOK.**
+- **Ücretsiz süre YOK:** 1 dakikalık park da 100 ₺.
+- **Araç sınıfına göre fiyat farkı YOK:** kural geneldir (`vehicleClassId = null`).
+
+**24 saat sınırı — dikkat edilecek nokta:** "24 saatten sonra her ek 24 saat"
+kuralı **başlayan bloğu tam sayar.** Yani:
+
+| Süre | Ücret | Neden |
+|---|---:|---|
+| tam 24 saat | 500 ₺ | ilk gün, üst limitte |
+| 24 sa 1 dk | 1.100 ₺ | 500 + bir ek blok başladı |
+| 48 saat | 1.100 ₺ | hâlâ tek ek blok |
+| 48 sa 1 dk | 1.700 ₺ | ikinci ek blok başladı |
+| 7 gün | 4.100 ₺ | 500 + 6 × 600 |
+
+Bu yorum `tests/unit/gercek-tarife.test.ts` içinde bant bant test edilmiştir.
+**Orantılı bölme yapılmaz**; patron farklı istiyorsa panelden "günlük ücret"
+alanı kullanılarak eski (orantılı) modele geçilebilir.
+
+### 0.2 Karavan — ayrı bölüm, fiyatı belirlenmedi
+
+Karavanlar **normal otopark tarifesine dahil değildir.** `KARAVAN` araç sınıfı
+`excludeFromStandardTariff = true` ile işaretlidir: tarife çözümleyici bu sınıf
+için **genel kurala düşmez.** Karavana özel kural girilmediği sürece:
+
+- araç girişi **engellenmez**,
+- çıkışta ücret **hesaplanmaz** ve işlem `tarifeTanimsiz` işaretlenir,
+- personel ekranında **"Karavan normal otopark tarifesine dahil değil ve kendi
+  fiyatı henüz tanımlanmadı"** uyarısı çıkar.
+
+Sessizce otomobil fiyatından ücretlendirme **mümkün değildir.** Karavan
+fiyatlandırması ayrı bölüm olarak tasarlanacak.
+
+### 0.3 Oto yıkama — araç tipine göre
+
+**Araç tipine göre fiyatlandırma YALNIZCA oto yıkamada vardır.**
+Başlangıç fiyatları (İç Dış Yıkama):
+
+| Araç tipi | Ücret |
+|---|---:|
+| Otomobil | 600 ₺ |
+| SUV / Arazi | 700 ₺ |
+| Motosiklet | 400 ₺ |
+
+- Ek hizmetler (**motor yıkama** gibi) ayrı hizmet olarak tanımlanır; fiyatı
+  panelden girilir. **Motor yıkama ücreti henüz belirlenmedi** ve hizmet
+  fiyatsız oluşturulur.
+- Yeni araç tipi (Ticari, Minibüs, Karavan…) panelden eklenebilir; fiyatı
+  ızgaradan girilir.
+- **Abonmanın yıkamada indirimi YOKTUR** (karar 04.10.2026).
+
+Ayrıntı: `docs/09-oto-yikama.md`.
+
+### 0.4 Abonman süresi
+
+**Standart abonman 1 AYDIR** ve şu anda **yalnızca 1 aylık abonman** vardır.
+Arayüzde tek süre seçeneği sunulur; bitiş tarihi başlangıçtan +1 ay ön dolu
+gelir. Veri modeli herhangi bir tarih aralığını destekler, ileride farklı
+süreler `SURE_SECENEKLERI` listesine eklenerek açılabilir.
+
+**Abonman ücreti hâlâ müşteriye özeldir** ve ön dolu gelmez.
 
 ## 5.1 Tarife çözümleme (hangi kural uygulanacak?)
 

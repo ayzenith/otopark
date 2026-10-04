@@ -9,6 +9,17 @@
  *
  * Snapshot GIRIS ANINDA yazilir (karar: 02.10.2026). Yonetici fiyati sonradan
  * degistirse bile o arac giris anindaki tarifeyle ucretlendirilir.
+ *
+ * STANDART TARIFE DISI SINIFLAR (karar: 04.10.2026)
+ * -------------------------------------------------
+ * Karavanlar normal otopark tarifesine DAHIL DEGILDIR; ayri bolum ve ayri
+ * fiyatlandirma olarak tasarlanacak, fiyati henuz belirlenmedi. Bu yuzden
+ * `VehicleClass.excludeFromStandardTariff = true` olan siniflarda cozumleyici
+ * GENEL kurala (vehicleClassId = null) DUSMEZ. Yalnizca o sinifa ozel yazilmis
+ * kural gecerlidir; yoksa null doner ve islem "tarife tanimsiz" isaretlenir.
+ *
+ * Neden boyle: aksi halde karavan sessizce otomobil fiyatindan ucretlendirilir
+ * ve kimse farketmez. Burada yanlis fiyat yerine ACIK UYARI uretilir.
  */
 
 import type { Prisma, PrismaClient } from "@prisma/client";
@@ -36,6 +47,13 @@ export async function cozumleTarife(
   anında: Date,
   db: DbClient = prisma,
 ): Promise<CozumlemeSonucu | null> {
+  // Bu sinif standart tarifenin disinda mi? (karavan gibi)
+  const sinif = await db.vehicleClass.findUnique({
+    where: { id: aracSinifiId },
+    select: { excludeFromStandardTariff: true },
+  });
+  const genelKuralaDusebilir = !(sinif?.excludeFromStandardTariff ?? false);
+
   const surumler = await db.tariffVersion.findMany({
     where: {
       isActive: true,
@@ -69,10 +87,11 @@ export async function cozumleTarife(
   });
 
   for (const surum of sirali) {
-    // Once aracin sinifina ozel kural, yoksa genel kural.
+    // Once aracin sinifina ozel kural.
+    // Standart tarife disi siniflarda (karavan) GENEL kurala DUSULMEZ.
+    const sinifaOzel = surum.rules.find((r) => r.vehicleClassId === aracSinifiId);
     const kural =
-      surum.rules.find((r) => r.vehicleClassId === aracSinifiId) ??
-      surum.rules.find((r) => r.vehicleClassId === null);
+      sinifaOzel ?? (genelKuralaDusebilir ? surum.rules.find((r) => r.vehicleClassId === null) : undefined);
     if (!kural) continue;
 
     const snapshot: TarifeSnapshot = {
@@ -95,6 +114,7 @@ export async function cozumleTarife(
       saatYuvarlamaDakika: Math.max(1, kural.hourlyRoundingMinutes),
 
       gunlukUcret: toKurus(kural.dailyPrice),
+      ekGunBlokUcret: toKurus(kural.extraDayBlockPrice),
       gunlukUstLimit: toKurus(kural.dailyCapPrice),
 
       geceSabitUcret: kural.nightFlatPrice === null ? null : toKurus(kural.nightFlatPrice),

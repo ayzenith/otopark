@@ -6,6 +6,7 @@ import { businessDayRange } from "@/lib/datetime";
 import { kapasiteDurumu } from "@/server/parking/entry";
 import { toKurus } from "@/lib/money";
 import { abonmanSayaclari } from "@/server/subscription/queries";
+import { yikamaOzeti } from "@/server/wash/queries";
 
 export const metadata = { title: "Yönetim" };
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function YonetimPaneli() {
   const { start, end } = businessDayRange();
 
-  const [kapasite, bugunGiris, bugunCikis, tahsilat, iptaller, tarifeVar, abonman] =
+  const [kapasite, bugunGiris, bugunCikis, tahsilat, iptaller, tarifeVar, abonman, yikama] =
     await Promise.all([
     kapasiteDurumu(),
     prisma.parkingSession.count({ where: { entryAt: { gte: start, lt: end } } }),
@@ -37,6 +38,7 @@ export default async function YonetimPaneli() {
       },
     }),
     abonmanSayaclari(),
+    yikamaOzeti(),
   ]);
 
   const nakit = toKurus(tahsilat.find((t) => t.method === "CASH")?._sum.amount ?? 0);
@@ -187,8 +189,55 @@ export default async function YonetimPaneli() {
         </CardBody>
       </Card>
 
-      <Alert tur="bilgi" baslik="Bu panel Aşama 3 kapsamındadır">
-        Oto yıkama, gelir-gider ve kasa bölümleri Aşama 4-5&apos;te eklenecek.
+      <Card>
+        <CardBody className="pt-4">
+          <Link
+            href="/yonetim/yikama"
+            className="flex min-h-12 items-center justify-between gap-3"
+          >
+            <span className="min-w-0">
+              <span className="block font-bold text-lacivert-700">Oto yıkama</span>
+              <span className="block text-sm text-slate-500">
+                Kuyruk, hizmet bazlı ciro, personel işlem sayısı, fiyatlar
+              </span>
+            </span>
+            <span className="rakam shrink-0 rounded-lg bg-slate-100 px-2 py-1 text-sm font-bold text-slate-600">
+              {yikama.sirada + yikama.yikamada}
+            </span>
+          </Link>
+        </CardBody>
+      </Card>
+
+      {yikama.tahsilEdilmeyen > 0 || yikama.fiyatsizIsSayisi > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Yıkama uyarıları</CardTitle>
+          </CardHeader>
+          <CardBody>
+            <ul className="space-y-2 text-sm">
+              {yikama.tahsilEdilmeyen > 0 ? (
+                <li className="text-uyari">
+                  ⚠{" "}
+                  <Link href="/yonetim/yikama" className="underline">
+                    {yikama.tahsilEdilmeyen} tamamlanmış yıkamanın tahsilatı yapılmadı.
+                  </Link>
+                </li>
+              ) : null}
+              {yikama.fiyatsizIsSayisi > 0 ? (
+                <li className="text-uyari">
+                  ⚠{" "}
+                  <Link href="/yonetim/ayarlar/yikama" className="underline">
+                    {yikama.fiyatsizIsSayisi} işte fiyatı tanımsız hizmet 0 ₺ kaydedildi.
+                  </Link>
+                </li>
+              ) : null}
+            </ul>
+          </CardBody>
+        </Card>
+      ) : null}
+
+      <Alert tur="bilgi" baslik="Bu panel Aşama 4 kapsamındadır">
+        Gelir-gider, kasa ve personel bölümleri Aşama 5-6&apos;da eklenecek.
       </Alert>
     </div>
   );

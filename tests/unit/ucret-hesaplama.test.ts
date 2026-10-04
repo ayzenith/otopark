@@ -31,6 +31,7 @@ function bosSnapshot(): TarifeSnapshot {
     saatlikUcret: 0,
     saatYuvarlamaDakika: 60,
     gunlukUcret: 0,
+    ekGunBlokUcret: 0,
     gunlukUstLimit: 0,
     geceSabitUcret: null,
     geceBaslangicDakika: null,
@@ -545,7 +546,20 @@ describe("snapshot şeması", () => {
   });
 
   it("bilinmeyen sürüm reddedilir", () => {
-    expect(TarifeSnapshotSemasi.safeParse({ ...bosSnapshot(), surum: 2 }).success).toBe(false);
+    expect(TarifeSnapshotSemasi.safeParse({ ...bosSnapshot(), surum: 3 }).success).toBe(false);
+    expect(TarifeSnapshotSemasi.safeParse({ ...bosSnapshot(), surum: 0 }).success).toBe(false);
+  });
+
+  it("sürüm 1 snapshot okunmaya devam eder; ek gün bloğu 0 varsayılır", () => {
+    // Asama 2-3'te olusan park kayitlari surum 1 snapshot tasir ve
+    // ekGunBlokUcret alani ICERMEZ. Bu kayitlar giriste nasil hesaplandiysa
+    // aynen oyle hesaplanmaya devam etmek ZORUNDA (gecmis degismez).
+    const { ekGunBlokUcret, ...surum1 } = { ...bosSnapshot(), surum: 1 as const };
+    expect(ekGunBlokUcret).toBe(0);
+
+    const okunan = TarifeSnapshotSemasi.parse(surum1);
+    expect(okunan.surum).toBe(1);
+    expect(okunan.ekGunBlokUcret).toBe(0);
   });
 
   it("saat yuvarlaması 0 olamaz (sıfıra bölme koruması)", () => {

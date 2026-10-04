@@ -40,6 +40,11 @@ export const KuralGirdiSemasi = z.object({
 
   gunlukUcret: KurusGirdi.default(0),
   gunlukUstLimit: KurusGirdi.default(0),
+  /**
+   * 24 saatten sonra BASLAYAN her 24 saatlik blok icin sabit ucret.
+   * 0 = kapali (tam gunler orantili hesaplanir).
+   */
+  ekGunBlokUcret: KurusGirdi.default(0),
 
   geceSabitUcret: KurusGirdi.nullable().default(null),
   geceBaslangicDakika: z.coerce.number().int().min(0).max(1439).nullable().default(null),
@@ -79,6 +84,21 @@ function dogrulaKural(k: KuralGirdi): string[] {
   if (k.gunlukUstLimit > 0 && k.gunlukUcret > 0 && k.gunlukUstLimit < k.gunlukUcret) {
     hatalar.push(
       "Günlük üst limit, günlük ücretten küçük olamaz. (Kısmi gün tam günden pahalı olmamalı.)",
+    );
+  }
+  // Ek gun blogu, ilk 24 saatin fiyatindan bagimsiz calisir ama ilk gunun
+  // nasil hesaplandigini bilmek sart: saatlik kademe ya da gunluk ucret
+  // girilmemisse 24 saatlik park 0 TL olur ve ek blok yanlis temele oturur.
+  if (
+    k.ekGunBlokUcret > 0 &&
+    k.ilkBlokUcret === 0 &&
+    k.saatlikUcret === 0 &&
+    k.gunlukUcret === 0 &&
+    k.gunlukUstLimit === 0
+  ) {
+    hatalar.push(
+      "24 saat sonrası ek blok ücreti girdiniz ama ilk 24 saatin fiyatı tanımsız. " +
+        "Saatlik ücret veya günlük üst limit girin.",
     );
   }
   return hatalar;
@@ -234,6 +254,7 @@ export async function surumOlustur(actor: SessionUser, girdi: SurumOlusturGirdis
             hourlyRoundingMinutes: k.saatYuvarlamaDakika,
             dailyPrice: kurusToDecimalString(k.gunlukUcret),
             dailyCapPrice: kurusToDecimalString(k.gunlukUstLimit),
+            extraDayBlockPrice: kurusToDecimalString(k.ekGunBlokUcret),
             nightFlatPrice:
               k.geceSabitUcret === null ? null : kurusToDecimalString(k.geceSabitUcret),
             nightStartMinute: k.geceBaslangicDakika,
@@ -280,6 +301,7 @@ export async function surumOlustur(actor: SessionUser, girdi: SurumOlusturGirdis
             saatlikUcretKurus: k.saatlikUcret,
             gunlukUcretKurus: k.gunlukUcret,
             gunlukUstLimitKurus: k.gunlukUstLimit,
+            ekGunBlokUcretKurus: k.ekGunBlokUcret,
             asgariUcretKurus: k.asgariUcret,
           })),
         },
@@ -316,7 +338,12 @@ export async function planDurumDegistir(actor: SessionUser, planId: string, akti
  * Tarife onizlemesi: patron fiyat degistirmeden once etkisini gorur.
  * "Örnek: 3 saat park 115 ₺ yerine 130 ₺ olacak" (docs/05 5.3)
  */
-export function tarifeOnizleme(kural: KuralGirdi, ornekDakikalar = [30, 120, 192, 660, 1500]) {
+export function tarifeOnizleme(
+  kural: KuralGirdi,
+  // Patronun en cok karsilastigi sureler: 30 dk, 2 sa, 5 sa, 9 sa (ust limit),
+  // 24 sa ve 25 sa (ilk ek blok devreye girer).
+  ornekDakikalar = [30, 120, 300, 540, 1440, 1500],
+) {
   return ornekDakikalar.map((dakika) => ({
     dakika,
     kurus: onizlemeHesapla(kural, dakika),
@@ -331,7 +358,7 @@ function onizlemeHesapla(k: KuralGirdi, dakika: number): number {
     girisAt: giris,
     cikisAt: new Date(giris.getTime() + dakika * 60000),
     snapshot: {
-      surum: 1,
+      surum: 2,
       planId: "onizleme",
       planAdi: "Önizleme",
       surumId: "onizleme",
@@ -346,6 +373,7 @@ function onizlemeHesapla(k: KuralGirdi, dakika: number): number {
       saatlikUcret: k.saatlikUcret,
       saatYuvarlamaDakika: k.saatYuvarlamaDakika,
       gunlukUcret: k.gunlukUcret,
+      ekGunBlokUcret: k.ekGunBlokUcret,
       gunlukUstLimit: k.gunlukUstLimit,
       geceSabitUcret: k.geceSabitUcret,
       geceBaslangicDakika: k.geceBaslangicDakika,
@@ -428,6 +456,7 @@ export async function gecerliTarifeler(anında = new Date()) {
       saatlikUcret: toKurus(r.hourlyPrice),
       gunlukUcret: toKurus(r.dailyPrice),
       gunlukUstLimit: toKurus(r.dailyCapPrice),
+      ekGunBlokUcret: toKurus(r.extraDayBlockPrice),
       asgariUcret: toKurus(r.minCharge),
     })),
   }));

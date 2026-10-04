@@ -27,6 +27,10 @@ export async function temizle(): Promise<void> {
     "TariffChangeLog", "TariffRule", "TariffVersion", "TariffPlan",
     "WashServicePriceVersion", "WashServiceCatalog", "InventoryItem",
     "SubscriptionType", "User",
+    // Arac siniflari da temizlenir: testler kendi siniflarini olusturur.
+    // Aksi halde bir testte eklenen sinif (ornek: TICARI) sonraki kosuda
+    // "kod zaten kullaniliyor" hatasi verir ve testler birbirini etkiler.
+    "VehicleClass",
   ];
   const liste = tablolar.map((t) => `"${t}"`).join(", ");
   await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${liste} RESTART IDENTITY CASCADE;`);
@@ -115,6 +119,8 @@ export async function tarifeOlustur(opts: {
   saatlikUcret?: number;
   gunlukUcret?: number;
   gunlukUstLimit?: number;
+  /** 24 saat sonrasi her baslayan 24 saatlik blok icin sabit ucret. */
+  ekGunBlokUcret?: number;
   asgariUcret?: number;
   aracSinifiId?: string | null;
   gecerlilikBaslangici?: Date;
@@ -148,6 +154,7 @@ export async function tarifeOlustur(opts: {
             hourlyRoundingMinutes: 60,
             dailyPrice: kurusToDecimalString(opts.gunlukUcret ?? 0),
             dailyCapPrice: kurusToDecimalString(opts.gunlukUstLimit ?? 0),
+            extraDayBlockPrice: kurusToDecimalString(opts.ekGunBlokUcret ?? 0),
             minCharge: kurusToDecimalString(opts.asgariUcret ?? 0),
             isActive: true,
           },
@@ -213,4 +220,72 @@ export async function abonmanOlustur(opts: {
   });
 
   return { musteri, arac, abonman };
+}
+
+// ---------------------------------------------------------------------------
+// ASAMA 4 YARDIMCILARI (OTO YIKAMA)
+// ---------------------------------------------------------------------------
+
+/** Arac sinifi olusturur veya getirir. */
+export async function sinifGetir(code: string, ad = code, tarifeDisi = false) {
+  return prisma.vehicleClass.upsert({
+    where: { code },
+    update: {},
+    create: { code, name: ad, sortOrder: 10, excludeFromStandardTariff: tarifeDisi },
+  });
+}
+
+/**
+ * Test yikama hizmeti ve fiyatlarini olusturur.
+ *
+ * DIKKAT: Buradaki fiyatlar YALNIZCA TEST icindir; isletmenin gercek yikama
+ * fiyatlari DEGILDIR.
+ */
+export async function yikamaHizmetiKur(opts: {
+  kod: string;
+  ad?: string;
+  tahminiDakika?: number;
+  siraNo?: number;
+  /** Arac sinifi id -> kurus. Verilmeyen sinif = fiyat tanimsiz. */
+  sinifFiyatlari?: Record<string, number>;
+  /** Tum siniflar icin genel fiyat (kurus). */
+  genelFiyat?: number;
+  gecerlilikBaslangici?: Date;
+}) {
+  const hizmet = await prisma.washServiceCatalog.upsert({
+    where: { code: opts.kod },
+    update: {},
+    create: {
+      code: opts.kod,
+      name: opts.ad ?? opts.kod,
+      estimatedMinutes: opts.tahminiDakika ?? null,
+      sortOrder: opts.siraNo ?? 0,
+    },
+  });
+
+  const baslangic = opts.gecerlilikBaslangici ?? new Date(Date.now() - 3600_000);
+
+  if (opts.genelFiyat !== undefined) {
+    await prisma.washServicePriceVersion.create({
+      data: {
+        washServiceId: hizmet.id,
+        vehicleClassId: null,
+        price: kurusToDecimalString(opts.genelFiyat),
+        effectiveFrom: baslangic,
+      },
+    });
+  }
+
+  for (const [sinifId, ucret] of Object.entries(opts.sinifFiyatlari ?? {})) {
+    await prisma.washServicePriceVersion.create({
+      data: {
+        washServiceId: hizmet.id,
+        vehicleClassId: sinifId,
+        price: kurusToDecimalString(ucret),
+        effectiveFrom: baslangic,
+      },
+    });
+  }
+
+  return hizmet;
 }

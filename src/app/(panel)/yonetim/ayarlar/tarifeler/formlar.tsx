@@ -71,6 +71,7 @@ export interface MevcutKural {
   saatYuvarlamaDakika: number;
   gunlukUcretKurus: number;
   gunlukUstLimitKurus: number;
+  ekGunBlokUcretKurus: number;
   geceSabitUcretKurus: number | null;
   geceBaslangicDakika: number | null;
   geceBitisDakika: number | null;
@@ -215,18 +216,30 @@ export function SurumOlusturFormu({
 
             <div className="grid grid-cols-2 gap-3">
               <Input
-                name={`gunlukUcret_${i}`}
-                etiket="Günlük (24 sa) ücret (₺)"
-                inputMode="decimal"
-                defaultValue={liraMetni(mevcut?.gunlukUcretKurus ?? 0)}
-              />
-              <Input
                 name={`gunlukUstLimit_${i}`}
                 etiket="Günlük üst limit (₺)"
                 inputMode="decimal"
                 defaultValue={liraMetni(mevcut?.gunlukUstLimitKurus ?? 0)}
+                yardim="İlk 24 saatte bu tutarı geçmez."
+                data-test={`gunluk-ust-limit-${i}`}
+              />
+              <Input
+                name={`ekGunBlokUcret_${i}`}
+                etiket="24 sa sonrası her ek gün (₺)"
+                inputMode="decimal"
+                defaultValue={liraMetni(mevcut?.ekGunBlokUcretKurus ?? 0)}
+                yardim="24 saati geçen her başlayan 24 saat için sabit tutar."
+                data-test={`ek-gun-blok-${i}`}
               />
             </div>
+
+            <Input
+              name={`gunlukUcret_${i}`}
+              etiket="Günlük (24 sa) ücret (₺) — eski model"
+              inputMode="decimal"
+              defaultValue={liraMetni(mevcut?.gunlukUcretKurus ?? 0)}
+              yardim="Yukarıdaki ek gün ücretini kullanıyorsanız bunu 0 bırakın. Doldurursanız tam günler orantılı hesaplanır."
+            />
 
             <Input
               name={`asgariUcret_${i}`}

@@ -3,7 +3,7 @@
 Otopark giriş-çıkış, abonman, oto yıkama, kasa, gelir-gider ve kurumsal web
 sitesini tek platformda birleştiren, **mobil öncelikli** işletme yönetim yazılımı.
 
-**Durum: Aşama 3 tamamlandı** (04.10.2026)
+**Durum: Aşama 4 tamamlandı** (04.10.2026)
 
 | Aşama | Kapsam | Durum |
 |---|---|---|
@@ -11,15 +11,25 @@ sitesini tek platformda birleştiren, **mobil öncelikli** işletme yönetim yaz
 | 1 | Altyapı, veritabanı, kimlik doğrulama, yetki, denetim kaydı, mobil kabuk | ✅ |
 | 2 | Tarife sistemi, ücret hesaplama motoru, araç giriş-çıkış, tahsilat | ✅ |
 | 3 | Müşteriler, abonmanlar, dönem/yenileme, abonman tahsilatı, abonmanlı araçlar | ✅ |
-| 4–8 | Oto yıkama, kasa/finans, personel, web sitesi, devreye alma | ⏳ |
+| 4 | Oto yıkama: hizmet kataloğu, araç tipine göre fiyat, kuyruk, tahsilat, raporlar | ✅ |
+| 5–8 | Kasa/finans, personel, web sitesi, devreye alma | ⏳ |
 
-**523 test geçiyor** (165 birim · 220 entegrasyon · 138 uçtan uca ×3 ekran boyutu),
+**670 test geçiyor** (191 birim · 287 entegrasyon · 192 uçtan uca ×3 ekran boyutu),
 başarısız test yok. Ayrıntı: `docs/06-gelistirme-plani.md`.
 
-**Gerçek işletme fiyatları henüz girilmedi** ve **varsayılmadı**: otopark
-tarifesi, kapasite ve abonman ücretleri patron panelinden girilir. Fiyat
-girilmeden sistem çalışır; ücret hesaplanamayan işlemlerde personele büyük
-uyarı çıkar ve işleme not düşülür. Açık sorular: `docs/07-acik-sorular.md`.
+**Fiyatlar koda sabitlenmemiştir.** Otopark tarifesi ve yıkama fiyatları
+veritabanında sürümlü kayıt olarak tutulur ve patron panelinden değiştirilir.
+İşletmenin verdiği başlangıç fiyatlarını veritabanına yazmak için:
+
+```bash
+npm run fiyatlar:kur      # mevcut fiyatları EZMEZ, yalnızca eksikleri yazar
+```
+
+**Bilinçli olarak belirlenmeyen fiyatlar** (varsayılmadı): karavan otopark
+ücreti (ayrı bölüm olarak tasarlanacak), motor yıkama ücreti, diğer yıkama
+hizmetleri, otopark kapasitesi. Bu kalemler girilmeden sistem çalışır; ücret
+hesaplanamayan işlemlerde personele büyük uyarı çıkar ve işleme not düşülür.
+Açık sorular: `docs/07-acik-sorular.md`.
 
 ## Hızlı başlangıç
 
@@ -95,10 +105,11 @@ kontrolü, doğrulama, transaction ve denetim kaydından sorumludur.
 | [docs/02-veritabani-semasi.md](docs/02-veritabani-semasi.md) | Tablolar, ilişkiler, veri bütünlüğü kuralları |
 | [docs/03-roller-yetki-matrisi.md](docs/03-roller-yetki-matrisi.md) | Roller, izin listesi, yetki matrisi |
 | [docs/04-ekranlar-ve-akislar.md](docs/04-ekranlar-ve-akislar.md) | Ekran taslakları, akışlar, mobil ölçüler |
-| [docs/05-tarife-ve-abonman.md](docs/05-tarife-ve-abonman.md) | Ücret hesaplama algoritması, abonman kuralları |
+| [docs/05-tarife-ve-abonman.md](docs/05-tarife-ve-abonman.md) | **İşletmenin gerçek tarifesi**, ücret hesaplama algoritması, abonman kuralları |
 | [docs/06-gelistirme-plani.md](docs/06-gelistirme-plani.md) | 8 aşama, tamamlanma kriterleri, test stratejisi |
 | [docs/07-acik-sorular.md](docs/07-acik-sorular.md) | **Yanıt bekleyen işletme kuralları** |
 | [docs/08-maliyet-ve-teslim.md](docs/08-maliyet-ve-teslim.md) | Maliyetler, teslim, bir yıllık destek |
+| [docs/09-oto-yikama.md](docs/09-oto-yikama.md) | Oto yıkama: fiyat modeli, iş emri akışı, otoparktan ayrılığı |
 | [ops/RUNBOOK.md](ops/RUNBOOK.md) | Kurulum, güncelleme, yedekleme, geri alma |
 
 ## Güvenlik

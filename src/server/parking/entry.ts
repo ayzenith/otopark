@@ -170,8 +170,14 @@ export async function aracGirisi(actor: SessionUser, istek: GirisIstegi): Promis
   const tarife = abonman.ucretsizMi ? null : await cozumleTarife(arac.vehicleClassId, simdi);
   const tarifeTanimsiz = !abonman.ucretsizMi && tarife === null;
   if (tarifeTanimsiz) {
+    // Karavan gibi STANDART TARIFE DISI siniflarda sebep farklidir: genel
+    // tarife var ama bu sinif ona dahil degil. Personel "tarife girilmemis"
+    // sanip patrona yanlis bilgi vermesin.
     uyarilar.push(
-      "Tarife tanımlı değil. Çıkışta ücret hesaplanamayacak; patron panelinden tarife girilmeli.",
+      arac.vehicleClass.excludeFromStandardTariff
+        ? `${arac.vehicleClass.name} normal otopark tarifesine dahil değil ve ` +
+            "kendi fiyatı henüz tanımlanmadı. Çıkışta ücret hesaplanamayacak."
+        : "Tarife tanımlı değil. Çıkışta ücret hesaplanamayacak; patron panelinden tarife girilmeli.",
     );
   }
 

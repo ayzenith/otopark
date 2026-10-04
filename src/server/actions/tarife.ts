@@ -108,6 +108,7 @@ export async function surumOlusturAction(formData: FormData) {
         saatYuvarlamaDakika: SayiMetni.parse(al("saatYuvarlamaDakika")) || 60,
         gunlukUcret: LiraMetni.parse(al("gunlukUcret")),
         gunlukUstLimit: LiraMetni.parse(al("gunlukUstLimit")),
+        ekGunBlokUcret: LiraMetni.parse(al("ekGunBlokUcret")),
         geceSabitUcret: al("geceSabitUcret") === "" ? null : LiraMetni.parse(al("geceSabitUcret")),
         geceBaslangicDakika: SaatMetni.parse(al("geceBaslangic")),
         geceBitisDakika: SaatMetni.parse(al("geceBitis")),

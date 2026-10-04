@@ -128,7 +128,14 @@ export async function cikisOnizleme(plakaVeyaId: string): Promise<CikisOnizleme>
   }
 
   const simdi = new Date();
-  const hesap = hesaplaCikisUcreti(kayit, simdi);
+  const hesap = hesaplaCikisUcreti(
+    {
+      ...kayit,
+      standartTarifeDisiSinif: kayit.vehicle.vehicleClass.excludeFromStandardTariff,
+      aracSinifiAdi: kayit.vehicle.vehicleClass.name,
+    },
+    simdi,
+  );
 
   return {
     parkingSessionId: kayit.id,
@@ -176,6 +183,9 @@ function hesaplaCikisUcreti(
     entryAt: Date;
     billingMode: string;
     tariffSnapshot: Prisma.JsonValue | null;
+    /** Arac sinifi standart otopark tarifesinin disinda mi (karavan)? */
+    standartTarifeDisiSinif?: boolean;
+    aracSinifiAdi?: string | null;
   },
   cikisAt: Date,
 ) {
@@ -212,7 +222,16 @@ function hesaplaCikisUcreti(
     return {
       sureDakika,
       tutar: 0,
-      dokum: [{ aciklama: "Girişte tarife tanımlı değildi", tutar: 0 }],
+      dokum: [
+        {
+          // Karavan gibi standart tarife disi siniflarda sebep farklidir.
+          aciklama: kayit.standartTarifeDisiSinif
+            ? `${kayit.aracSinifiAdi ?? "Bu araç sınıfı"} normal otopark tarifesine dahil değil; ` +
+              "fiyatı henüz tanımlanmadı"
+            : "Girişte tarife tanımlı değildi",
+          tutar: 0,
+        },
+      ],
       ucretsizMi: false,
       tarifeTanimsiz: true,
       uygulananKurallar: ["tarife_tanimsiz"],
@@ -338,12 +357,20 @@ export async function aracCikisi(actor: SessionUser, istek: CikisIstegi): Promis
 
     const kayit = await tx.parkingSession.findUniqueOrThrow({
       where: { id: istek.parkingSessionId },
+      include: { vehicle: { include: { vehicleClass: true } } },
     });
 
     const cikisAt = new Date();
 
     // --- 2. UCRETI SUNUCUDA YENIDEN HESAPLA ---
-    const hesap = hesaplaCikisUcreti(kayit, cikisAt);
+    const hesap = hesaplaCikisUcreti(
+      {
+        ...kayit,
+        standartTarifeDisiSinif: kayit.vehicle.vehicleClass.excludeFromStandardTariff,
+        aracSinifiAdi: kayit.vehicle.vehicleClass.name,
+      },
+      cikisAt,
+    );
     const hesaplanan = hesap.tutar;
 
     // Indirim ve elle tutar

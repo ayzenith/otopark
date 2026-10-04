@@ -93,6 +93,12 @@ başka müşteriye bağlanabilir; değişiklik `AuditLog`'a yazılır.
 `name`, `sortOrder`, `isActive`.
 → Sabit enum değil tablo: işletme yeni sınıf ekleyebilsin (karavan/çekici gibi).
 **Gerçek sınıf listesi Açık Soru S2'de soruluyor.**
+→ `excludeFromStandardTariff`: **standart otopark tarifesinin dışında** olan
+sınıflar (karar 04.10.2026: **karavan**). Tarife çözümleyici bu sınıflar için
+genel kurala (`vehicleClassId = null`) **düşmez**; sınıfa özel kural yoksa ücret
+hesaplanmaz ve işlem `tarifeTanimsiz` işaretlenir. Sessizce otomobil fiyatından
+ücretlendirme imkânsızdır.
+
 
 ### Tarife (sürümlü)
 
@@ -116,6 +122,12 @@ başka müşteriye bağlanabilir; değişiklik `AuditLog`'a yazılır.
 `weekendMultiplier?`,
 `minCharge`, `isActive`.
 → Hesaplama algoritması ve örnekleri doküman 05'te.
+→ `extraDayBlockPrice`: **24 saat sonrası her başlayan 24 saatlik blok** için
+sabit ücret (karar 04.10.2026: 600 ₺). 0'dan büyükse ilk 24 saat saatlik
+kademeden hesaplanıp `dailyCapPrice` ile sınırlanır, sonrası bu tutarın
+katlarıdır ve **orantılı bölünmez**. 0 ise eski (orantılı tam gün) model
+geçerlidir.
+
 
 **`TariffChangeLog`** — kim, ne zaman, neyi değiştirdi (AuditLog'a ek olarak okunabilir tarihçe)
 `id`, `tariffPlanId`, `fromVersionId?`, `toVersionId`, `changedById`, `changedAt`, `note`.

@@ -12,9 +12,13 @@
  * ama otomatik kopyalanmaz - "gecen ay 3.000'di, bu ay 3.500" durumu
  * sessizce yanlis kaydedilmesin.
  *
- * SURE DE UYDURULMAZ: bitis tarihi varsayilan olarak bos gelir. "+1 ay" gibi
- * butonlar yalnizca TAKVIM HESABI yapar; hangi sureyi secmek gerektigine
- * patron karar verir.
+ * SURE KARARA BAGLANDI (04.10.2026): standart abonman 1 AYDIR ve su anda
+ * yalnizca 1 aylik abonman vardir. Bu yuzden bitis tarihi baslangictan +1 ay
+ * olarak ON DOLU gelir; alan yine duzenlenebilir (ozel durum icin). Ileride
+ * baska sureler eklenebilir - o zaman buradaki SURE_SECENEKLERI listesine
+ * eklenmesi yeterlidir, baska bir degisiklik gerekmez.
+ *
+ * FIYAT hala uydurulmaz: ucret alani daima bos gelir.
  * ============================================================================
  */
 
@@ -42,6 +46,19 @@ function bugun(): string {
   return new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Istanbul" });
 }
 
+/**
+ * ARAYUZDE SUNULAN ABONMAN SURELERI.
+ *
+ * Karar (04.10.2026): su anda yalnizca 1 aylik abonman var. Veri modeli
+ * herhangi bir tarih araligini destekler; burasi yalnizca personelin/patronun
+ * tek dokunusla sectigi hazir surelerin listesidir. Yeni sure eklemek icin
+ * bu listeye bir satir eklemek yeterlidir.
+ */
+const SURE_SECENEKLERI: { etiket: string; ay: number }[] = [{ etiket: "1 ay", ay: 1 }];
+
+/** Standart abonman suresi (ay). */
+const STANDART_SURE_AY = 1;
+
 /** YYYY-MM-DD metnine ay/yil ekler. Yalnizca takvim hesabi yapar. */
 function tarihEkle(temel: string, ay: number): string {
   const [y, a, g] = temel.split("-").map(Number);
@@ -66,7 +83,8 @@ export function AbonmanFormu({
   const [hata, setHata] = useState<string | null>(null);
   const [zorla, setZorla] = useState(false);
   const [baslangic, setBaslangic] = useState(bugun());
-  const [bitis, setBitis] = useState("");
+  // Standart abonman 1 ay: bitis on dolu gelir, yine degistirilebilir.
+  const [bitis, setBitis] = useState(() => tarihEkle(bugun(), STANDART_SURE_AY));
   const [secili, setSecili] = useState<string[]>(musteriPlakalari.slice(0, 1));
   const [elleP, setElleP] = useState("");
   const [bekliyor, basla] = useTransition();
@@ -131,7 +149,7 @@ export function AbonmanFormu({
         defaultValue="Aylık"
         maxLength={60}
         required
-        yardim="Serbest metindir; fiyatı etkilemez."
+        yardim="Serbest metindir; fiyatı etkilemez. Standart abonman 1 aylıktır."
         data-test="plan-etiketi"
       />
 
@@ -141,7 +159,12 @@ export function AbonmanFormu({
           etiket="Başlangıç"
           type="date"
           value={baslangic}
-          onChange={(e) => setBaslangic(e.target.value)}
+          onChange={(e) => {
+            const yeni = e.target.value;
+            setBaslangic(yeni);
+            // Bitis henuz elle degistirilmediyse 1 ay sonrasina kaydir.
+            if (yeni) setBitis(tarihEkle(yeni, STANDART_SURE_AY));
+          }}
           required
           data-test="abonman-baslangic"
         />
@@ -157,19 +180,15 @@ export function AbonmanFormu({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {[
-          { etiket: "+1 ay", ay: 1 },
-          { etiket: "+3 ay", ay: 3 },
-          { etiket: "+6 ay", ay: 6 },
-          { etiket: "+1 yıl", ay: 12 },
-        ].map((s) => (
+        {SURE_SECENEKLERI.map((se) => (
           <Button
-            key={s.ay}
+            key={se.ay}
             size="normal"
             variant="sade"
-            onClick={() => setBitis(tarihEkle(baslangic, s.ay))}
+            onClick={() => setBitis(tarihEkle(baslangic, se.ay))}
+            data-test={`sure-${se.ay}-ay`}
           >
-            {s.etiket}
+            {se.etiket}
           </Button>
         ))}
       </div>
@@ -274,7 +293,8 @@ export function YenilemeFormu({
   const [hata, setHata] = useState<string | null>(null);
   const [basari, setBasari] = useState<string | null>(null);
   const [baslangic, setBaslangic] = useState(oncekiBitis);
-  const [bitis, setBitis] = useState("");
+  // Yenileme de standart 1 aylik sureyle on dolu gelir.
+  const [bitis, setBitis] = useState(() => tarihEkle(oncekiBitis, STANDART_SURE_AY));
   const [bekliyor, basla] = useTransition();
 
   return (
@@ -314,7 +334,11 @@ export function YenilemeFormu({
           etiket="Yeni başlangıç"
           type="date"
           value={baslangic}
-          onChange={(e) => setBaslangic(e.target.value)}
+          onChange={(e) => {
+            const yeni = e.target.value;
+            setBaslangic(yeni);
+            if (yeni) setBitis(tarihEkle(yeni, STANDART_SURE_AY));
+          }}
           required
           data-test="yenileme-baslangic"
         />
@@ -329,14 +353,15 @@ export function YenilemeFormu({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {[1, 3, 6, 12].map((ay) => (
+        {SURE_SECENEKLERI.map((se) => (
           <Button
-            key={ay}
+            key={se.ay}
             size="normal"
             variant="sade"
-            onClick={() => setBitis(tarihEkle(baslangic, ay))}
+            onClick={() => setBitis(tarihEkle(baslangic, se.ay))}
+            data-test={`yenileme-sure-${se.ay}-ay`}
           >
-            {ay === 12 ? "+1 yıl" : `+${ay} ay`}
+            {se.etiket}
           </Button>
         ))}
       </div>

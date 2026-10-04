@@ -17,12 +17,17 @@ export const KurusSemasi = z.number().int().min(0);
 /**
  * Snapshot'in bicim surumu. Hesaplama motoru hangi surumle ugrastigini bilir;
  * ileride alan eklenirse eski kayitlar dogru yorumlanmaya devam eder.
+ *
+ * SURUM 2 (04.10.2026): `ekGunBlokUcret` alani eklendi. Surum 1 snapshot'lar
+ * bu alani tasimaz; okunurken 0 varsayilir ve bu TAM OLARAK o kayitlarin
+ * giriste hesaplandigi davranistir (ozellik kapali). Boylece Asama 2-3'te
+ * olusan park kayitlari aynen dogru fiyatlanmaya devam eder.
  */
-export const SNAPSHOT_SURUMU = 1 as const;
+export const SNAPSHOT_SURUMU = 2 as const;
 
 export const TarifeSnapshotSemasi = z.object({
-  /** Snapshot bicim surumu. */
-  surum: z.literal(1),
+  /** Snapshot bicim surumu (1 veya 2). */
+  surum: z.union([z.literal(1), z.literal(2)]),
 
   /** Izlenebilirlik: hangi plan/surum/kural uygulandi. */
   planId: z.string(),
@@ -50,6 +55,20 @@ export const TarifeSnapshotSemasi = z.object({
   gunlukUcret: KurusSemasi,
   /** Gunluk ust limit. 0 = limit yok. */
   gunlukUstLimit: KurusSemasi,
+
+  /**
+   * 24 SAAT SONRASI EK BLOK UCRETI (karar 04.10.2026).
+   *
+   * 0'dan buyukse: ilk 24 saat saatlik kademeden hesaplanir ve gunluk ust
+   * limitle sinirlanir; 24 saatten sonra BASLAYAN her 24 saatlik blok icin bu
+   * tutar SABIT eklenir. 24 sa 1 dk park, bir ek blok baslatmis sayilir.
+   *
+   * 0 ise bu model kapalidir ve tam gunler gunlukUcret/gunlukUstLimit
+   * uzerinden ORANTILI hesaplanir (Asama 2 davranisi).
+   *
+   * Surum 1 snapshot'larda alan yoktur; 0 varsayilir.
+   */
+  ekGunBlokUcret: KurusSemasi.default(0),
 
   /** Gece tarifesi. Hepsi birlikte tanimli olmalidir, yoksa uygulanmaz. */
   geceSabitUcret: KurusSemasi.nullable(),
