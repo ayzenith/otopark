@@ -12,7 +12,8 @@
 | Abonman süresi (04.10.2026) | **1 ay.** Şu anda tek süre seçeneği |
 | Abonmanın yıkama indirimi (04.10.2026) | **YOK.** Yıkama ücreti abonmandan etkilenmez |
 | Otoparkta araç sınıfı farkı (04.10.2026) | **YOK.** Tip farkı yalnızca yıkamada |
-| Karavan (04.10.2026) | **Normal tarifenin dışında.** Fiyatı belirlenmedi |
+| Karavan (04.10.2026) | **Normal tarifenin dışında, kendi kuralı var: 700 ₺ / 24 saat**, her ek 24 saat +700 ₺ |
+| Otopark kapasitesi (S3, 04.10.2026) | **SINIR YOK.** Doluluk yüzünden araç girişi engellenmez |
 
 > **Uyarı:** Bu dokümandaki sayısal örneklerin bir kısmı **yalnızca algoritmayı
 > göstermek için uydurulmuş** örneklerdir. Gerçek fiyatlar aşağıdaki
@@ -70,19 +71,64 @@ Bu yorum `tests/unit/gercek-tarife.test.ts` içinde bant bant test edilmiştir.
 **Orantılı bölme yapılmaz**; patron farklı istiyorsa panelden "günlük ücret"
 alanı kullanılarak eski (orantılı) modele geçilebilir.
 
-### 0.2 Karavan — ayrı bölüm, fiyatı belirlenmedi
+### 0.2 Karavan — ayrı tarife (karar: 04.10.2026)
 
-Karavanlar **normal otopark tarifesine dahil değildir.** `KARAVAN` araç sınıfı
-`excludeFromStandardTariff = true` ile işaretlidir: tarife çözümleyici bu sınıf
-için **genel kurala düşmez.** Karavana özel kural girilmediği sürece:
+Karavanlar **normal otopark tarifesine dahil değildir** ve **kendi tarifesi
+vardır:**
 
-- araç girişi **engellenmez**,
-- çıkışta ücret **hesaplanmaz** ve işlem `tarifeTanimsiz` işaretlenir,
-- personel ekranında **"Karavan normal otopark tarifesine dahil değil ve kendi
-  fiyatı henüz tanımlanmadı"** uyarısı çıkar.
+| Süre | Ücret |
+|---|---:|
+| 24 saate kadar | 700 ₺ |
+| 24 saatten sonra **başlayan her 24 saat** | +700 ₺ |
 
-Sessizce otomobil fiyatından ücretlendirme **mümkün değildir.** Karavan
-fiyatlandırması ayrı bölüm olarak tasarlanacak.
+| Süre | Ücret | Neden |
+|---|---:|---|
+| 1 saat | 700 ₺ | 24 saatlik tek blok |
+| tam 24 saat | 700 ₺ | ilk blok |
+| 24 sa 1 dk | 1.400 ₺ | bir ek blok başladı |
+| 48 saat | 1.400 ₺ | hâlâ tek ek blok |
+| 48 sa 1 dk | 2.100 ₺ | ikinci ek blok başladı |
+| 7 gün | 4.900 ₺ | 700 + 6 × 700 |
+
+**Motor parametrelerine dönüşümü** (panelde girilen alanlar):
+
+| Alan | Değer |
+|---|---:|
+| İlk blok | **1440 dk / 700 ₺** |
+| Saatlik ücret | **yok (0)** |
+| Günlük üst limit | 700 ₺ |
+| 24 sa sonrası her ek gün | 700 ₺ |
+
+> **VARSAYIM DEĞİL, AÇIK YORUM:** İşletme karavan için yalnızca **24 saatlik**
+> fiyatı verdi; **saatlik kademe vermedi ve uydurulmadı.** Bu yüzden karavan
+> tarifesi 24 saatlik **tek blok** olarak girildi: 1 saatlik karavan parkı da
+> 700 ₺'dir. Patron karavan için saatlik kademe isterse panelden
+> (Yönetim → Tarifeler) girer; kod değişikliği gerekmez.
+
+**Teknik yapı:** `KARAVAN` araç sınıfı `excludeFromStandardTariff = true` ile
+işaretlidir. Tarife çözümleyici bu sınıf için **genel kurala düşmez**; yalnızca
+karavana özel yazılmış kural geçerlidir. Karavan kuralı bir gün silinirse ücret
+**hesaplanmaz**, işlem `tarifeTanimsiz` işaretlenir ve personele açık uyarı
+çıkar — **sessizce otomobil fiyatından ücretlendirme mümkün değildir**
+(testle doğrulanıyor).
+
+Doğrulama: `tests/unit/karavan-tarife.test.ts` (motor) ve
+`tests/integration/karavan-ve-kapasite.test.ts` (gerçek veritabanı, giriş→çıkış).
+
+**Karavan YIKAMA ücreti hâlâ belirlenmedi** — yıkamada karavan tipi fiyatsızdır.
+
+### 0.2.1 Otopark kapasitesi — sınır yok (karar: 04.10.2026, S3)
+
+**Kapasite sınırı uygulanmaz.** `ParkingCapacitySetting.totalCapacity = 0`
+bırakılır; bu "kapasite tanımlı değil" anlamına gelir ve:
+
+- doluluk yüzdesi **hesaplanmaz**, personel ekranında kapasite çubuğu **çizilmez**,
+- araç girişi doluluk yüzünden **hiçbir zaman engellenmez**,
+- kapasite uyarısı **üretilmez**.
+
+Kapasite mantığı koddan kaldırılmadı: patron ileride bir sayı girerse
+(Yönetim → Ayarlar) doluluk göstergesi ve "otopark dolu" onayı kendiliğinden
+devreye girer. Şu an **aktif değildir** (testle doğrulanıyor).
 
 ### 0.3 Oto yıkama — araç tipine göre
 
@@ -100,7 +146,13 @@ Başlangıç fiyatları (İç Dış Yıkama):
   fiyatsız oluşturulur.
 - Yeni araç tipi (Ticari, Minibüs, Karavan…) panelden eklenebilir; fiyatı
   ızgaradan girilir.
-- **Abonmanın yıkamada indirimi YOKTUR** (karar 04.10.2026).
+- **Abonmanın yıkamada indirimi YOKTUR** (karar 04.10.2026). Yıkama
+  fiyatlandırması abonman tablolarına hiç bakmaz.
+- **Karavan yıkama ücreti belirlenmedi**; karavan tipi yıkamada fiyatsızdır.
+- **Motor yıkama, iç temizlik, pasta/cila vb. ek hizmetlerin ücretleri
+  belirlenmedi** (karar 04.10.2026: "şu an uydurma, panelden sonradan
+  girilebilir bırak"). Fiyatsız hizmet **0 ₺'ye çevrilmez**; personel
+  ekranında "fiyat girilmemiş" uyarısı çıkar.
 
 Ayrıntı: `docs/09-oto-yikama.md`.
 

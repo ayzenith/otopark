@@ -38,14 +38,30 @@ Otomobil / SUV / minibüs / kamyonet / motosiklet / karavan / çekici?
 > uygulanır. **Araç tipine göre fiyatlandırma YALNIZCA oto yıkamada vardır**
 > (Otomobil 600 ₺, SUV 700 ₺, Motosiklet 400 ₺ başlangıç değerleri; panelden
 > değiştirilir, yeni tip eklenebilir).
-> **Karavan ayrı:** normal otopark tarifesinin dışındadır
-> (`excludeFromStandardTariff`), fiyatı **henüz belirlenmedi** ve kendi kuralı
-> girilene kadar çıkışta ücret hesaplanmaz, personele açık uyarı çıkar.
+> **Karavan ayrı — fiyatı da karara bağlandı (04.10.2026):**
+> normal otopark tarifesinin dışındadır (`excludeFromStandardTariff`) ve
+> **kendi tarifesi vardır: 700 ₺ / 24 saat, 24 saatten sonra başlayan her
+> 24 saat +700 ₺.** İşletme yalnızca 24 saatlik fiyatı verdiği için karavan
+> tarifesi 24 saatlik **tek blok** olarak girildi (saatlik kademe
+> **uydurulmadı**): 1 saatlik karavan parkı da 700 ₺'dir. Çözümleyici bu
+> sınıfta genel kurala düşmediği için, kural silinse bile sessizce otomobil
+> fiyatı uygulanmaz. Ayrıntı `docs/05` 0.2; testler
+> `tests/unit/karavan-tarife.test.ts` ve
+> `tests/integration/karavan-ve-kapasite.test.ts`.
+> **Karavan YIKAMA ücreti hâlâ belirlenmedi.**
 
 ### S3 — Otopark kapasitesi kaç araç?
 Ayrıca abonmanlılara ayrılmış sabit yer var mı?
 
-> **Yanıt:**
+> **Yanıt:** ✅ **KARAR (04.10.2026): ŞİMDİLİK KAPASİTE YOK — sınır
+> uygulanmaz.** `ParkingCapacitySetting.totalCapacity = 0` bırakıldı
+> ("tanımlı değil"): doluluk hesaplanmaz, personel ekranında kapasite çubuğu
+> çizilmez, araç girişi doluluk yüzünden **hiçbir zaman** engellenmez.
+> Kapasite mantığı koddan kaldırılmadı; patron ileride Yönetim → Ayarlar'dan
+> bir sayı girerse gösterge ve "otopark dolu" onayı kendiliğinden devreye
+> girer. Şu an **aktif edilmedi** (testle doğrulanıyor).
+> **Abonmanlılara ayrılmış sabit yer sorusu yanıtlanmadı** — sistemde böyle
+> bir ayırma yok.
 
 ### S4 — Gece tarifesi nasıl çalışıyor?
 - Gece hangi saat aralığı? (ör. 20:00–08:00)
@@ -165,8 +181,14 @@ Hizmet adları ve fiyatları (araç sınıfına göre değişiyorsa her sınıf 
 > belirlenmedi** — fiyatsız hizmet 0 ₺'ye çevrilmez; personel ekranında
 > "fiyat girilmemiş" yazar ve kayıt için açık onay istenir.
 >
-> **Hâlâ açık:** iç temizlik, detaylı temizlik, pasta cila gibi diğer
-> hizmetlerin adları ve fiyatları; karavan yıkama ücreti.
+> ✅ **EK KARAR (04.10.2026):** Otomobil 600 ₺ / SUV 700 ₺ / Motosiklet 400 ₺
+> **ana yıkama fiyatları olarak kalır.** Motor yıkama, iç temizlik, pasta/cila
+> gibi ek hizmetlerin fiyatları **şimdilik girilmeyecek ve UYDURULMAYACAK**;
+> panelden sonradan girilebilir bırakıldı.
+>
+> **Hâlâ açık (varsayılmadı):** motor yıkama ücreti; iç temizlik, detaylı
+> temizlik, pasta cila gibi diğer hizmetlerin adları ve fiyatları; karavan
+> yıkama ücreti.
 
 ### S14 — Yıkamayı kim yapıyor?
 Personel mi, dışarıdan anlaşmalı ekip mi? Yıkayan kişiye prim/yüzde veriliyor mu?
@@ -243,11 +265,22 @@ Aşağıdaki işler **hiçbir yanıta bağlı değil** ve onay verirsen hemen ba
 Yani **S1–S4 ve S13'ün gecikmesi geliştirmeyi durdurmaz**: tarifeler panelden
 girilebilir alanlar olarak kodlanır, sen hazır olduğunda kendi ekranından girersin.
 
-> **Güncelleme (04.10.2026):** S1, S2, S4, S6, S11 karara bağlandı; S13 kısmen
-> yanıtlandı. Verilen fiyatlar `npm run fiyatlar:kur` ile veritabanına **veri
-> olarak** yazıldı; koda sabitlenmedi. Hâlâ açık ve **varsayılmayan** fiyatlar:
-> karavan otopark ücreti, motor yıkama ücreti, diğer yıkama hizmetleri,
-> otopark kapasitesi (S3).
+> **Güncelleme (04.10.2026 — ikinci tur):** S1, S2, S3, S4, S6, S11 karara
+> bağlandı; S13 kısmen yanıtlandı ve kalanı bilinçli olarak açık bırakıldı.
+> Verilen fiyatlar `npm run fiyatlar:kur` ile veritabanına **veri olarak**
+> yazıldı; koda sabitlenmedi.
+>
+> | Konu | Durum |
+> |---|---|
+> | Karavan otopark ücreti | ✅ 700 ₺ / 24 sa, her ek 24 sa +700 ₺ |
+> | Otopark kapasitesi (S3) | ✅ sınır yok, aktif edilmedi |
+> | Yıkama ana fiyatları | ✅ 600 / 700 / 400 ₺ (değişmedi) |
+> | Abonman süresi | ✅ 1 ay |
+> | Abonmanın yıkama indirimi | ✅ yok |
+> | Motor yıkama ücreti | ⏳ **belirlenmedi — uydurulmadı** |
+> | Diğer yıkama hizmetleri (iç temizlik, pasta/cila…) | ⏳ **belirlenmedi** |
+> | Karavan yıkama ücreti | ⏳ **belirlenmedi** |
+> | S12, S14–S20 | ⏳ yanıt bekliyor |
 Ancak **S5, S7, S9, S10 kararları koda gömülen mantığı belirler** — bunları
 Aşama 2 başlamadan önce yanıtlamak gerekir — **bu dördü 02.10.2026'da karara bağlandı**
 (S5: girişte sabitlenir · S7: takvim günü 00:00 · S9: a+c · S10: a). Dolayısıyla

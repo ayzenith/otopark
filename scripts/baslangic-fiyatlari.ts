@@ -24,7 +24,13 @@
 
 import { PrismaClient } from "@prisma/client";
 import { resolvePermissions } from "../src/lib/permissions";
-import { surumOlustur, gecerliTarifeler } from "../src/server/pricing/admin";
+import {
+  surumOlustur,
+  gecerliTarifeler,
+  gecerliSurum,
+  type KuralGirdi,
+} from "../src/server/pricing/admin";
+import { toKurus } from "../src/lib/money";
 import { yikamaHizmetiOlustur, yikamaFiyatiGuncelle } from "../src/server/wash/admin";
 import { yikamaFiyatTablosu } from "../src/server/wash/pricing";
 import type { SessionUser } from "../src/server/auth/session";
@@ -54,6 +60,30 @@ const OTOPARK = {
   saatlikUcret: 50 * TL,
   gunlukUstLimit: 500 * TL,
   ekGunBlokUcret: 600 * TL,
+};
+
+/**
+ * KARAVAN OTOPARK TARIFESI (karar 04.10.2026)
+ *
+ *   24 saate kadar                  700 TL
+ *   24 saatten sonra baslayan her 24 saat  +700 TL
+ *
+ * Isletme yalnizca 24 SAATLIK fiyat verdi; karavan icin saatlik kademe
+ * BELIRTILMEDI ve UYDURULMADI. Bu yuzden motor parametreleri 24 saatlik tek
+ * blok olarak girilir: ilk blok 1440 dk / 700 TL, saatlik ucret YOK.
+ * Boylece 1 saatlik karavan parki da 24 saatlik gibi 700 TL olur. Patron
+ * karavan icin saatlik kademe isterse panelden girer.
+ *
+ * Ek blok orantili bolunmez - normal tarifedeki kararin aynisi:
+ *   24 sa = 700 · 24 sa 1 dk = 1.400 · 48 sa = 1.400 · 48 sa 1 dk = 2.100
+ */
+const KARAVAN = {
+  aracSinifiKodu: "KARAVAN",
+  ilkBlokDakika: 1440,
+  ilkBlokUcret: 700 * TL,
+  saatlikUcret: 0,
+  gunlukUstLimit: 700 * TL,
+  ekGunBlokUcret: 700 * TL,
 };
 
 /**
@@ -90,6 +120,104 @@ const YIKAMA_HIZMETLERI = [
   },
 ];
 
+/**
+ * Veritabanindaki tarife kuralini surumOlustur'un bekledigi girdi bicimine
+ * birebir cevirir. Yeni surum acarken MEVCUT kurallarin aynen tasinmasi icin
+ * kullanilir: hicbir fiyat degismez, yalnizca eksik kural eklenir.
+ */
+function kuralaCevir(r: {
+  vehicleClassId: string | null;
+  freeMinutes: number;
+  freeMinutesDeductible: boolean;
+  firstPeriodMinutes: number;
+  firstPeriodPrice: unknown;
+  hourlyPrice: unknown;
+  hourlyRoundingMinutes: number;
+  dailyPrice: unknown;
+  dailyCapPrice: unknown;
+  extraDayBlockPrice: unknown;
+  nightFlatPrice: unknown;
+  nightStartMinute: number | null;
+  nightEndMinute: number | null;
+  weekendMultiplier: unknown;
+  minCharge: unknown;
+}): KuralGirdi {
+  return {
+    vehicleClassId: r.vehicleClassId,
+    ucretsizDakika: r.freeMinutes,
+    ucretsizDusulur: r.freeMinutesDeductible,
+    ilkBlokDakika: r.firstPeriodMinutes,
+    ilkBlokUcret: toKurus(r.firstPeriodPrice as string),
+    saatlikUcret: toKurus(r.hourlyPrice as string),
+    saatYuvarlamaDakika: Math.max(1, r.hourlyRoundingMinutes),
+    gunlukUcret: toKurus(r.dailyPrice as string),
+    gunlukUstLimit: toKurus(r.dailyCapPrice as string),
+    ekGunBlokUcret: toKurus(r.extraDayBlockPrice as string),
+    geceSabitUcret: r.nightFlatPrice === null ? null : toKurus(r.nightFlatPrice as string),
+    geceBaslangicDakika: r.nightStartMinute,
+    geceBitisDakika: r.nightEndMinute,
+    haftaSonuKatsayisi:
+      r.weekendMultiplier === null ? null : Number(String(r.weekendMultiplier)),
+    asgariUcret: toKurus(r.minCharge as string),
+  };
+}
+
+/**
+ * Karavan kuralini YURURLUKTEKI plana ekler - yalnizca EKSIKSE.
+ *
+ * Neden yeni surum: yururlukteki surumun kural satirlarini duzenlemek,
+ * o surumle ucretlendirilmis gecmis park kayitlarinin dayanagini degistirir.
+ * Mimari kural 3 (tarihsel degismezlik) bunu yasaklar. Bu yuzden mevcut
+ * kurallarin BIREBIR kopyasi + karavan kurali ile yeni surum acilir.
+ */
+async function karavanKuraliniKur(
+  actor: SessionUser,
+  karavanKurali: KuralGirdi | null,
+): Promise<string[]> {
+  if (!karavanKurali) {
+    return ["ATLANDI  karavan tarifesi — KARAVAN araç sınıfı yok (`npm run db:seed`)"];
+  }
+
+  // Varsayilan plan yoksa en yuksek oncelikli aktif plan.
+  const plan = await prisma.tariffPlan.findFirst({
+    where: { isActive: true },
+    orderBy: [{ isDefault: "desc" }, { priority: "desc" }],
+  });
+  if (!plan) {
+    return ["ATLANDI  karavan tarifesi — aktif tarife planı yok"];
+  }
+
+  const surum = await gecerliSurum(plan.id);
+  if (!surum) {
+    return [`ATLANDI  karavan tarifesi — ${plan.name} planının yürürlükteki sürümü yok`];
+  }
+
+  const varOlan = surum.rules.find((r) => r.vehicleClassId === karavanKurali.vehicleClassId);
+  if (varOlan) {
+    const ucret = toKurus(varOlan.firstPeriodPrice as unknown as string);
+    return [
+      `ATLANDI  karavan tarifesi — zaten tanımlı ` +
+        `(${(ucret / 100).toLocaleString("tr-TR")} ₺ / ilk ${varOlan.firstPeriodMinutes} dk)`,
+    ];
+  }
+
+  await surumOlustur(actor, {
+    planId: plan.id,
+    // 60_000 degil: bkz. yukaridaki DIKKAT notu.
+    gecerlilikBaslangici: new Date(Date.now() - 30_000),
+    degisiklikNotu:
+      "Karavan tarifesi eklendi (700 ₺ / 24 saat, her ek 24 saat +700 ₺ — karar 04.10.2026). " +
+      "Diğer kurallar aynen taşındı.",
+    // ONEMLI: mevcut kurallar AYNEN tasinir, yalnizca karavan eklenir.
+    kurallar: [...surum.rules.map(kuralaCevir), karavanKurali],
+  });
+
+  return [
+    `YAZILDI  karavan tarifesi — 700 ₺ / 24 saat, her ek 24 saat +700 ₺ ` +
+      `(${plan.name} s.${surum.versionNo + 1})`,
+  ];
+}
+
 async function main() {
   const patron = await prisma.user.findFirst({ where: { role: "OWNER" } });
   if (!patron) {
@@ -112,16 +240,55 @@ async function main() {
   const satirlar: string[] = [];
 
   // -------------------------------------------------------------------------
-  // 1. OTOPARK TARIFESI
+  // 1. OTOPARK TARIFESI (genel kural + karavan kurali)
   // -------------------------------------------------------------------------
+  const karavanSinifi = await prisma.vehicleClass.findUnique({
+    where: { code: KARAVAN.aracSinifiKodu },
+  });
+
+  /** Karavana ozel tarife kurali. Sinif yoksa kural da yazilmaz. */
+  const karavanKurali: KuralGirdi | null = karavanSinifi
+    ? {
+        vehicleClassId: karavanSinifi.id,
+        ucretsizDakika: 0,
+        ucretsizDusulur: false,
+        ilkBlokDakika: KARAVAN.ilkBlokDakika,
+        ilkBlokUcret: KARAVAN.ilkBlokUcret,
+        saatlikUcret: KARAVAN.saatlikUcret,
+        saatYuvarlamaDakika: 60,
+        gunlukUcret: 0,
+        gunlukUstLimit: KARAVAN.gunlukUstLimit,
+        ekGunBlokUcret: KARAVAN.ekGunBlokUcret,
+        geceSabitUcret: null,
+        geceBaslangicDakika: null,
+        geceBitisDakika: null,
+        haftaSonuKatsayisi: null,
+        asgariUcret: 0,
+      }
+    : null;
+
+  const genelKural: KuralGirdi = {
+    // Normal otoparkta arac sinifina gore fiyat farki YOK: genel kural.
+    vehicleClassId: null,
+    ucretsizDakika: 0,
+    ucretsizDusulur: false,
+    ilkBlokDakika: OTOPARK.ilkBlokDakika,
+    ilkBlokUcret: OTOPARK.ilkBlokUcret,
+    saatlikUcret: OTOPARK.saatlikUcret,
+    saatYuvarlamaDakika: 60,
+    gunlukUcret: 0,
+    gunlukUstLimit: OTOPARK.gunlukUstLimit,
+    ekGunBlokUcret: OTOPARK.ekGunBlokUcret,
+    geceSabitUcret: null,
+    geceBaslangicDakika: null,
+    geceBitisDakika: null,
+    haftaSonuKatsayisi: null,
+    asgariUcret: 0,
+  };
+
   const mevcutTarifeler = await gecerliTarifeler();
-  if (mevcutTarifeler.length > 0) {
-    satirlar.push(
-      `ATLANDI  otopark tarifesi — zaten tanımlı (${mevcutTarifeler
-        .map((t) => `${t.planAdi} s.${t.surumNo}`)
-        .join(", ")})`,
-    );
-  } else {
+  if (mevcutTarifeler.length === 0) {
+    // --- ILK KURULUM: plan + ilk surum, iki kuralla birlikte ---
     const plan = await prisma.tariffPlan.create({
       data: {
         name: OTOPARK.planAdi,
@@ -135,46 +302,46 @@ async function main() {
 
     await surumOlustur(actor, {
       planId: plan.id,
-      // Hemen gecerli olsun: 1 dakika once baslatilir ki "gelecek tarih"
+      // Hemen gecerli olsun: biraz geriden baslatilir ki "gelecek tarih"
       // kontrolune takilmadan aninda devreye girsin.
-      gecerlilikBaslangici: new Date(Date.now() - 60_000),
+      //
+      // DIKKAT: tam 60_000 KULLANILMAZ. surumOlustur gecmise tarihlemeyi
+      // 60 saniye toleransla reddeder ve araya giren birkac milisaniye
+      // siniri asirip betigi hataya dusurur (yasandi). 30 saniye guvenli.
+      gecerlilikBaslangici: new Date(Date.now() - 30_000),
       degisiklikNotu: "Başlangıç tarifesi (işletme sahibinin verdiği değerler, 04.10.2026)",
-      kurallar: [
-        {
-          // Arac sinifina gore fiyat farki YOK: genel kural.
-          vehicleClassId: null,
-          ucretsizDakika: 0,
-          ucretsizDusulur: false,
-          ilkBlokDakika: OTOPARK.ilkBlokDakika,
-          ilkBlokUcret: OTOPARK.ilkBlokUcret,
-          saatlikUcret: OTOPARK.saatlikUcret,
-          saatYuvarlamaDakika: 60,
-          gunlukUcret: 0,
-          gunlukUstLimit: OTOPARK.gunlukUstLimit,
-          ekGunBlokUcret: OTOPARK.ekGunBlokUcret,
-          geceSabitUcret: null,
-          geceBaslangicDakika: null,
-          geceBitisDakika: null,
-          haftaSonuKatsayisi: null,
-          asgariUcret: 0,
-        },
-      ],
+      kurallar: karavanKurali ? [genelKural, karavanKurali] : [genelKural],
     });
     satirlar.push(`YAZILDI  otopark tarifesi — ${OTOPARK.planAdi}`);
+    satirlar.push(
+      karavanKurali
+        ? `YAZILDI  karavan tarifesi — 700 ₺ / 24 saat, her ek 24 saat +700 ₺`
+        : "ATLANDI  karavan tarifesi — KARAVAN araç sınıfı yok (`npm run db:seed`)",
+    );
+  } else {
+    satirlar.push(
+      `ATLANDI  otopark tarifesi — zaten tanımlı (${mevcutTarifeler
+        .map((t) => `${t.planAdi} s.${t.surumNo}`)
+        .join(", ")})`,
+    );
+
+    // --- MEVCUT KURULUM: yalnizca EKSIK olan karavan kurali eklenir ---
+    //
+    // TARIHSEL DEGISMEZLIK: yururlukteki surumun satirlarina DOKUNULMAZ.
+    // Karavan kurali eksikse mevcut kurallarin birebir kopyasi + karavan
+    // kuraliyla YENI SURUM acilir; eski surum oldugu gibi kapanir ve o
+    // surumle ucretlendirilmis gecmis park kayitlari izlenebilir kalir.
+    satirlar.push(...(await karavanKuraliniKur(actor, karavanKurali)));
   }
 
-  // Karavan: standart tarife disi oldugu dogrulanir (migration ile isaretlenir).
-  const karavan = await prisma.vehicleClass.findUnique({ where: { code: "KARAVAN" } });
-  if (karavan) {
-    if (!karavan.excludeFromStandardTariff) {
-      await prisma.vehicleClass.update({
-        where: { id: karavan.id },
-        data: { excludeFromStandardTariff: true },
-      });
-      satirlar.push("YAZILDI  karavan standart tarife dışına alındı");
-    } else {
-      satirlar.push("TAMAM    karavan standart tarife dışında (fiyatı belirlenmedi)");
-    }
+  // Karavan standart tarife disidir: cozumleyici bu sinifta GENEL kurala
+  // dusmez, yalnizca yukaridaki karavan kurali gecerlidir.
+  if (karavanSinifi && !karavanSinifi.excludeFromStandardTariff) {
+    await prisma.vehicleClass.update({
+      where: { id: karavanSinifi.id },
+      data: { excludeFromStandardTariff: true },
+    });
+    satirlar.push("YAZILDI  karavan standart tarife dışına alındı");
   }
 
   // -------------------------------------------------------------------------
@@ -246,9 +413,12 @@ async function main() {
   console.log("    Yıkama   : Yönetim → Yıkama fiyatları");
   console.log(cizgi);
   console.log("  BELİRLENMEYEN FİYATLAR (kasıtlı olarak boş):");
-  console.log("    · Karavan otopark ücreti — ayrı bölüm olarak tasarlanacak");
   console.log("    · Motor yıkama (ek hizmet) ücreti");
-  console.log("    · Otopark kapasitesi (0 = sınırsız; giriş engellenmez)");
+  console.log("    · Diğer yıkama hizmetleri (iç temizlik, pasta cila…)");
+  console.log("    · Karavan YIKAMA ücreti (otopark ücreti girildi, yıkama değil)");
+  console.log(cizgi);
+  console.log("  OTOPARK KAPASİTESİ: karar 04.10.2026 — KAPASİTE SINIRI YOK.");
+  console.log("    Kapasite 0 bırakıldı; araç girişi doluluk yüzünden engellenmez.");
   console.log(`${cizgi}\n`);
 }
 
