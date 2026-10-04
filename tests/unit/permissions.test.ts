@@ -138,3 +138,46 @@ describe("izin kataloğu tutarlılığı", () => {
     expect(new Set(ALL_PERMISSIONS).size).toBe(ALL_PERMISSIONS.length);
   });
 });
+
+// ---------------------------------------------------------------------------
+// SERVER ACTION HATA CEVIRIMI
+// ---------------------------------------------------------------------------
+describe("runAction hata çevirimi", () => {
+  it("İŞ HATALARI KULLANICIYA AYNEN GÖSTERİLİR", async () => {
+    // Gerileme korumasi: bir donem IslemHatasi genel "İşlem tamamlanamadı"
+    // mesajina cevriliyordu ve personel ne yapacagini anlayamiyordu.
+    const { runAction } = await import("@/server/auth/authz");
+    const { IslemHatasi } = await import("@/server/errors");
+
+    const sonuc = await runAction(async () => {
+      throw new IslemHatasi("ZATEN_ICERIDE", "Bu araç 14:28 itibarıyla otoparkta.");
+    });
+
+    expect(sonuc.ok).toBe(false);
+    if (!sonuc.ok) {
+      expect(sonuc.error).toBe("Bu araç 14:28 itibarıyla otoparkta.");
+      expect(sonuc.code).toBe("ZATEN_ICERIDE");
+    }
+  });
+
+  it("beklenmeyen hatalar kullanıcıya sızdırılmaz", async () => {
+    const { runAction } = await import("@/server/auth/authz");
+    const sonuc = await runAction(async () => {
+      throw new Error("veritabanı bağlantı dizesi: postgres://gizli@sunucu");
+    });
+
+    expect(sonuc.ok).toBe(false);
+    if (!sonuc.ok) {
+      expect(sonuc.error).not.toContain("postgres://");
+      expect(sonuc.error).toContain("İşlem tamamlanamadı");
+      expect(sonuc.code).toBe("SUNUCU_HATASI");
+    }
+  });
+
+  it("başarılı işlem veriyi döndürür", async () => {
+    const { runAction } = await import("@/server/auth/authz");
+    const sonuc = await runAction(async () => ({ tutar: 11500 }));
+    expect(sonuc.ok).toBe(true);
+    if (sonuc.ok) expect(sonuc.data.tutar).toBe(11500);
+  });
+});

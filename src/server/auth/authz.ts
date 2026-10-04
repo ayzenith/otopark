@@ -11,6 +11,7 @@
 import { getSession, type SessionUser } from "./session";
 import { writeAudit, AUDIT_ACTIONS } from "@/server/audit";
 import type { Permission } from "@/lib/permissions";
+import { IslemHatasi } from "@/server/errors";
 
 /** Yetkisiz erisim hatasi. Server Action'lar bunu yakalayip 403 dondurur. */
 export class AuthorizationError extends Error {
@@ -111,6 +112,13 @@ export async function runAction<T>(fn: () => Promise<T>): Promise<ActionResult<T
     return { ok: true, data: await fn() };
   } catch (err) {
     if (err instanceof AuthorizationError || err instanceof AuthenticationError) {
+      return { ok: false, error: err.message, code: err.code };
+    }
+    // Is hatalari KULLANICIYA AYNEN GOSTERILIR: "bu araç zaten otoparkta",
+    // "plaka biçimine uymuyor" gibi mesajlar personelin ne yapacagini bilmesi
+    // icin gereklidir. Genel bir hataya cevrilmeleri kullanilamaz bir arayuz
+    // uretir.
+    if (err instanceof IslemHatasi) {
       return { ok: false, error: err.message, code: err.code };
     }
     if (err instanceof Error && err.name === "ZodError") {

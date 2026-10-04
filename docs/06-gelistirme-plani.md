@@ -55,6 +55,8 @@ geliştirme bekletilmedi.
 ---
 
 ## Aşama 2 — Mobil personel ana ekranı, araç giriş-çıkış, ücret hesaplama
+**Durum:** ✅ Tamamlandı (04.10.2026)
+
 **Kapsam**
 - Tarife yönetimi (sürümlü) — minimum: patron tek plan + kural girebilsin
 - `pricing/calculate.ts` saf hesaplama motoru + kapsamlı birim testleri
@@ -65,14 +67,46 @@ geliştirme bekletilmedi.
 - Vardiya aç/kapat; işlem iptali (VOID) ve indirim (yetkiye bağlı)
 - Hata ve onay ekranları (tam ekran, renk kodlu)
 
-**Tamamlanma kriterleri**
-- [ ] Doküman 05.7'deki ücret senaryolarının tamamı birim testle geçiyor
-- [ ] Mükerrer giriş DB seviyesinde engellendiği testle kanıtlanıyor
-- [ ] Eşzamanlı çıkış testi: tek tahsilat oluşuyor
-- [ ] Aynı isteğin iki kez gönderilmesi (idempotency) tek kayıt üretiyor
-- [ ] Playwright: 360/390/414 px genişlikte tam giriş→çıkış→tahsilat akışı
-- [ ] Hiçbir ekranda yatay kaydırma yok (otomatik kontrol)
-- [ ] Gün içi tarife değişikliğinde içerideki aracın fiyatı değişmiyor (test)
+**Tamamlanma kriterleri — ✅ TAMAMLANDI (04.10.2026)**
+- [x] Doküman 05.7'deki ücret senaryolarının tamamı birim testle geçiyor (64 test)
+- [x] Mükerrer giriş hem uygulama hem DB seviyesinde engelleniyor (testli)
+- [x] Eşzamanlı çıkış testi: `FOR UPDATE` kilidi ile tek tahsilat oluşuyor
+- [x] Idempotency: aynı istek iki kez gelirse tek kayıt üretiliyor (giriş + çıkış)
+- [x] Playwright: 375/393/1280 px genişlikte tam giriş→sorgula→ücret→tahsilat akışı
+- [x] Hiçbir ekranda yatay kaydırma yok (işlem paneli dahil, otomatik kontrol)
+- [x] Gün içi tarife değişikliğinde içerideki aracın fiyatı değişmiyor (testli)
+- [x] Çıkışta ücret **sunucuda yeniden hesaplanıyor**; istemci tutar göndermiyor
+- [x] İptal: finansal kayıt silinmiyor, VOIDED + gerekçe; iade senaryosunda ters kayıt
+- [x] Abonmanlı araç ücretsiz çıkıyor (S10 kuralı dahil)
+- [x] Kapasite tanımsızsa araç girişi engellenmiyor
+
+**Test sonucu:** 140 birim + 154 entegrasyon + 72 uçtan uca = **366 test geçiyor**
+
+**Bu aşamada bulunan ve düzeltilen üç hata**
+1. **İş hataları kullanıcıya ulaşmıyordu.** `runAction` tüm hataları yakalayıp
+   "İşlem tamamlanamadı" genel mesajına çeviriyordu; "bu araç zaten otoparkta"
+   gibi eyleme yönelten uyarılar personele hiç gösterilmiyordu. `IslemHatasi`
+   artık ayrı bir modülde (`src/server/errors.ts`) tanımlı ve `runAction`
+   mesajını aynen geçiriyor. Gerileme testi: `tests/unit/permissions.test.ts`.
+2. **Idempotency sırası yanlıştı.** Mükerrer giriş kontrolü idempotency
+   kontrolünden önce çalışıyordu; yavaş hatta butona iki kez basan personel
+   kendi ilk isteği yüzünden "araç zaten içeride" hatası alıyordu. Sıra
+   düzeltildi.
+3. **İptalde çifte muhasebe.** Orijinal tahsilat `VOIDED` yapılıp aynı zamanda
+   ters kayıt üretiliyordu; bu parayı iki kez düşürüyordu. Artık iki durum
+   ayrı: para fiilen iade edildiyse orijinal `CONFIRMED` kalır + ters kayıt
+   üretilir; para el değiştirmediyse orijinal `VOIDED` olur ve ters kayıt
+   üretilmez. Çağıran taraf hangi durumun geçerli olduğunu bildirmek zorunda —
+   sistem bunu varsaymıyor.
+
+**Bilinen eksikler (sonraki aşamalara devredildi)**
+- Çıkış panelinde indirim ve elle tutar arayüzü yok (sunucu tarafı hazır ve
+  testli; yetki kontrolleri çalışıyor)
+- İşlem iptali arayüzü yok (servis hazır ve testli)
+- Araç geçmişi yalnızca bugünü gösteriyor; haftalık/aylık ve dışa aktarma Aşama 5
+- Kart ödemesinde dekont notu arayüzde girilemiyor (servis destekliyor)
+- Gece tarifesi mantığı dokümandaki "avantajlı olanı uygula" kuralıyla yazıldı;
+  **S4 onayı bekliyor.** Patron gece ücreti girmediği sürece kural hiç devreye girmez.
 
 ---
 

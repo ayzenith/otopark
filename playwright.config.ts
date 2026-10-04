@@ -23,13 +23,18 @@ const launchOptions = existsSync(HARICI_CHROMIUM)
  */
 export default defineConfig({
   testDir: "./tests/e2e",
+  globalSetup: "./tests/e2e/global-setup.ts",
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   workers: 1,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
 
+  // Bileşenlerde data-test kullaniliyor; Playwright'in varsayilani data-testid.
+  expect: { timeout: 10_000 },
+
   use: {
+    testIdAttribute: "data-test",
     baseURL: process.env.E2E_BASE_URL ?? "http://127.0.0.1:3100",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",

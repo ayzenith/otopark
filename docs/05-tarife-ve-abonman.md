@@ -119,8 +119,14 @@ Bu algoritma `src/server/pricing/calculate.ts` içinde **saf fonksiyon** olarak 
 | 1 sa 10 dk | ilk 60 dk = 40 ₺ + başlayan 1 saat × 25 = 25 ₺ | **65 ₺** |
 | 3 sa 12 dk | 40 ₺ + ceil(132/60)=3 × 25 = 75 ₺ | **115 ₺** |
 | 11 saat | 40 ₺ + ceil(600/60)=10 × 25 = 250 ₺ → cap 250 | **250 ₺** (üst limit) |
-| 26 saat | 1 tam gün 200 ₺ + artan 2 sa (40+25) = 65 ₺ | **265 ₺** |
-| 3 gün 4 sa | 3 × 200 = 600 ₺ + (40 + 4×25=100) = 140 ₺ | **740 ₺** |
+| 26 saat | 1 tam gün 200 ₺ + artan 2 sa (40 + ceil(60/60)=1×25=25) = 65 ₺ | **265 ₺** |
+| 3 gün 4 sa | 3 × 200 = 600 ₺ + artan 4 sa (40 + ceil(180/60)=3×25=75) = 115 ₺ | **715 ₺** |
+
+> **Düzeltme (04.10.2026):** Bu tablonun son satırı ilk yazımda **740 ₺**
+> yazılmıştı; ilk bloğun 60 dakikası kalan süreden düşülmemişti. Tablonun diğer
+> satırları (1 sa 10 dk, 3 sa 12 dk, 26 saat) ilk bloğu düşerek hesaplanmıştı,
+> yani doküman kendi içinde çelişiyordu. Doğru değer **715 ₺**. Hesaplama
+> motoru ve birim testleri doğru kuralı uygular.
 
 ## 5.3 Yönetici tarife düzenleme akışı
 
@@ -257,6 +263,23 @@ da raporlanabilir (kaç gün, kaç saat, hangi saatler).
 | Aynı müşteri hem abonmanlı hem saatlik araç kullanıyor | İzinli; yalnızca abonmana dahil plakalar ücretsiz. |
 | Abonman ortasında plaka değişikliği | Eski `SubscriptionVehicle.removedAt` işaretlenir, yeni satır eklenir; geçmiş korunur. |
 | Abonman bitti ama araç hâlâ içeride | Giriş anındaki `billingMode=SUBSCRIPTION` korunur → o park ücretsiz tamamlanır. Sonraki giriş normal tarifeye tabi. **(Onaylandı: S10)** |
+
+## 5.6.1 Uygulamada alınan yapısal kararlar (fiyat varsayımı değil)
+
+Patron bazı alanları boş bırakabilir. Boş alan "tanımlı değil" demektir ve
+sistem o alana **fiyat uydurmaz**. Ancak hesabın tutarlı kalması için bazı
+yapısal kurallar gerekti; bunlar fiyat değil, *davranış* kararlarıdır:
+
+| Durum | Davranış | Gerekçe |
+|---|---|---|
+| Günlük ücret girilmemiş, saatlik girilmiş | Tam günler bir günlük saatlik tutardan hesaplanır | Aksi halde 26 saatlik park sessizce bedava olurdu |
+| Günlük ücret girilmemiş, günlük üst limit girilmiş | Tam günler üst limitten hesaplanır | Patronun girdiği en yakın değer |
+| Günlük üst limit yok, günlük ücret var | Kısmi gün tam günü aşamaz | 23 saat, 24 saatten pahalı olmamalı |
+| Tarifede hiçbir fiyat yok | Ücret 0, ama `tarifeTanimsiz` işaretlenir; personel ekranında **büyük uyarı** çıkar ve işleme not düşülür | Sessizce "0 ₺ tahsil edildi" kaydı oluşmamalı |
+| Park süresi 0 dakika | Ücret 0 | Yanlışlıkla girilip hemen çıkarılan araç; doğru yol iptal işlemidir |
+| Kapasite girilmemiş (0) | Araç girişi **engellenmez**, doluluk gösterilmez | İşletme kapasiteyi girmeden sistemi kullanabilmeli |
+
+Bu kuralların hepsi `tests/unit/ucret-hesaplama.test.ts` içinde test edilir.
 
 ## 5.7 Test edilecek senaryolar (Aşama 2–3)
 
