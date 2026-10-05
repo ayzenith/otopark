@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { siteIcerigi, SITE_SAYFA_ANAHTARLARI } from "@/server/site/queries";
+import { telHref, whatsappHref } from "@/lib/telefon";
 import { SiteMetni } from "../metin";
 
 /**
@@ -24,6 +25,9 @@ export default async function IletisimSayfasi() {
   const { kunye, sayfalar } = await siteIcerigi();
   const sayfa = sayfalar[SITE_SAYFA_ANAHTARLARI.ILETISIM];
 
+  const ara = telHref(kunye.telefon);
+  const whatsapp = whatsappHref(kunye.whatsapp);
+
   const hicBilgiYok =
     !kunye.adres && !kunye.telefon && !kunye.whatsapp && !kunye.calismaSaatleri && !kunye.mapsUrl;
 
@@ -33,18 +37,22 @@ export default async function IletisimSayfasi() {
 
       {sayfa ? <SiteMetni govde={sayfa.govde} /> : null}
 
-      {kunye.telefon ? (
+      {ara ? (
         <a
-          href={`tel:${kunye.telefon.replace(/\s/g, "")}`}
+          href={ara}
+          data-test="ara"
           className="flex h-16 items-center justify-center rounded-2xl bg-lacivert-600 px-4 text-lg font-bold text-white"
         >
           ☎ {kunye.telefon}
         </a>
       ) : null}
 
-      {kunye.whatsapp ? (
+      {whatsapp ? (
         <a
-          href={`https://wa.me/${kunye.whatsapp.replace(/\D/g, "")}`}
+          href={whatsapp}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-test="whatsapp"
           className="flex h-16 items-center justify-center rounded-2xl bg-emerald-600 px-4 text-lg font-bold text-white"
         >
           WhatsApp ile yazın
@@ -87,9 +95,12 @@ export default async function IletisimSayfasi() {
       {kunye.mapsUrl ? (
         <a
           href={kunye.mapsUrl}
-          className="flex h-14 items-center justify-center rounded-2xl border-2 border-lacivert-600 px-4 font-bold text-lacivert-700"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-test="yol-tarifi"
+          className="flex h-16 items-center justify-center rounded-2xl bg-lacivert-600 px-4 text-lg font-extrabold text-white"
         >
-          Yol tarifi al
+          📍 YOL TARİFİ AL
         </a>
       ) : null}
     </div>

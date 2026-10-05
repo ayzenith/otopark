@@ -20,7 +20,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
     "db:studio": "prisma studio",
-    "fiyatlar:kur": "tsx scripts/baslangic-fiyatlari.ts"
+    "fiyatlar:kur": "tsx scripts/baslangic-fiyatlari.ts",
+    "isletme:kur": "tsx scripts/isletme-bilgileri.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

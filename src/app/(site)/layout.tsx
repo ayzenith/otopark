@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { siteIcerigi } from "@/server/site/queries";
+import { telHref } from "@/lib/telefon";
 
 /**
  * Site içeriği PANELDEN gelir ve anında yayına girmelidir; ayrıca üretim
@@ -74,7 +75,7 @@ export default async function SiteDuzeni({ children }: { children: React.ReactNo
           {kunye.calismaSaatleri ? <p>{kunye.calismaSaatleri}</p> : null}
           {kunye.telefon ? (
             <p>
-              <a className="font-semibold text-mavi-700" href={`tel:${kunye.telefon.replace(/\s/g, "")}`}>
+              <a className="font-semibold text-mavi-700" href={telHref(kunye.telefon) ?? "#"}>
                 {kunye.telefon}
               </a>
             </p>

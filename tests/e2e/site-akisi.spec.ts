@@ -1,5 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
-import { E2E_KULLANICI, E2E_PAROLA, E2E_PATRON } from "./global-setup";
+import {
+  E2E_KULLANICI,
+  E2E_PAROLA,
+  E2E_PATRON,
+  E2E_SITE_MAPS,
+  E2E_SITE_SAAT,
+  E2E_SITE_WHATSAPP_BAGLANTI,
+} from "./global-setup";
 
 /**
  * KURUMSAL SITE - UCTAN UCA (Asama 7)
@@ -37,6 +44,49 @@ test.describe("kurumsal site - ziyaretçi", () => {
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByRole("link", { name: "Personel girişi" })).toBeVisible();
+  });
+
+  /**
+   * ISLETMENIN 05.10.2026 KARARI: ziyaretci ilk ekranda "7/24 acik" bilgisini
+   * ve tek dokunusla yol tarifi butonunu gormeli.
+   */
+  test("ana sayfada 7/24 bilgisi ve YOL TARİFİ butonu ilk ekranda", async ({ page }) => {
+    await page.goto("/");
+
+    const rozet = page.getByTestId("calisma-saatleri-rozeti");
+    await expect(rozet).toHaveText(E2E_SITE_SAAT);
+
+    const yolTarifi = page.getByTestId("yol-tarifi");
+    await expect(yolTarifi).toBeVisible();
+    await expect(yolTarifi).toHaveAttribute("href", E2E_SITE_MAPS);
+
+    // Telefonda kaydirmadan gorunmeli: butonun alt kenari ekranin icinde.
+    const kutu = await yolTarifi.boundingBox();
+    const ekranYuksekligi = page.viewportSize()!.height;
+    expect(kutu!.y + kutu!.height).toBeLessThanOrEqual(ekranYuksekligi);
+
+    // Dokunma hedefi en az 48px (mobil oncelikli tasarim kurali).
+    expect(kutu!.height).toBeGreaterThanOrEqual(48);
+  });
+
+  test("WhatsApp bağlantısı ülke koduyla üretilir", async ({ page }) => {
+    await page.goto("/");
+    // Ulke kodu eksik olursa WhatsApp calismayan bir sohbet acar.
+    await expect(page.getByTestId("whatsapp")).toHaveAttribute(
+      "href",
+      E2E_SITE_WHATSAPP_BAGLANTI,
+    );
+  });
+
+  test("telefon girilmediği için arama butonu çizilmez", async ({ page }) => {
+    await page.goto("/");
+    // Mimari kural 19: girilmemis bilgi icin yer tutucu buton konulmaz.
+    await expect(page.getByTestId("ara")).toHaveCount(0);
+  });
+
+  test("iletişim sayfasında da yol tarifi butonu vardır", async ({ page }) => {
+    await page.goto("/iletisim");
+    await expect(page.getByTestId("yol-tarifi")).toHaveAttribute("href", E2E_SITE_MAPS);
   });
 
   test("fiyatlar ve iletişim sayfaları açılır", async ({ page }) => {

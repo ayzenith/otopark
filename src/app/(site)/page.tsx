@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { siteIcerigi, SITE_SAYFA_ANAHTARLARI } from "@/server/site/queries";
+import { telHref, whatsappHref } from "@/lib/telefon";
 import { SiteMetni } from "./metin";
 
 /**
@@ -10,14 +11,24 @@ import { SiteMetni } from "./metin";
  */
 export const dynamic = "force-dynamic";
 
-
 /**
  * SİTE ANA SAYFASI
  *
- * İÇERİK HENÜZ GİRİLMEDİ (docs/07 S18-S19). Bu sayfa hiçbir adres, telefon,
- * çalışma saati veya fiyat UYDURMAZ: girilmemiş her bölüm çizilmez. Patron
- * panelden (Yönetim → Web sitesi) bilgileri yazdığı anda bölümler kendiliğinden
- * görünür.
+ * ============================================================================
+ * İŞLETMENİN 05.10.2026'DA VERDİĞİ KARAR: ziyaretçinin ilk gördüğü şey
+ * "7/24 açık" bilgisi ve TEK DOKUNUŞLA YOL TARİFİ olmalı. Fiyat yazılmayacak.
+ *
+ * Bu yüzden sayfanın en üstünde, kaydırmaya gerek kalmadan:
+ *   1. işletme adı,
+ *   2. çalışma saati rozeti (panelden gelir; "7/24 açık" yazılır),
+ *   3. verilen hizmetler,
+ *   4. BÜYÜK "YOL TARİFİ AL" butonu (telefonda Google Maps uygulamasını açar),
+ *   5. WhatsApp ve arama butonları
+ * bulunur.
+ * ============================================================================
+ *
+ * Girilmemiş hiçbir bilgi UYDURULMAZ (mimari kural 19): harita bağlantısı
+ * yoksa yol tarifi butonu, telefon yoksa arama butonu hiç çizilmez.
  */
 export default async function SiteAnaSayfa() {
   const { kunye, sayfalar, fiyatlar, galeri } = await siteIcerigi();
@@ -25,44 +36,74 @@ export default async function SiteAnaSayfa() {
   const otopark = sayfalar[SITE_SAYFA_ANAHTARLARI.OTOPARK];
   const yikama = sayfalar[SITE_SAYFA_ANAHTARLARI.YIKAMA];
 
+  const ara = telHref(kunye.telefon);
+  const whatsapp = whatsappHref(kunye.whatsapp);
+
   return (
     <div className="space-y-8">
-      <section>
-        <h1 className="text-2xl font-bold text-lacivert-700">{kunye.isletmeAdi}</h1>
+      {/* ---- VİTRİN: ilk ekranda görünmesi gereken her şey ---- */}
+      <section className="space-y-4">
+        <h1 className="text-3xl font-extrabold leading-tight text-lacivert-700">
+          {kunye.isletmeAdi}
+        </h1>
+
+        {kunye.calismaSaatleri ? (
+          <p
+            data-test="calisma-saatleri-rozeti"
+            className="inline-flex items-center rounded-full bg-emerald-600 px-4 py-2 text-base font-bold text-white"
+          >
+            {kunye.calismaSaatleri}
+          </p>
+        ) : null}
+
         {anasayfa ? (
-          <div className="mt-4">
-            <SiteMetni govde={anasayfa.govde} />
-          </div>
+          <SiteMetni govde={anasayfa.govde} />
         ) : (
-          // Tanıtım metni girilmemiş. Ziyaretçiye yer tutucu bir pazarlama
-          // cümlesi UYDURULMAZ; sayfa sadece iletişim yollarını gösterir.
-          <p className="mt-4 leading-relaxed text-lacivert-700">
+          // Tanitim metni girilmemis. Yer tutucu bir pazarlama cumlesi
+          // UYDURULMAZ; isletmenin kesin olarak verdigi iki hizmet yazilir.
+          <p className="text-lg leading-relaxed text-lacivert-700">
             Otopark ve oto yıkama hizmeti veriyoruz.
           </p>
         )}
-      </section>
 
-      {/* Telefon/WhatsApp: yalnızca girilmişse. Tek dokunuşla arama. */}
-      {kunye.telefon || kunye.whatsapp ? (
-        <section className="grid gap-3 sm:grid-cols-2">
-          {kunye.telefon ? (
-            <a
-              href={`tel:${kunye.telefon.replace(/\s/g, "")}`}
-              className="flex h-16 items-center justify-center rounded-2xl bg-lacivert-600 px-4 text-lg font-bold text-white"
-            >
-              ☎ {kunye.telefon}
-            </a>
-          ) : null}
-          {kunye.whatsapp ? (
-            <a
-              href={`https://wa.me/${kunye.whatsapp.replace(/\D/g, "")}`}
-              className="flex h-16 items-center justify-center rounded-2xl bg-emerald-600 px-4 text-lg font-bold text-white"
-            >
-              WhatsApp
-            </a>
-          ) : null}
-        </section>
-      ) : null}
+        {/* ANA EYLEM: yol tarifi. Telefonda Google Maps uygulamasını açar. */}
+        {kunye.mapsUrl ? (
+          <a
+            href={kunye.mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-test="yol-tarifi"
+            className="flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-lacivert-600 px-4 text-xl font-extrabold text-white"
+          >
+            <span aria-hidden>📍</span> YOL TARİFİ AL
+          </a>
+        ) : null}
+
+        {whatsapp || ara ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {whatsapp ? (
+              <a
+                href={whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-test="whatsapp"
+                className="flex h-16 items-center justify-center rounded-2xl bg-emerald-600 px-4 text-lg font-bold text-white"
+              >
+                WhatsApp ile yaz
+              </a>
+            ) : null}
+            {ara ? (
+              <a
+                href={ara}
+                data-test="ara"
+                className="flex h-16 items-center justify-center rounded-2xl border-2 border-lacivert-600 px-4 text-lg font-bold text-lacivert-700"
+              >
+                ☎ {kunye.telefon}
+              </a>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
 
       {otopark ? (
         <section>
@@ -83,7 +124,8 @@ export default async function SiteAnaSayfa() {
       ) : null}
 
       {/* Fiyatlar: SADECE patronun "sitede göster" dediği satırlar.
-          Tarife tablosundan otomatik kopyalanmaz (docs/07 S19). */}
+          İşletme 05.10.2026'da "fiyat yazmaya gerek yok" dedi; satır
+          girilmediği sürece bu bölüm hiç çizilmez. */}
       {fiyatlar.length > 0 ? (
         <section>
           <h2 className="text-xl font-bold text-lacivert-700">Fiyatlar</h2>

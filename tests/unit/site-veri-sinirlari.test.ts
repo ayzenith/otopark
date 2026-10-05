@@ -27,6 +27,7 @@ const IZINLI_ICE_AKTARMALAR = [
   "next/navigation",
   "@/server/site/queries",
   "@/lib/site-metin",
+  "@/lib/telefon",
 ];
 
 function tsxDosyalari(klasor: string): string[] {

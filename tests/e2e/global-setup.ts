@@ -13,6 +13,21 @@ export const E2E_KULLANICI = "e2e_personel";
 export const E2E_PATRON = "e2e_patron";
 export const E2E_PAROLA = "Kavun42Tepsi";
 
+/**
+ * SITE KUNYESI - TEST DEGERLERI.
+ *
+ * DIKKAT: bunlar isletmenin GERCEK bilgileri DEGILDIR. Site testleri
+ * "girilen ne ise o gorunur" davranisini dogrular; gercek numara/adres
+ * uzerinden dogrulama yapilmaz.
+ *
+ * `phone` BILEREK BOS birakilir: sitede arama butonunun yalnizca telefon
+ * girilince cizildigini (mimari kural 19) dogrulamak icin.
+ */
+export const E2E_SITE_WHATSAPP = "0555 000 00 00";
+export const E2E_SITE_WHATSAPP_BAGLANTI = "https://wa.me/905550000000";
+export const E2E_SITE_MAPS = "https://maps.example.com/e2e-konum";
+export const E2E_SITE_SAAT = "E2E 7/24 AÇIK";
+
 /** TEST tarifesi: ilk 60 dk 40 ₺, sonra saatlik 25 ₺. */
 export const E2E_TARIFE = {
   ilkBlokDakika: 60,
@@ -367,10 +382,19 @@ export default async function globalSetup() {
     });
 
     // Vardiya pencereleri: testler kendi degerlerini yaziyor, temiz baslat.
+    // Site kunyesi de sabitlenir: site testleri bu degerleri bekler ve
+    // telefon alani BOS kalir (arama butonu cizilmemeli).
+    const kunye = {
+      shiftWindows: [],
+      whatsappPhone: E2E_SITE_WHATSAPP,
+      mapsUrl: E2E_SITE_MAPS,
+      workingHoursText: E2E_SITE_SAAT,
+      phone: "",
+    };
     await prisma.businessSetting.upsert({
       where: { id: "singleton" },
-      update: { shiftWindows: [] },
-      create: { id: "singleton", shiftWindows: [] },
+      update: kunye,
+      create: { id: "singleton", ...kunye },
     });
 
     // TEK ACIK KASA kurali: onceki kosudan kalan acik kasa oturumu, yeni

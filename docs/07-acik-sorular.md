@@ -364,3 +364,38 @@ ve S19'un hâlâ açık olması. (Mimari kural 11'in site karşılığı.)
 Site, bilgiler girilene kadar **arama motorlarına kapalıdır**
 (`robots: index false`); yarım bir sayfanın indekslenmesi sonradan zor
 düzelir. Aşama 8'de açılacak.
+
+---
+
+## 05.10.2026 (akşam) — işletme sahibinden gelen kesin bilgiler
+
+| Soru | Cevap |
+|---|---|
+| S19 sitedeki fiyatlar | **KAPANDI: fiyat yazılmayacak.** "fiyatları yazmaya gerek yok" |
+| Çalışma saatleri | **7/24 otopark ve oto yıkama.** Sahibinin ifadesiyle "bu bilgi kesin olsun, bu çok önemli" — sitede en üstte rozet olarak |
+| WhatsApp | `0555 056 79 79` |
+| Konum | `https://maps.app.goo.gl/rLR4CvWx5VsCNLr5A` |
+| Ana eylem | Ana sayfada büyük "YOL TARİFİ AL" butonu; telefonda Google Maps uygulamasını açar |
+| Logo | Henüz gelmedi, gönderilecek |
+
+### Hâlâ cevapsız (VARSAYILMADI)
+
+- **Açık adres metni.** Yalnızca harita bağlantısı verildi; adres yazısı
+  sitede boş. (Harita kısa bağlantısı bu ortamdan açılamadığı için adres
+  oradan da okunamadı.)
+- **Arama için telefon.** Verilen numara WhatsApp olarak bildirildi. Aynı
+  numaradan arama alınıyorsa `phone` alanına girilince sitede "Ara" butonu
+  kendiliğinden çıkar. Teyit beklenirken boş bırakıldı.
+- Instagram adresi, fotoğraflar, işletmenin tam ticari unvanı.
+
+### S17 — barındırma: ÖNEMLİ UYARI
+
+Sahibi "Turhost'tan alan adı + hosting alacağım, ayzenith.com'daki gibi" dedi.
+
+**Turhost'un paylaşımlı hosting paketleri bu sistemi çalıştıramaz.** Panel
+Next.js (Node.js) ile yazıldı ve PostgreSQL kullanıyor; paylaşımlı paketler
+PHP + MySQL sunar, kalıcı bir Node süreci ve PostgreSQL çalıştırılamaz.
+Gereken: **VPS / sunucu paketi** (Turhost'ta da var) ya da başka bir VPS
+sağlayıcı. Alan adı Turhost'tan alınıp sunucuya yönlendirilebilir.
+
+Bu uyarı kullanıcıya iletildi; alan adı henüz alınmadı.

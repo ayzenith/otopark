@@ -32,7 +32,7 @@ dokunma (hâlâ 0 commit). Her aşama sonunda commit + push.
 | 7 | Kurumsal web sitesi (iskelet + panelden içerik yönetimi) | ✅ |
 | **8** | **SIRADAKİ:** devreye alma, gerçek cihaz testleri | ⏳ |
 
-**1123 test geçiyor**, başarısız yok: 303 birim + 463 entegrasyon + 357 E2E
+**1146 test geçiyor**, başarısız yok: 314 birim + 463 entegrasyon + 369 E2E
 (3 ekran boyutu). Her aşamada önce mevcut testleri çalıştır, sonra yenileri
 ekle, sonra hepsini tekrar çalıştır.
 
@@ -44,27 +44,37 @@ zenginleştirilmesi, personel maliyetlerinin otomatik gider üretmesi.
 **Son commit:** Aşama 7 (kurumsal site iskeleti) tamamlandı ve push edildi.
 `main` dalı hâlâ 0 commit, dokunulmadı.
 
-## ⚠️ AŞAMA 8 ÖNCESİ SORULACAKLAR (hâlâ cevapsız)
+## Site için 05.10.2026'da VERİLEN bilgiler (uydurma değil, sahibinden)
 
-Aşama 7'nin **iskeleti bitti**: site çalışıyor, tüm içerik panelden giriliyor
-(Yönetim → Web sitesi + Yönetim → İşletme ayarları). İçerik alanları BOŞ ve
-hiçbir şey uydurulmadı — girilmeyen bölüm sitede hiç çizilmiyor.
+`npm run isletme:kur` bunları veritabanına **veri olarak** yazar (idempotent,
+dolu alanı ezmez). Kaynak: işletme sahibi, 05.10.2026.
 
-Site yayına çıkmadan önce gereken bilgiler (docs/07 S17–S20):
+| Alan | Değer |
+|---|---|
+| WhatsApp | `0555 056 79 79` → `wa.me/905550567979` |
+| Google Maps | `https://maps.app.goo.gl/rLR4CvWx5VsCNLr5A` |
+| Çalışma saatleri | **7/24 AÇIK** — sahibi "bu bilgi kesin olsun, çok önemli" dedi |
+| Hizmetler | Otopark + oto yıkama (ana sayfada madde listesi) |
+| Sitede fiyat | **YAZILMAYACAK** (S19 kapandı). Fiyat satırı girilmediği sürece bölüm çizilmez |
+| Ana eylem (CTA) | Ana sayfada ve iletişimde büyük **YOL TARİFİ AL** butonu; telefonda Maps uygulamasını açar |
 
-1. **S17 — Alan adı ve barındırma:** kullanıcı 05.10.2026'da ".com alacağım,
-   yarın olur" dedi. Alan adı gelince sunucu kurulumu yapılacak. Sunucu
-   sağlayıcı kararı verilmedi.
-2. **S18 — İşletme künyesi:** tam ad, açık adres, telefon, WhatsApp, çalışma
-   saatleri, Google Maps bağlantısı, Instagram. **Fotoğraf ve logo da yok** —
-   PWA ikonu GEÇİCİ ("LC" harfleri, `public/ikon-*.png`).
-3. **S19 — Sitede hangi fiyatlar yazılacak?** Site fiyatı tarifeden otomatik
-   akmaz; patron hangi satırı yazarsa o görünür. Hiç satır girilmezse site
-   "arayınız" der. Abonman fiyatının sitede yazılmaması önerildi.
-4. **S20 — Teslim ve erişim:** depo/sunucu/yedek kimde olacak?
+**HÂLÂ VERİLMEYEN — VARSAYMA:**
+- **Açık adres metni** (yalnızca harita bağlantısı var)
+- **Arama için telefon.** Verilen numara WhatsApp olarak bildirildi; aynı
+  numaradan arama alınıp alınmadığı TEYİT EDİLMEDİ. `phone` boş; sitede arama
+  butonu çıkmıyor. Teyit gelince panelden girilir
+- Instagram · logo · fotoğraflar · işletmenin tam ticari unvanı
 
-Ayrıca: **KVKK saklama süresi (S12)** ve **XLSX/PDF dışa aktarma için
-bağımlılık onayı** Aşama 8'de tekrar sorulacak.
+## ⚠️ AŞAMA 8 ÖNCESİ SORULACAKLAR
+
+1. **S17 — Barındırma (05.10.2026):** sahibi "Turhost'tan alan adı + hosting
+   alacağım, ayzenith.com gibi" dedi. **UYARI: Turhost'un PAYLAŞIMLI HOSTING
+   paketleri bu sistemi ÇALIŞTIRAMAZ** — Next.js (Node.js) + PostgreSQL
+   gerekiyor, paylaşımlı paketler PHP/MySQL'dir. **VPS/sunucu paketi**
+   alınmalı. Bu kullanıcıya bildirildi; alan adı henüz alınmadı
+2. **S18 — kalan künye alanları:** yukarıdaki "hâlâ verilmeyen" listesi
+3. **S20 — Teslim ve erişim:** depo/sunucu/yedek kimde olacak?
+4. **S12 — KVKK saklama süresi** · **XLSX/PDF için bağımlılık onayı**
 
 ## İşletme sahibinin verdiği KESİN kararlar
 
@@ -263,9 +273,10 @@ scripts/baslangic-fiyatlari.ts   fiyatları DB'ye yazar (idempotent)
 
 ```bash
 npm run typecheck && npm run lint && npm run build
-npm run test              # birim (303)
+npm run test              # birim (314)
 npm run test:integration  # entegrasyon, gerçek PostgreSQL (463)
-npm run test:e2e          # Playwright, 3 ekran boyutu (357)
+npm run test:e2e          # Playwright, 3 ekran boyutu (369)
+npm run isletme:kur       # işletme künyesi başlangıç değerleri (idempotent)
 npm run fiyatlar:kur      # başlangıç fiyatları (mevcut fiyatları ezmez)
 npm run db:seed           # araç sınıfları, kategoriler, patron hesabı
 ```
