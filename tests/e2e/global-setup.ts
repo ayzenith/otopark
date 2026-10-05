@@ -89,6 +89,30 @@ export const E2E_YIKAMA_ANA = { kod: "E2E_IC_DIS", ad: "E2E İç Dış Yıkama" 
 export const E2E_YIKAMA_EK = { kod: "E2E_MOTOR", ad: "E2E Motor Yıkama" };
 export const E2E_YIKAMA_FIYAT = { otomobilKurus: 600_00, suvKurus: 700_00 };
 
+/**
+ * ASAMA 5 FIXTURE'LARI (kasa, gider, stok).
+ *
+ * DIKKAT: Buradaki gider kategorisi ve malzeme adlari YALNIZCA TESTtir;
+ * isletmenin gercek gider kalemleri veya malzemeleri DEGILDIR.
+ *
+ * Malzeme adlari PROJE BASINA ayrilir: malzeme adi tekildir ve E2E
+ * veritabani uc Playwright projesi arasinda PAYLASILIR; ayni adi ikinci
+ * projede acmak "zaten kayitli" hatasi verirdi.
+ */
+export const E2E_GIDER_KATEGORISI = { kod: "E2E_TEST_GIDERI", ad: "E2E Test Gideri" };
+
+export const E2E_MALZEMELERI: Record<string, string> = {
+  "telefon-kucuk": "E2E Test Şampuanı K",
+  "telefon-orta": "E2E Test Şampuanı O",
+  masaustu: "E2E Test Şampuanı M",
+};
+
+export function e2eMalzemeAdi(projeAdi: string): string {
+  const ad = E2E_MALZEMELERI[projeAdi];
+  if (!ad) throw new Error(`Bu proje için malzeme fixture tanımlı değil: ${projeAdi}`);
+  return ad;
+}
+
 export function parkEdilmisPlaka(projeAdi: string): string {
   const plaka = E2E_PARK_EDILMIS_PLAKALAR[projeAdi];
   if (!plaka) throw new Error(`Bu proje için park edilmiş araç tanımlı değil: ${projeAdi}`);
@@ -248,6 +272,51 @@ export default async function globalSetup() {
 
       await tx.$executeRawUnsafe(`DELETE FROM "Vehicle" WHERE "plateNormalized" LIKE '34Z%'`);
       await tx.$executeRawUnsafe(`DELETE FROM "Customer" WHERE "fullName" LIKE 'E2E %'`);
+
+      // --- ASAMA 5: kasa, finans ve stok test kayitlari ---
+      //
+      // Finansal satirlar normalde SILINMEZ (tetikleyici reddeder); burada
+      // yalnizca E2E test verisi siliniyor ve bu transaction icinde
+      // session_replication_role = replica oldugu icin tetikleyici gecici
+      // olarak devre disi. Gercek veri ASLA silinmez: olcut "E2E " oneki.
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "InventoryMovement" WHERE "inventoryItemId" IN
+           (SELECT id FROM "InventoryItem" WHERE "name" LIKE 'E2E %')`,
+      );
+      await tx.$executeRawUnsafe(`DELETE FROM "InventoryItem" WHERE "name" LIKE 'E2E %'`);
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "CashMovement" WHERE "description" LIKE 'E2E %'
+         OR "expenseId" IN (SELECT id FROM "Expense" WHERE "description" LIKE 'E2E %')`,
+      );
+      await tx.$executeRawUnsafe(`DELETE FROM "Expense" WHERE "description" LIKE 'E2E %'`);
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "Payment" WHERE "otherIncomeId" IN
+           (SELECT id FROM "OtherIncome" WHERE "label" LIKE 'E2E %')`,
+      );
+      await tx.$executeRawUnsafe(`DELETE FROM "OtherIncome" WHERE "label" LIKE 'E2E %'`);
+    });
+
+    // TEK ACIK KASA kurali: onceki kosudan kalan acik kasa oturumu, yeni
+    // kosudaki "kasayi ac" adimini engeller. Kalanlar kapatilir.
+    await prisma.cashDrawerSession.updateMany({
+      where: { status: "OPEN" },
+      data: {
+        status: "CLOSED",
+        closedAt: new Date(),
+        notes: "E2E hazırlığında kapatıldı",
+      },
+    });
+
+    // E2E gider kategorisi (yoksa olustur).
+    await prisma.expenseCategory.upsert({
+      where: { code: E2E_GIDER_KATEGORISI.kod },
+      update: { isActive: true },
+      create: {
+        code: E2E_GIDER_KATEGORISI.kod,
+        name: E2E_GIDER_KATEGORISI.ad,
+        isActive: true,
+        sortOrder: 900,
+      },
     });
 
     // Acik vardiyalari kapat ki testler temiz baslayabilsin.

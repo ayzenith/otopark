@@ -45,8 +45,13 @@ export default async function DigerSayfasi() {
     bolumler.push({
       href: "/kasa",
       etiket: "Kasa / Vardiyam",
-      aciklama: "Tahsilat özeti ve kasa kapanışı",
-      asama: "Aşama 5",
+      aciklama: "Tahsilat özeti, kasa açma ve kapanış sayımı",
+    });
+  if (has(P.INVENTORY_VIEW))
+    bolumler.push({
+      href: "/stok",
+      etiket: "Malzeme stoğu",
+      aciklama: "Malzeme kartları ve stok hareketleri",
     });
   if (has(P.TARIFF_VIEW))
     bolumler.push({

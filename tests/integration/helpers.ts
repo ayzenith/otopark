@@ -31,6 +31,12 @@ export async function temizle(): Promise<void> {
     // Aksi halde bir testte eklenen sinif (ornek: TICARI) sonraki kosuda
     // "kod zaten kullaniliyor" hatasi verir ve testler birbirini etkiler.
     "VehicleClass",
+    // Gider kategorileri AYNI NEDENLE temizlenir (Asama 5'te yasandi):
+    // testlerin olusturdugu kategoriler birikiyor ve bir sonraki kosuda
+    // "kod zaten kullaniliyor" hatasi tum dosyayi dusuruyordu. Kategoriler
+    // de VehicleClass gibi yapisal tohum verisidir; testler kendi
+    // kategorilerini olusturur.
+    "ExpenseCategory",
   ];
   const liste = tablolar.map((t) => `"${t}"`).join(", ");
   await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${liste} RESTART IDENTITY CASCADE;`);

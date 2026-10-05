@@ -24,6 +24,7 @@
 
 import { Prisma, type PaymentMethod } from "@prisma/client";
 import { prisma } from "@/server/db";
+import { acikKasaId } from "@/server/cash/drawer";
 import { writeAudit, AUDIT_ACTIONS } from "@/server/audit";
 import { IslemHatasi } from "@/server/errors";
 import { clampNonNegative, kurusToDecimalString, toKurus } from "@/lib/money";
@@ -133,6 +134,7 @@ export async function yikamaTahsilat(
           sourceType: "WASH",
           washJobId: isEmri.id,
           shiftId: vardiya.id,
+          cashDrawerSessionId: await acikKasaId(tx),
           collectedById: actor.id,
           status: "CONFIRMED",
           idempotencyKey: istek.idempotencyKey,
@@ -337,6 +339,7 @@ export async function yikamaIptal(actor: SessionUser, istek: YikamaIptalIstegi) 
             sourceType: "REFUND",
             washJobId: isEmri.id,
             shiftId: vardiya!.id,
+            cashDrawerSessionId: await acikKasaId(tx),
             collectedById: actor.id,
             status: "CONFIRMED",
             reversalOfId: odeme.id,

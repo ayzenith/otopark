@@ -33,8 +33,9 @@ cash.shift.open          cash.shift.close         cash.drawer.open
 cash.drawer.close        cash.movement.create     cash.report.self
 cash.report.all          cash.void
 
-finance.income.view      finance.expense.view     finance.expense.create
-finance.expense.void     finance.report.view      finance.report.export
+finance.income.view      finance.income.create    finance.expense.view
+finance.expense.create   finance.expense.void     finance.report.view
+finance.report.export
 
 tariff.view              tariff.edit
 washprice.view           washprice.edit
@@ -73,8 +74,9 @@ settings.business.edit   audit.view               user.manage
 | cash.report.self (kendi tahsilatı) | ✅ | ✅ | ✅ |
 | cash.report.all (tüm personel) | ✅ | ✅ | ❌ |
 | cash.void | ✅ | ❌ | ❌ |
-| finance.income.view | ✅ | ❌ | ❌ |
-| finance.expense.view / create | ✅ | ❌ | ❌ |
+| finance.income.view | ✅ | ✅ | ❌ |
+| finance.income.create | ✅ | ✅ | ❌ |
+| finance.expense.view / create | ✅ | ✅ | ❌ |
 | finance.expense.void | ✅ | ❌ | ❌ |
 | finance.report.view / export | ✅ | ❌ | ❌ |
 | tariff.view | ✅ | ✅ | ✅ (yalnızca geçerli fiyatlar) |

@@ -26,6 +26,7 @@
  */
 
 import { prisma } from "@/server/db";
+import { acikKasaId } from "@/server/cash/drawer";
 import { writeAudit, AUDIT_ACTIONS } from "@/server/audit";
 import { kurusToDecimalString, toKurus } from "@/lib/money";
 import { vardiyaZorunlu, IslemHatasi } from "@/server/shift";
@@ -127,6 +128,7 @@ export async function parkIptal(actor: SessionUser, istek: IptalIstegi): Promise
             sourceType: "REFUND",
             parkingSessionId: kayit.id,
             shiftId: vardiya.id,
+            cashDrawerSessionId: await acikKasaId(tx),
             collectedById: actor.id,
             status: "CONFIRMED",
             reversalOfId: odeme.id,

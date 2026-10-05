@@ -197,8 +197,9 @@ Başarısız test yok. `tsc --noEmit`, `npm run lint` ve `npm run build` temiz.
 - [x] Fiyat değişikliğinin geçmiş yıkama tutarlarını etkilemediği test
 - [x] Durum geçişlerinin yalnızca geçerli yönde yapılabildiği test
 - [x] Tahsil edilmemiş yıkamaların yönetim ekranında listelendiği E2E
-- [ ] ~~Stok hareketi ↔ gider ilişkisinin doğru kurulduğu test~~ → **Aşama 5**
-      (gider modülü orada geliyor; stok alışını gidere bağlamak onu gerektirir)
+- [x] ~~Stok hareketi ↔ gider ilişkisinin doğru kurulduğu test~~ → **Aşama 5'te
+      yapıldı** (gider modülü orada geldi; stok alışını gidere bağlamak onu
+      gerektiriyordu)
 
 ---
 
@@ -250,33 +251,130 @@ doğru davranışını yanlış varsaymıştı.*
   tabloları hazır, ama planın "alışların gidere bağlanması" maddesi Gelir-Gider
   modülünü gerektiriyor ve o Aşama 5'te geliyor. Stok hareketini şimdi, gider
   bağını sonra yapmak yarım bir muhasebe kaydı üretirdi.
+  → **Aşama 5'te tamamlandı (05.10.2026).**
 - Yıkama **fişi/belgesi yazdırma** yok (Aşama 7).
 - Yıkama **süre hedefi / SLA** tanımlanmadı.
-- Karavan otopark ücreti, motor yıkama ücreti ve diğer yıkama hizmetlerinin
-  fiyatları **belirlenmedi** (bilinçli olarak boş).
+- Motor yıkama ücreti ve diğer yıkama hizmetlerinin fiyatları
+  **belirlenmedi** (bilinçli olarak boş).
+  → **Karavan otopark ücreti 04.10.2026'da karara bağlandı:** 700 ₺ / 24 saat,
+  her ek 24 saat +700 ₺ (`docs/05` 0.2). Karavan **yıkama** ücreti hâlâ açık.
 
 ---
 
-## Aşama 5 — Kasa, gelir-gider, finansal raporlar
+## Aşama 5 — Kasa, gelir-gider, malzeme stoğu ✅ TAMAMLANDI (05.10.2026)
+
 **Kapsam**
-- **(Aşama 4'ten taşındı)** Malzeme stok kartı, tüketim/alış hareketleri ve
-  alışların gidere bağlanması — gider modülüyle birlikte yapılacak
-- Kasa oturumu: açılış nakdi, beklenen/sayılan, fark + zorunlu açıklama, mutabakat
-- Vardiya bazlı ve personel bazlı tahsilat raporları
-- Nakit/kart ayrımı, kasa hareketleri (avans, bankaya yatırma, düzeltme)
-- Gider kayıtları + kategoriler + iptal (ters kayıt) mekanizması
-- Diğer gelirler
-- Finansal raporlar: günlük/aylık/yıllık gelir-gider, net sonuç, kategori dağılımı,
-  gelir kaynağı dağılımı, dönem karşılaştırması
-- Dışa aktarma: CSV + Excel (XLSX) + yazdırılabilir PDF özet
-- Her rapor başlığında: *"Yönetim amaçlı rapordur; resmî muhasebe/yasal bilanço yerine geçmez."*
+- Kasa oturumu: açılış nakdi, **sunucuda hesaplanan** beklenen nakit/kart,
+  sayım, fark + **zorunlu gerekçe**, mutabakat
+- Kasa hareketleri: kasaya ekleme, kasadan alma, bankaya yatırma, personel
+  avansı, sayım düzeltmesi (yön ayrıca sorulur) + iptal
+- Her tahsilatın **açık kasa oturumuna bağlanması**; kasa açık değilken
+  yapılan nakit tahsilatların **"kasa dışı tahsilat"** olarak işaretlenmesi
+- Vardiya bazlı tahsilat özeti (nakit/kart/kaynak dağılımı)
+- Gider kayıtları + kategoriler + iptal (VOIDED + gerekçe)
+- Diğer gelirler (tahsilat üreten) + iptal (iade / ters kayıt ayrımı)
+- Finansal raporlar: günlük/aylık gelir-gider, net, kategori dağılımı,
+  **otopark / yıkama / abonman ayrı satırlarda**
+- **(Aşama 4'ten taşındı)** Malzeme stok kartı, alış/tüketim/zayi/düzeltme
+  hareketleri ve **alışların gidere bağlanması**
+- CSV dışa aktarma (tr-TR; noktalı virgül + UTF-8 BOM, Excel TR uyumlu)
+- Her rapor/dosya başlığında: *"Yönetim amaçlı rapordur; resmî
+  muhasebe/yasal bilanço yerine geçmez."*
 
 **Tamamlanma kriterleri**
-- [ ] Kasa kapanış hesabı: açılış + nakit tahsilat − nakit çıkış = beklenen (test)
-- [ ] İptal ve iade sonrası kasa ve rapor tutarlarının tutarlı kaldığı test
-- [ ] Finansal satırın hiçbir arayüzden silinemediği test
-- [ ] `finance.*` izni olmayan kullanıcının rapor verisine erişemediği test (sunucu)
-- [ ] CSV/XLSX çıktısında tutar ve tarih biçimlerinin tr-TR olduğu doğrulandı
+- [x] Kasa kapanış hesabı: açılış + nakit tahsilat − nakit çıkış − nakit gider
+      = beklenen (birim + entegrasyon testi)
+- [x] İptal ve iade sonrası kasa ve rapor tutarlarının tutarlı kaldığı test
+- [x] Finansal satırın hiçbir arayüzden silinemediği test (DB tetikleyicisi)
+- [x] `finance.*` izni olmayan kullanıcının rapor verisine erişemediği test
+      (CSV uç noktası personele **403**; E2E ile doğrulandı)
+- [x] CSV çıktısında tutar ve tarih biçimlerinin tr-TR olduğu doğrulandı
+- [x] Stok hareketi ↔ gider ilişkisinin doğru kurulduğu test (Aşama 4'ten devir)
+- [x] Stoğun negatife düşemediği test (uygulama **ve** veritabanı kısıtı)
+
+**Aşama 5'te alınan yapısal kararlar**
+
+| Karar | Gerekçe |
+|---|---|
+| Kasa oturumu vardiyadan AYRI | Vardiya çalışma süresi, kasa oturumu **paranın fiziki sorumluluğu**; bir vardiyada kasa iki kez sayılabilir |
+| **Aynı anda tek açık kasa** | Tek fiziki kasa var. Uygulama kontrolü + kısmi unique indeks (`cash_drawer_single_open`) |
+| Beklenen nakit **sayımdan önce gösterilmez** | Ekranda yazarsa personel saymadan o rakamı yazar, kasa farkı hiç ortaya çıkmaz |
+| Nakit gider kasadan **bir kez** düşer | Hem `Expense` hem `CashMovement` üretmek beklenen nakdi iki kez düşürür (Aşama 2'deki çifte muhasebe hatasının kasa karşılığı). Gider için kasa hareketi **üretilmez**; beklenen nakit hesabı gidere bağlı hareketleri toplamaz |
+| Kasa açık değilken tahsilat **engellenmez** | Müşteri kapıda bekletilmez. Kayıp sessiz kalmasın diye "kasa dışı tahsilat" sayacı patron panelinde gösterilir |
+| Kapanmış kasanın gideri/hareketi geriye dönük **iptal edilemez** | İmzalanmış sayımı bozar; düzeltme yeni kasada düzeltme hareketiyle yapılır |
+| Kasa kapanış onayı **sunucudan** okunur | Kapanış `revalidatePath` çağırır; istemcide tutulan özet o anda yok olur ve personel farkı göremez. "Son kasa kapanışı" kartı kalıcı kaynaktır |
+| Stok **negatife düşmez** | Elde 3 litre varken 5 litre tüketim girilemez; uygulama hatası + DB CHECK kısıtı |
+| Stok hareketi ve miktarı **işaretsiz** | Yön `type` (stok) / `direction` (kasa) alanında taşınır; "-500" satırı hesabı sessizce ters çeviremez |
+| Stok defteri **silinmez** | Yanlış hareket için ters yönde düzeltme girilir; DB tetikleyicisi DELETE'i reddeder |
+| Gider iptali stoğu **geri almaz** | Malzeme fiilen depoya girdiyse iptal onu çıkarmaz. Kullanıcıya "elle düzeltin" uyarısı verilir |
+| Malzeme ve kategori **silinmez** | Pasifleştirilir; geçmiş hareketler kategorisini/malzemesini kaybetmemeli |
+| Gider/gelir tutarı **istemciden alınır** | Hesaplanan değil, dış dünyadan gelen olgu (fatura tutarı). Bu yüzden izne bağlı ve denetimli |
+
+**Test sayıları (05.10.2026)**
+
+| Katman | Aşama 4 sonu | Aşama 5 eklenen | Toplam |
+|---|---:|---:|---:|
+| Birim | 191 | +56 | **247** |
+| Entegrasyon (gerçek PostgreSQL) | 287 | +84 | **371** |
+| Uçtan uca (3 ekran boyutu) | 192 | +57 | **249** |
+| **Toplam** | 670 | +197 | **867** |
+
+Başarısız test yok. `tsc --noEmit`, `npm run lint`, `npm run build` temiz.
+
+> Not: Birim ve entegrasyon artışının bir kısmı (16 + 14) karavan tarifesi ve
+> kapasite kararının testlerinden gelir; bunlar Aşama 5 kodundan önce,
+> `ddcfdc3` commit'inde eklendi.
+
+**Aşama 5'te bulunan ve düzeltilen hatalar**
+
+Bu aşamada **beş gerçek hata** bulundu; dördü ürün kodunda, biri test
+altyapısındaydı.
+
+1. **Türkçe büyük/küçük harf tuzağı (ürün kodu).** Malzeme adı tekilliği
+   Prisma'nın `mode: "insensitive"` karşılaştırmasıyla yapılıyordu; bu
+   PostgreSQL'de Türkçe I/ı ve İ/i çifti için **doğru sonuç vermez**.
+   "Deterjanı" ile "DETERJANI" farklı sayılıyor ve aynı malzeme iki kez
+   açılabiliyordu. Karşılaştırma Türkçe yerel kuralıyla uygulamaya taşındı
+   (`adAnahtari`).
+2. **Zod 4 davranışı: eksik form alanı tüm işlemi düşürüyordu (ürün kodu).**
+   `z.union([..., z.undefined()])` nesne doğrulamasında **eksik anahtarı**
+   kabul etmez; alanın kendisi `.optional()` olmak zorundadır. Formlar
+   göndermediği (`yon`, `tedarikci`, `belgeNo`…) alanlar yüzünden kasa
+   hareketi ve stok hareketi "Girdiğiniz bilgiler geçersiz" hatasıyla
+   reddediliyordu.
+3. **Doğrulama hataları kullanıcıya gösterilmiyordu (ürün kodu, mimari
+   kural 12).** `runAction` tüm Zod hatalarını tek bir *"Girdiğiniz bilgiler
+   geçersiz."* mesajına çeviriyordu; personel hangi alanın yanlış olduğunu
+   göremiyordu. Artık alan adı + Türkçe mesaj aynen gösteriliyor. **Bu hata
+   Aşama 2–4'te de vardı**, yalnızca bu aşamada ortaya çıktı.
+4. **Başarı ve kapanış onayları ekrandan siliniyordu (ürün kodu).** Form
+   kaydettikten sonra kapandığı için başarı uyarısı da yok oluyordu; kasa
+   kapanışında ise `revalidatePath` sayfayı tazeleyince **kasa farkı özeti**
+   tamamen kayboluyordu — personel farkı hiç görmüyordu. Başarı mesajları form
+   kapandıktan sonra da çiziliyor, kasa kapanış özeti ise **sunucudan** okunan
+   kalıcı "Son kasa kapanışı" kartına taşındı.
+   Ayrıca React 19'da `<form action={fn}>` **formu sıfırladığı** için, sayım
+   formundaki alanlar hata sonrası siliniyordu (personelin az önce saydığı
+   nakit dahil). Sayım formu kontrollü duruma geçirildi.
+5. **`ExpenseCategory` test temizliğinde silinmiyordu (test altyapısı).**
+   Testlerin oluşturduğu kategoriler birikiyor, sonraki koşuda "kod zaten
+   kullanılıyor" hatası **tüm dosyayı** düşürüyordu. `VehicleClass` ile aynı
+   gerekçeyle temizlik listesine eklendi.
+
+**Aşama 5 sonunda bilinen eksikler**
+
+- **XLSX ve PDF dışa aktarma yok.** CSV yapıldı (Excel TR uyumlu: noktalı
+  virgül + BOM) ve testli. XLSX yeni bir bağımlılık (`exceljs` vb.), PDF ise
+  yazdırma şablonu gerektirir; yazdırılabilir sayfalar **Aşama 7** kapsamında.
+  Bağımlılık eklemek için onay beklenmektedir.
+- **Dönem karşılaştırması** (geçen aya göre değişim) ve **yıllık grafik** yok;
+  CSV'de yıllık özet var. Grafikler Aşama 6 panelinde.
+- Kasa raporlarında **tarih aralığı filtresi** yok; günlük/aylık sabit
+  dönemler ve son 90 gün listeleri var. Filtre Aşama 6'da.
+- **Personel bazlı** tahsilat raporu yok (vardiya bazlı var); personel
+  yönetimi Aşama 6'da geliyor.
+- Malzeme **birim maliyeti ortalaması / stok değerlemesi** yapılmıyor; her
+  alışın birim maliyeti kendi satırında saklanıyor.
 
 ---
 

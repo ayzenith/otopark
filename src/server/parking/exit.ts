@@ -24,6 +24,7 @@
 
 import { Prisma, type PaymentMethod } from "@prisma/client";
 import { prisma } from "@/server/db";
+import { acikKasaId } from "@/server/cash/drawer";
 import { writeAudit, AUDIT_ACTIONS } from "@/server/audit";
 import { normalizePlate } from "@/lib/plate";
 import { daysBetween, isWeekend, minuteOfDay } from "@/lib/datetime";
@@ -419,6 +420,7 @@ export async function aracCikisi(actor: SessionUser, istek: CikisIstegi): Promis
           sourceType: "PARKING",
           parkingSessionId: kayit.id,
           shiftId: vardiya.id,
+          cashDrawerSessionId: await acikKasaId(tx),
           collectedById: actor.id,
           status: "CONFIRMED",
           paidAt: cikisAt,

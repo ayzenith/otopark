@@ -122,7 +122,28 @@ export async function runAction<T>(fn: () => Promise<T>): Promise<ActionResult<T
       return { ok: false, error: err.message, code: err.code };
     }
     if (err instanceof Error && err.name === "ZodError") {
-      return { ok: false, error: "Girdiğiniz bilgiler geçersiz.", code: "GECERSIZ_VERI" };
+      // DOGRULAMA MESAJLARI KULLANICIYA GOSTERILIR (mimari kural 12).
+      //
+      // Eskiden burada tek bir "Girdiğiniz bilgiler geçersiz." mesaji
+      // donuyordu; personel hangi alanin yanlis oldugunu goremedigi icin
+      // arayuz kullanilamaz hale geliyordu (Asama 5'te yasandi: eksik bir
+      // form alani yuzunden tum kasa hareketi bu mesajla reddedildi ve
+      // sebebi ekranda hic gorunmedi).
+      //
+      // Semalardaki mesajlar Turkce ve personele yoneliktir; alan adlari
+      // da birlikte yazilir ki "hangi alan?" sorusu yanitsiz kalmasin.
+      const issues = (err as { issues?: { path?: (string | number)[]; message: string }[] }).issues;
+      const metin = (issues ?? [])
+        .map((i) => {
+          const alan = (i.path ?? []).join(".");
+          return alan ? `${alan}: ${i.message}` : i.message;
+        })
+        .join(" · ");
+      return {
+        ok: false,
+        error: metin || "Girdiğiniz bilgiler geçersiz.",
+        code: "GECERSIZ_VERI",
+      };
     }
     // Beklenmeyen hata: ayrintisi kullaniciya gosterilmez, sunucuya yazilir.
     console.error("[action] beklenmeyen hata:", err);

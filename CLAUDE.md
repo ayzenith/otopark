@@ -18,7 +18,7 @@ hatada açık uyarı, başarıda net onay. Masaüstü de kusursuz çalışmalı.
 **Dal:** `claude/londra-camping-parking-system-3zwfd8` — `main` dalına ASLA
 dokunma (hâlâ 0 commit). Her aşama sonunda commit + push.
 
-## Durum (04.10.2026)
+## Durum (05.10.2026)
 
 | Aşama | Kapsam | Durum |
 |---|---|---|
@@ -26,16 +26,20 @@ dokunma (hâlâ 0 commit). Her aşama sonunda commit + push.
 | 1 | Altyapı, DB, kimlik doğrulama, yetki, denetim kaydı, mobil kabuk | ✅ |
 | 2 | Tarife sistemi, ücret motoru, araç giriş-çıkış, tahsilat | ✅ |
 | 3 | Müşteriler, abonmanlar, dönem/yenileme, abonman tahsilatı | ✅ |
-| **5** | **SIRADAKİ:** kasa, gelir-gider, **malzeme stoğu (Aşama 4'ten taşındı)** | ⏳ |
-| 6 | Personel yönetimi, patron raporları | ⏳ |
+| 4 | Oto yıkama | ✅ |
+| 5 | Kasa, gelir-gider, malzeme stoğu, CSV dışa aktarma | ✅ |
+| **6** | **SIRADAKİ:** personel yönetimi, patron paneli/raporları, uyarı merkezi, denetim ekranı | ⏳ |
 | 7 | Kurumsal web sitesi | ⏳ |
 | 8 | Devreye alma, gerçek cihaz testleri | ⏳ |
 
-Aşama 4 (oto yıkama) ✅ tamamlandı. Son commit: `63caf09`.
+**867 test geçiyor**, başarısız yok: 247 birim + 371 entegrasyon + 249 E2E
+(3 ekran boyutu). Her aşamada önce mevcut testleri çalıştır, sonra yenileri
+ekle, sonra hepsini tekrar çalıştır.
 
-**670 test geçiyor**, başarısız yok: 191 birim + 287 entegrasyon + 192 E2E
-(3 ekran boyutu × 64). Her aşamada önce mevcut testleri çalıştır, sonra
-yenileri ekle, sonra hepsini tekrar çalıştır.
+Aşama 5'te taşınmayan işler (docs/06 sonunda tam liste): XLSX/PDF dışa aktarma
+(bağımlılık onayı bekliyor), dönem karşılaştırması ve grafikler (Aşama 6),
+kasa raporlarında tarih aralığı filtresi (Aşama 6), personel bazlı tahsilat
+raporu (Aşama 6), stok değerlemesi.
 
 ## İşletme sahibinin verdiği KESİN kararlar
 
@@ -54,12 +58,31 @@ günlük üst limit 500 ₺, `extraDayBlockPrice` 600 ₺.
   48 sa = 1.100 ₺, 48 sa 1 dk = 1.700 ₺. Bu yorum kullanıcıya bildirildi,
   onay beklemedi ama itiraz da gelmedi.
 
-### Karavan
+### Karavan (fiyatı 04.10.2026'da karara bağlandı)
 Normal otopark tarifesinin **DIŞINDA**
 (`VehicleClass.excludeFromStandardTariff = true`). Tarife çözümleyici bu
-sınıfta genel kurala **düşmez**. Karavana özel kural girilene kadar çıkışta
-ücret hesaplanmaz, personele açık uyarı çıkar. **Karavan fiyatı
-belirlenmedi** — varsayma.
+sınıfta genel kurala **düşmez**; yalnızca karavana özel kural geçerlidir.
+
+**Karavan tarifesi: 24 saate kadar 700 ₺, 24 saatten sonra başlayan her
+24 saat +700 ₺.** (24 sa = 700 · 24 sa 1 dk = 1.400 · 48 sa = 1.400 ·
+48 sa 1 dk = 2.100.)
+
+Motor karşılığı: ilk blok **1440 dk / 700 ₺**, saatlik ücret **yok**,
+günlük üst limit 700 ₺, `extraDayBlockPrice` 700 ₺.
+
+> İşletme yalnızca 24 saatlik fiyatı verdi; **karavan için saatlik kademe
+> VERİLMEDİ ve UYDURULMADI.** Bu yüzden 1 saatlik karavan parkı da 700 ₺'dir.
+> Patron saatlik kademe isterse panelden girer.
+
+Karavan kuralı silinirse ücret hesaplanmaz ve personele açık uyarı çıkar —
+sessizce otomobil fiyatı uygulanmaz (testli).
+**Karavan YIKAMA ücreti hâlâ belirlenmedi.**
+
+### Otopark kapasitesi (S3, 04.10.2026)
+**SINIR YOK.** `totalCapacity = 0` bırakıldı ("tanımlı değil"): doluluk
+hesaplanmaz, kapasite çubuğu çizilmez, giriş **hiçbir zaman** engellenmez.
+Kapasite mantığı koddan kaldırılmadı; patron bir sayı girerse kendiliğinden
+devreye girer. **Aktif etme.**
 
 ### Oto yıkama
 **Araç tipine göre fiyatlandırma YALNIZCA yıkamada var.** Başlangıç:
@@ -78,8 +101,12 @@ Otomobil 600 ₺, SUV 700 ₺, Motosiklet 400 ₺ (İç Dış Yıkama).
   kaydeder (S9/S10 kararları `docs/05`'te)
 
 ### Hâlâ belirlenmeyen (VARSAYMA, sor)
-Karavan otopark ücreti · motor yıkama ücreti · diğer yıkama hizmetleri
-(iç temizlik, pasta cila…) · otopark kapasitesi (S3) · S12, S14–S20.
+Motor yıkama ücreti · diğer yıkama hizmetleri (iç temizlik, pasta cila…) ·
+karavan **yıkama** ücreti · S12, S14–S20.
+
+İşletme 04.10.2026'da bu kalemler için **"şu an uydurma, panelden sonradan
+girilebilir bırak"** dedi. Fiyatsız hizmet 0 ₺'ye çevrilmez; personel
+ekranında "fiyat girilmemiş" uyarısı çıkar (mimari kural 10).
 
 ## Değişmez mimari kurallar
 
@@ -114,13 +141,28 @@ Karavan otopark ücreti · motor yıkama ücreti · diğer yıkama hizmetleri
     hesaplama paylaşırlar. Testlerle kanıtlı — bu ayrımı bozma.
 12. **İş hataları kullanıcıya AYNEN gösterilir** (`IslemHatasi`). Genel
     "işlem tamamlanamadı" mesajına çevirmek arayüzü kullanılamaz yapar —
-    Aşama 2'de yaşanan gerçek hata.
+    Aşama 2'de yaşanan gerçek hata. **Zod doğrulama mesajları da gösterilir**
+    (alan adı + Türkçe mesaj); Aşama 5'te bunun eksik olduğu bulundu.
+13. **Beklenen nakit personele SAYIMDAN ÖNCE gösterilmez.** Ekranda yazarsa
+    personel saymadan o rakamı yazar ve kasa farkı hiç ortaya çıkmaz.
+14. **Nakit gider kasadan BİR KEZ düşer.** Gider için ayrıca kasa hareketi
+    ÜRETİLMEZ; beklenen nakit hesabı gidere bağlı hareketleri toplamaz.
+    (Kural 5'teki çifte muhasebe tuzağının kasa karşılığı.)
+15. **Yön işaretli tutarla taşınmaz.** Kasada `direction`, stokta `type`
+    belirler; tutar/miktar her zaman pozitiftir. "-500" satırı hesabı
+    sessizce ters çevirebilir.
+16. **Stok negatife düşmez** (uygulama + DB CHECK). Stok defteri de
+    silinmez; düzeltme ters yönde hareketle yapılır.
+17. **Kalıcı onay sunucudan okunur.** `revalidatePath` çağıran bir işlemden
+    sonra istemcide tutulan özet kartı yok olur (kasa kapanışında personel
+    farkı göremedi). React 19'da `<form action={fn}>` formu da SIFIRLAR;
+    hata sonrası değer kaybetmemesi gereken formlar kontrollü olmalı.
 
 ## Kod haritası
 
 ```
 src/lib/           money.ts (kuruş) · datetime.ts (Europe/Istanbul) ·
-                   plate.ts (normalize/doğrula/biçimle) · permissions.ts (52 izin)
+                   plate.ts (normalize/doğrula/biçimle) · permissions.ts (53 izin)
 src/server/auth/   password (Argon2id) · session (özel DB oturum katmanı,
                    Auth.js sapması docs/01 §1.3.1) · login · authz
 src/server/pricing/ types.ts (Zod snapshot, sürüm 2) · calculate.ts (SAF
@@ -129,11 +171,19 @@ src/server/parking/ entry · exit · void · queries · codes
 src/server/subscription/ rules.ts (saf kural motoru) · customer · manage ·
                    payment · queries · resolve
 src/server/wash/   pricing · admin · job · payment · queries
+src/server/cash/   drawer.ts (aç/say/kapat, beklenen nakit) · movement.ts ·
+                   queries.ts · codes.ts (G-, D- fiş kodları)
+src/server/finance/ expense.ts · income.ts · queries.ts (gelir-gider raporu) ·
+                   export.ts (CSV, tr-TR)
+src/server/inventory/ items.ts (malzeme kartı) · movement.ts (stok defteri) ·
+                   queries.ts
 src/server/actions/ ince kabuk: yetki + Zod + servis çağrısı
 src/components/panel/ islem-paneli.tsx (7 adımlık park akışı) ·
-                   yikama-paneli.tsx · abonman-karti.tsx
+                   yikama-paneli.tsx · abonman-karti.tsx · kasa-paneli.tsx
 src/app/(panel)/   vardiya · araclar · yikama · abonmanlar · musteriler ·
-                   abonmanli-araclar · tarife · yonetim/**
+                   abonmanli-araclar · tarife · kasa · stok · yonetim/**
+                   (yonetim/finans · yonetim/finans/giderler ·
+                    yonetim/finans/csv (route handler) · yonetim/kasa)
 scripts/baslangic-fiyatlari.ts   fiyatları DB'ye yazar (idempotent)
 ```
 
@@ -141,9 +191,9 @@ scripts/baslangic-fiyatlari.ts   fiyatları DB'ye yazar (idempotent)
 
 ```bash
 npm run typecheck && npm run lint && npm run build
-npm run test              # birim (191)
-npm run test:integration  # entegrasyon, gerçek PostgreSQL (287)
-npm run test:e2e          # Playwright, 3 ekran boyutu (192)
+npm run test              # birim (247)
+npm run test:integration  # entegrasyon, gerçek PostgreSQL (371)
+npm run test:e2e          # Playwright, 3 ekran boyutu (249)
 npm run fiyatlar:kur      # başlangıç fiyatları (mevcut fiyatları ezmez)
 npm run db:seed           # araç sınıfları, kategoriler, patron hesabı
 ```
@@ -187,8 +237,21 @@ Sürüklenme kontrolü: `npx prisma migrate diff ... --exit-code` → 0 olmalı.
 - `temizle()` **TRUNCATE CASCADE** kullanır, DELETE değil.
   `session_replication_role` bağlantı bazlıdır ve Prisma havuzdan başka
   bağlantı verince sessizce etkisiz kalır.
-- `VehicleClass` de temizlenir; aksi halde bir testte eklenen araç tipi
-  sonraki koşuda "kod zaten kullanılıyor" verir.
+- `VehicleClass` **ve `ExpenseCategory`** de temizlenir; aksi halde bir testte
+  eklenen araç tipi / gider kategorisi sonraki koşuda "kod zaten kullanılıyor"
+  verir ve **tüm dosyayı** düşürür (ikincisi Aşama 5'te yaşandı).
+- E2E'de **tek açık kasa** kuralı var: kasayı açan test onu KAPATARAK bitmeli,
+  yoksa sonraki proje kasayı açamaz. `global-setup` kalan açık kasaları kapatır.
+- Türkçe büyük/küçük harf: PostgreSQL'in `mode: "insensitive"` karşılaştırması
+  **I/ı ve İ/i çifti için doğru çalışmaz** ("Deterjanı" ≠ "DETERJANI").
+  Tekillik kontrolü `toLocaleLowerCase("tr-TR")` ile uygulamada yapılır.
+- Zod 4: `z.union([..., z.undefined()])` nesne doğrulamasında **eksik anahtarı
+  kabul etmez**; alanın kendisi `.optional()` olmalı. Formdan gelmeyen alanlar
+  yüzünden tüm işlem reddedilir.
+- `selectOption({ label: ... })` **RegExp kabul etmez**; seçeneğin `value`
+  değerini okuyup onu geç.
+- Ekranda tr-TR biçimli sayı varsa testte metni ayrıştırma; makine okunur
+  `data-*` değeri ekle (stok için `data-stok`).
 - E2E veritabanı **3 Playwright projesi arasında paylaşılır**. "Liste boş"
   varsayımı yapma; doğrulamayı o plakanın satırına daralt
   (`toHaveCount(0)`).
@@ -216,6 +279,7 @@ Sürüklenme kontrolü: `npx prisma migrate diff ... --exit-code` → 0 olmalı.
 
 `docs/01` mimari · `02` veri modeli · `03` yetki matrisi · `04` ekranlar ve
 akışlar · `05` **tarife + abonman (gerçek fiyatlar bölüm 0'da)** ·
-`06` 8 aşamalı plan + test sayıları + bulunan hatalar · `07` **açık sorular
-(hangisi karara bağlandı, hangisi değil)** · `08` maliyet/teslim ·
-`09` oto yıkama · `ops/RUNBOOK.md` kurulum/yedek/geri yükleme
+`06` 8 aşamalı plan + test sayıları + **bulunan hatalar (aşama aşama)** ·
+`07` **açık sorular (hangisi karara bağlandı, hangisi değil)** ·
+`08` maliyet/teslim · `09` oto yıkama ·
+`ops/RUNBOOK.md` kurulum/yedek/geri yükleme

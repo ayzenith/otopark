@@ -52,6 +52,8 @@ export const PERMISSIONS = {
 
   // Finans
   FINANCE_INCOME_VIEW: "finance.income.view",
+  /** Park/yikama/abonman DISI gelir kaydi (hurda satisi, otomat geliri…). */
+  FINANCE_INCOME_CREATE: "finance.income.create",
   FINANCE_EXPENSE_VIEW: "finance.expense.view",
   FINANCE_EXPENSE_CREATE: "finance.expense.create",
   FINANCE_EXPENSE_VOID: "finance.expense.void",
@@ -124,6 +126,10 @@ const MANAGER_PERMISSIONS: Permission[] = [
   P.CASH_DRAWER_CLOSE,
   P.CASH_MOVEMENT_CREATE,
   P.CASH_REPORT_ALL,
+  P.FINANCE_INCOME_VIEW,
+  P.FINANCE_INCOME_CREATE,
+  P.FINANCE_EXPENSE_VIEW,
+  P.FINANCE_EXPENSE_CREATE,
   P.PERSONNEL_VIEW,
 ];
 
@@ -209,6 +215,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   [P.CASH_REPORT_ALL]: "Tüm personelin tahsilatını görebilir",
   [P.CASH_VOID]: "Tahsilat iptal edebilir",
   [P.FINANCE_INCOME_VIEW]: "Gelirleri görebilir",
+  [P.FINANCE_INCOME_CREATE]: "Diğer gelir kaydı girebilir",
   [P.FINANCE_EXPENSE_VIEW]: "Giderleri görebilir",
   [P.FINANCE_EXPENSE_CREATE]: "Gider kaydı girebilir",
   [P.FINANCE_EXPENSE_VOID]: "Gider kaydını iptal edebilir",

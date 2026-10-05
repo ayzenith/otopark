@@ -21,6 +21,7 @@
 
 import { Prisma, type PaymentMethod } from "@prisma/client";
 import { prisma } from "@/server/db";
+import { acikKasaId } from "@/server/cash/drawer";
 import { writeAudit, AUDIT_ACTIONS } from "@/server/audit";
 import { IslemHatasi } from "@/server/errors";
 import { kurusToDecimalString, toKurus } from "@/lib/money";
@@ -120,6 +121,7 @@ export async function abonmanTahsilatiKaydet(
         direction: "IN",
         sourceType: "SUBSCRIPTION",
         shiftId: vardiya.id,
+        cashDrawerSessionId: await acikKasaId(tx),
         // KURAL 2: tahsilati yapan kullanici.
         collectedById: actor.id,
         status: "CONFIRMED",
@@ -287,6 +289,7 @@ export async function abonmanTahsilatIptal(actor: SessionUser, istek: TahsilatIp
           direction: "OUT",
           sourceType: "REFUND",
           shiftId: vardiya.id,
+          cashDrawerSessionId: await acikKasaId(tx),
           collectedById: actor.id,
           status: "CONFIRMED",
           reversalOfId: kayit.paymentId,
