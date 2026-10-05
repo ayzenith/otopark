@@ -1,0 +1,61 @@
+# ---------------------------------------------------------------------------
+# Londra Camping Otopark - YEREL DENEME
+#
+# Amac: sistemi kendi bilgisayarinda acip incelemek. Uretim dagitimi DEGILDIR
+# (ops/docker-compose.yml onun icin; alan adi + HTTPS gerektirir).
+#
+# Kullanim (proje klasorunde):
+#     docker compose -f ops/yerel-deneme.yml up -d --build
+# Sonra tarayicida:  http://localhost:3000
+# Kapatmak icin:     docker compose -f ops/yerel-deneme.yml down
+# Veriyi de silmek:  docker compose -f ops/yerel-deneme.yml down -v
+#
+# UYARI: Buradaki parolalar YEREL DENEME icindir. Gercek sunucuda
+# ops/docker-compose.yml + ops/.env kullanilir, parolalar oradan verilir.
+# ---------------------------------------------------------------------------
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: otopark
+      POSTGRES_PASSWORD: yerel-deneme
+      POSTGRES_DB: otopark
+      TZ: Europe/Istanbul
+    volumes:
+      - yerel-veri:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U otopark -d otopark"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://otopark:yerel-deneme@postgres:5432/otopark?schema=public
+      AUTH_SECRET: yerel-deneme-icin-sabit-anahtar-uretimde-kullanilmaz
+      AUTH_URL: http://localhost:3000
+      TZ: Europe/Istanbul
+      # Ilk patron hesabi. Ilk giriste parola degistirmen istenir.
+      OWNER_USERNAME: patron
+      OWNER_INITIAL_PASSWORD: LondraKamp2026
+    ports:
+      - "3000:3000"
+    # Sema -> baslangic verisi -> gercek fiyatlar -> uygulama.
+    # Hepsi idempotent: ikinci calistirmada mevcut veriyi EZMEZ.
+    command: >
+      sh -c "npx prisma migrate deploy &&
+             npm run db:seed &&
+             npm run fiyatlar:kur &&
+             npm run start"
+
+volumes:
+  yerel-veri:
