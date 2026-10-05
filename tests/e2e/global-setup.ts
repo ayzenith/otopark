@@ -101,6 +101,15 @@ export const E2E_YIKAMA_FIYAT = { otomobilKurus: 600_00, suvKurus: 700_00 };
  */
 export const E2E_GIDER_KATEGORISI = { kod: "E2E_TEST_GIDERI", ad: "E2E Test Gideri" };
 
+/**
+ * ASAMA 6: testlerin actigi personel hesaplarinin kullanici adi oneki.
+ *
+ * Gercek personel adlari sisteme YAZILMAZ (karar 05.10.2026); testler kendi
+ * hesaplarini acar ve global-setup bunlari temizler. Onek sabit tutulur ki
+ * temizlik olcutu net olsun: "e2e_p" ile baslayan hesaplar TESTtir.
+ */
+export const E2E_PERSONEL_ONEKI = "e2e_p";
+
 export const E2E_MALZEMELERI: Record<string, string> = {
   "telefon-kucuk": "E2E Test Şampuanı K",
   "telefon-orta": "E2E Test Şampuanı O",
@@ -294,6 +303,66 @@ export default async function globalSetup() {
            (SELECT id FROM "OtherIncome" WHERE "label" LIKE 'E2E %')`,
       );
       await tx.$executeRawUnsafe(`DELETE FROM "OtherIncome" WHERE "label" LIKE 'E2E %'`);
+
+      // --- ASAMA 6: testlerin actigi personel hesaplari ve avanslari ---
+      //
+      // Olcut: kullanici adi "e2e_p" ile baslayanlar. Patron (e2e_patron) ve
+      // personel (e2e_personel) fixture'lari KORUNUR - onlar "e2e_pa"/"e2e_pe"
+      // ile baslasa da asagidaki sorgular kimliklerini acikca disarida tutar.
+      const korunan = `('${E2E_KULLANICI}', '${E2E_PATRON}')`;
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "StaffAdvance" WHERE "userId" IN
+           (SELECT id FROM "User" WHERE "username" LIKE '${E2E_PERSONEL_ONEKI}%'
+            AND "username" NOT IN ${korunan})`,
+      );
+      // Bu hesaplarin maas giderleri ve bagli kasa hareketleri.
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "CashMovement" WHERE "expenseId" IN
+           (SELECT id FROM "Expense" WHERE "relatedUserId" IN
+             (SELECT id FROM "User" WHERE "username" LIKE '${E2E_PERSONEL_ONEKI}%'
+              AND "username" NOT IN ${korunan}))`,
+      );
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "Expense" WHERE "relatedUserId" IN
+           (SELECT id FROM "User" WHERE "username" LIKE '${E2E_PERSONEL_ONEKI}%'
+            AND "username" NOT IN ${korunan})`,
+      );
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "EmployeeProfile" WHERE "userId" IN
+           (SELECT id FROM "User" WHERE "username" LIKE '${E2E_PERSONEL_ONEKI}%'
+            AND "username" NOT IN ${korunan})`,
+      );
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "UserPermission" WHERE "userId" IN
+           (SELECT id FROM "User" WHERE "username" LIKE '${E2E_PERSONEL_ONEKI}%'
+            AND "username" NOT IN ${korunan})`,
+      );
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "Session" WHERE "userId" IN
+           (SELECT id FROM "User" WHERE "username" LIKE '${E2E_PERSONEL_ONEKI}%'
+            AND "username" NOT IN ${korunan})`,
+      );
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "AuditLog" WHERE "userId" IN
+           (SELECT id FROM "User" WHERE "username" LIKE '${E2E_PERSONEL_ONEKI}%'
+            AND "username" NOT IN ${korunan})`,
+      );
+      // Hesap, hicbir islem yapmadiysa silinebilir; islem yaptiysa yabanci
+      // anahtarlar silmeyi reddeder ve hesap kalir (zararsiz).
+      await tx.$executeRawUnsafe(
+        `DELETE FROM "User" WHERE "username" LIKE '${E2E_PERSONEL_ONEKI}%'
+         AND "username" NOT IN ${korunan}
+         AND id NOT IN (SELECT "collectedById" FROM "Payment")
+         AND id NOT IN (SELECT "userId" FROM "Shift")
+         AND id NOT IN (SELECT "openedById" FROM "CashDrawerSession")`,
+      );
+    });
+
+    // Vardiya pencereleri: testler kendi degerlerini yaziyor, temiz baslat.
+    await prisma.businessSetting.upsert({
+      where: { id: "singleton" },
+      update: { shiftWindows: [] },
+      create: { id: "singleton", shiftWindows: [] },
     });
 
     // TEK ACIK KASA kurali: onceki kosudan kalan acik kasa oturumu, yeni

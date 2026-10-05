@@ -10,6 +10,7 @@ import { prisma } from "@/server/db";
 import { acikVardiya } from "@/server/shift";
 import { kapasiteDurumu } from "@/server/parking/entry";
 import { anaEkranSayaclari, sonIslemler } from "@/server/parking/queries";
+import { pencereBul, vardiyaPencereleri } from "@/server/settings/shift-windows";
 import { formatDuration, formatTime } from "@/lib/datetime";
 
 export const metadata = { title: "Vardiya" };
@@ -28,7 +29,7 @@ export default async function VardiyaSayfasi() {
   const tahsilatGorebilir = user.permissions.has(PERMISSIONS.CASH_REPORT_SELF);
   const cikisYetkisi = user.permissions.has(PERMISSIONS.PARKING_EXIT);
 
-  const [vardiya, sayaclar, kapasite, islemler, siniflar] = await Promise.all([
+  const [vardiya, sayaclar, kapasite, islemler, siniflar, pencereler] = await Promise.all([
     acikVardiya(user.id),
     anaEkranSayaclari(user.id, tahsilatGorebilir),
     kapasiteDurumu(),
@@ -38,7 +39,12 @@ export default async function VardiyaSayfasi() {
       orderBy: { sortOrder: "asc" },
       select: { id: true, name: true },
     }),
+    // Vardiya penceresi YALNIZCA BİLGİ: vardiya açmayı engellemez
+    // (karar 05.10.2026 — tek vardiya zorunluluğu yok).
+    vardiyaPencereleri(),
   ]);
+
+  const suAndakiPencere = pencereBul(pencereler);
 
   return (
     <div className="space-y-4">
@@ -46,9 +52,22 @@ export default async function VardiyaSayfasi() {
       {vardiya ? (
         <p className="text-sm text-slate-500">
           Vardiya: <strong>{formatTime(vardiya.startedAt)}</strong>&apos;den beri açık
+          {suAndakiPencere ? (
+            <>
+              {" "}
+              · <span data-test="vardiya-penceresi">{suAndakiPencere.ad}</span>
+            </>
+          ) : null}
         </p>
       ) : (
-        <VardiyaBaslatButonu />
+        <div className="space-y-2">
+          {suAndakiPencere ? (
+            <p className="text-sm text-slate-500" data-test="vardiya-penceresi">
+              Şu an <strong>{suAndakiPencere.ad}</strong> vardiya saatleri içinde.
+            </p>
+          ) : null}
+          <VardiyaBaslatButonu />
+        </div>
       )}
 
       {/* ---- İŞLEM PANELİ: ekranın en belirgin öğesi ---- */}

@@ -1,14 +1,16 @@
 import { Alert, Card, CardBody, CardHeader, CardTitle } from "@/components/ui";
 import { prisma } from "@/server/db";
-import { KapasiteFormu } from "./formlar";
+import { KapasiteFormu, VardiyaPencereleriFormu } from "./formlar";
+import { dakikayiSaate, vardiyaPencereleri } from "@/server/settings/shift-windows";
 
 export const metadata = { title: "İşletme ayarları" };
 export const dynamic = "force-dynamic";
 
 export default async function IsletmeAyarlariSayfasi() {
-  const [kapasite, aktifArac] = await Promise.all([
+  const [kapasite, aktifArac, pencereler] = await Promise.all([
     prisma.parkingCapacitySetting.findUnique({ where: { id: "singleton" } }),
     prisma.parkingSession.count({ where: { status: "ACTIVE" } }),
+    vardiyaPencereleri(),
   ]);
 
   return (
@@ -30,6 +32,21 @@ export default async function IsletmeAyarlariSayfasi() {
           <KapasiteFormu
             mevcutKapasite={kapasite?.totalCapacity ?? 0}
             mevcutEsik={kapasite?.warnThresholdPercent ?? 90}
+          />
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Vardiya saatleri</CardTitle>
+        </CardHeader>
+        <CardBody>
+          <VardiyaPencereleriFormu
+            mevcut={pencereler.map((p) => ({
+              ad: p.ad,
+              baslangic: dakikayiSaate(p.baslangicDakika),
+              bitis: dakikayiSaate(p.bitisDakika),
+            }))}
           />
         </CardBody>
       </Card>

@@ -9,7 +9,6 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission, runAction, type ActionResult } from "@/server/auth/authz";
 import { IslemHatasi } from "@/server/errors";
@@ -78,6 +77,3 @@ export async function vardiyaPencereleriAction(
     return { adet: pencereler.length };
   });
 }
-
-/** Zod burada yalnızca tip güvenliği için; alanlar yukarıda elle doğrulanır. */
-export const VardiyaPencereFormuSemasi = z.record(z.string(), z.string());

@@ -23,6 +23,8 @@ export default async function YonetimLayout({ children }: { children: React.Reac
           { href: "/yonetim/yikama", etiket: "Yıkama" },
           { href: "/yonetim/finans", etiket: "Gelir / Gider" },
           { href: "/yonetim/kasa", etiket: "Kasa" },
+          { href: "/yonetim/personel", etiket: "Personel" },
+          { href: "/yonetim/denetim", etiket: "Denetim" },
           { href: "/yonetim/ayarlar/tarifeler", etiket: "Tarifeler" },
           { href: "/yonetim/ayarlar/yikama", etiket: "Yıkama fiyatları" },
           { href: "/yonetim/ayarlar/isletme", etiket: "İşletme" },

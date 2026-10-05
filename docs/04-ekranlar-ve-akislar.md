@@ -304,6 +304,22 @@ sekmeler arası geçiş tek dokunuş, bağlantılar paylaşılabilir.
 ```
 Mobilde aynı veriler tek kolon kart olarak, grafikler sadeleştirilmiş halde.
 
+> ### Uygulamadaki sapma (05.10.2026)
+>
+> **DOLULUK kartı çizilmez.** Kapasite işletme kararı gereği tanımsızdır
+> (sınır yok); anlamsız bir yüzde göstermek yanlış bilgi olur. Patron
+> Yönetim → Ayarlar'dan kapasite girerse kart kendiliğinden görünür.
+>
+> **Üst şerit beş karta çıktı:** Otoparkta · Giriş · Çıkış · Aktif abonman ·
+> Yıkama. Doluluk yerine yıkama sayacı kondu.
+>
+> **Grafik satır içi SVG'dir**, grafik kütüphanesi eklenmedi: üç seri
+> (otopark / yıkama / abonman) hem renkle hem etiketle ayrılır, renk
+> körlüğünde de okunur. Yakınlaştırma ve ipucu (tooltip) yok.
+>
+> **Uyarı merkezi en üstte**, sayaçların üzerinde: eylem gerektiren tek
+> bölüm o. Her uyarı ilgili ekrana bağlanır.
+
 ## 4.9 Kasa akışı (P9 / Y5)
 
 ```

@@ -456,3 +456,50 @@ hatası alır; mükerrer tahsilat oluşmaz.
 - **Geri yükleme testi** her çeyrekte bir kez yapılır ve `ops/RUNBOOK.md`'ye kaydedilir.
 - KVKK: işlem görmemiş müşteri kişisel verileri (ad/telefon) için saklama süresi
   belirlenmeli — **Açık Soru S12**.
+
+## Aşama 6 eklentileri (05.10.2026)
+
+### `StaffAdvance` — personel avansı (GİDER DEĞİL, ALACAK)
+
+Karar gereği avans gider sayılmaz; maaştan düşülecek bir alacaktır.
+
+| Alan | Anlam |
+|---|---|
+| `amount` | Avans tutarı (pozitif) |
+| `status` | `OPEN` (alacak) · `SETTLED` (mahsup edildi) · `VOIDED` (iptal) |
+| `cashMovementId` | Kasadan çıkışı temsil eden hareket (kasa açıkken dolu) |
+| `settledByExpenseId` | Mahsup edildiği maaş gideri |
+
+Veritabanı kısıtları:
+- `amount > 0`
+- `SETTLED` kaydın `settledByExpenseId` **ve** `settledAt` alanı zorunlu;
+  diğer durumlarda ikisi de boş olmalı
+- `VOIDED` kaydın gerekçesi ve iptal tarihi zorunlu
+- `BEFORE DELETE` tetikleyicisi silmeyi reddeder
+
+### `Expense.advanceOffsetAmount`
+
+Maaş giderinin ne kadarı daha önce verilmiş avanstan karşılandı?
+
+```
+amount              = maaşın tamamı (gerçekleşen maliyet, gider raporuna girer)
+advanceOffsetAmount = daha önce avans olarak ödenmiş kısım
+kasadan çıkan       = amount - advanceOffsetAmount
+```
+
+Kısıtlar: `advanceOffsetAmount >= 0` ve `advanceOffsetAmount <= amount`.
+Kasa dökümü nakit gideri bu fark üzerinden hesaplar; aksi halde avans kasadan
+**iki kez** düşülür.
+
+### `BusinessSetting.shiftWindows`
+
+`[{ ad, baslangicDakika, bitisDakika }]` listesi (JSONB, Zod ile doğrulanır).
+**Yalnızca bilgi ve rapor etiketidir**; personelin vardiya açmasını
+engellemez. Boş liste = pencere tanımlı değil. Pencere gece yarısını aşabilir.
+
+### "Kim girdi" yabancı anahtarları
+
+`CashDrawerSession.openedBy/closedBy`, `CashMovement.createdBy`,
+`Expense.createdBy`, `OtherIncome.createdBy`, `InventoryMovement.createdBy`,
+`StaffAdvance.user/createdBy` artık **yabancı anahtar**. Kasa açan kullanıcı
+`RESTRICT` (sorumluluk belirsizleşemez), diğerleri `SET NULL`.

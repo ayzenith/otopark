@@ -28,18 +28,18 @@ dokunma (hâlâ 0 commit). Her aşama sonunda commit + push.
 | 3 | Müşteriler, abonmanlar, dönem/yenileme, abonman tahsilatı | ✅ |
 | 4 | Oto yıkama | ✅ |
 | 5 | Kasa, gelir-gider, malzeme stoğu, CSV dışa aktarma | ✅ |
-| **6** | **SIRADAKİ:** personel yönetimi, patron paneli/raporları, uyarı merkezi, denetim ekranı | ⏳ |
-| 7 | Kurumsal web sitesi | ⏳ |
+| 6 | Personel yönetimi, avans/maaş, patron paneli, uyarı merkezi, denetim ekranı | ✅ |
+| **7** | **SIRADAKİ:** kurumsal web sitesi | ⏳ |
 | 8 | Devreye alma, gerçek cihaz testleri | ⏳ |
 
-**867 test geçiyor**, başarısız yok: 247 birim + 371 entegrasyon + 249 E2E
+**1069 test geçiyor**, başarısız yok: 287 birim + 449 entegrasyon + 333 E2E
 (3 ekran boyutu). Her aşamada önce mevcut testleri çalıştır, sonra yenileri
 ekle, sonra hepsini tekrar çalıştır.
 
-Aşama 5'te taşınmayan işler (docs/06 sonunda tam liste): XLSX/PDF dışa aktarma
-(bağımlılık onayı bekliyor), dönem karşılaştırması ve grafikler (Aşama 6),
-kasa raporlarında tarih aralığı filtresi (Aşama 6), personel bazlı tahsilat
-raporu (Aşama 6), stok değerlemesi.
+Taşınmayan işler (docs/06 sonunda tam liste): XLSX/PDF dışa aktarma
+(bağımlılık onayı bekliyor), stok değerlemesi, prim sistemi (karar gereği
+yok), KVKK otomasyonu (ertelendi), çoklu POS (karar gereği yok), grafiklerin
+zenginleştirilmesi, personel maliyetlerinin otomatik gider üretmesi.
 
 ## İşletme sahibinin verdiği KESİN kararlar
 
@@ -177,7 +177,11 @@ ekranında "fiyat girilmemiş" uyarısı çıkar (mimari kural 10).
     sessizce ters çevirebilir.
 16. **Stok negatife düşmez** (uygulama + DB CHECK). Stok defteri de
     silinmez; düzeltme ters yönde hareketle yapılır.
-17. **Kalıcı onay sunucudan okunur.** `revalidatePath` çağıran bir işlemden
+17. **`"use server"` dosyası YALNIZCA async fonksiyon ihraç eder.** Şema,
+    sabit, tip dışı bir değer ihraç etmek derlemede yakalanmaz ama **çalışma
+    anında sayfayı çökertir** (Aşama 6'da yaşandı). Paylaşılan şemaları
+    ayrı dosyaya koy.
+18. **Kalıcı onay sunucudan okunur.** `revalidatePath` çağıran bir işlemden
     sonra istemcide tutulan özet kartı yok olur (kasa kapanışında personel
     farkı göremedi). React 19'da `<form action={fn}>` formu da SIFIRLAR;
     hata sonrası değer kaybetmemesi gereken formlar kontrollü olmalı.
@@ -201,13 +205,22 @@ src/server/finance/ expense.ts · income.ts · queries.ts (gelir-gider raporu) �
                    export.ts (CSV, tr-TR)
 src/server/inventory/ items.ts (malzeme kartı) · movement.ts (stok defteri) ·
                    queries.ts
+src/server/staff/  users.ts (hesap, izin sapmaları, maliyet profili) ·
+                   advance.ts (avans = ALACAK, maaş mahsubu)
+src/server/reports/ range.ts (dönem aralığı, SAF) · dashboard.ts (panel,
+                   trend, personel tahsilatı) · alerts.ts (uyarı merkezi) ·
+                   audit-query.ts (denetim filtreleri)
+src/server/settings/ shift-windows.ts (vardiya pencereleri, ZORLAYICI DEĞİL)
 src/server/actions/ ince kabuk: yetki + Zod + servis çağrısı
 src/components/panel/ islem-paneli.tsx (7 adımlık park akışı) ·
-                   yikama-paneli.tsx · abonman-karti.tsx · kasa-paneli.tsx
+                   yikama-paneli.tsx · abonman-karti.tsx · kasa-paneli.tsx ·
+                   rapor-araclari.tsx (dönem filtresi, SVG trend, denetim)
 src/app/(panel)/   vardiya · araclar · yikama · abonmanlar · musteriler ·
                    abonmanli-araclar · tarife · kasa · stok · yonetim/**
                    (yonetim/finans · yonetim/finans/giderler ·
-                    yonetim/finans/csv (route handler) · yonetim/kasa)
+                    yonetim/finans/csv (route handler) · yonetim/kasa ·
+                    yonetim/personel[/id] · yonetim/denetim ·
+                    yonetim/raporlar/personel)
 scripts/baslangic-fiyatlari.ts   fiyatları DB'ye yazar (idempotent)
 ```
 
@@ -215,9 +228,9 @@ scripts/baslangic-fiyatlari.ts   fiyatları DB'ye yazar (idempotent)
 
 ```bash
 npm run typecheck && npm run lint && npm run build
-npm run test              # birim (247)
-npm run test:integration  # entegrasyon, gerçek PostgreSQL (371)
-npm run test:e2e          # Playwright, 3 ekran boyutu (249)
+npm run test              # birim (287)
+npm run test:integration  # entegrasyon, gerçek PostgreSQL (449)
+npm run test:e2e          # Playwright, 3 ekran boyutu (333)
 npm run fiyatlar:kur      # başlangıç fiyatları (mevcut fiyatları ezmez)
 npm run db:seed           # araç sınıfları, kategoriler, patron hesabı
 ```
@@ -261,6 +274,7 @@ Sürüklenme kontrolü: `npx prisma migrate diff ... --exit-code` → 0 olmalı.
 - `temizle()` **TRUNCATE CASCADE** kullanır, DELETE değil.
   `session_replication_role` bağlantı bazlıdır ve Prisma havuzdan başka
   bağlantı verince sessizce etkisiz kalır.
+- `StaffAdvance` de temizlik listesinde (Aşama 6).
 - `VehicleClass` **ve `ExpenseCategory`** de temizlenir; aksi halde bir testte
   eklenen araç tipi / gider kategorisi sonraki koşuda "kod zaten kullanılıyor"
   verir ve **tüm dosyayı** düşürür (ikincisi Aşama 5'te yaşandı).
@@ -273,7 +287,14 @@ Sürüklenme kontrolü: `npx prisma migrate diff ... --exit-code` → 0 olmalı.
   kabul etmez**; alanın kendisi `.optional()` olmalı. Formdan gelmeyen alanlar
   yüzünden tüm işlem reddedilir.
 - `selectOption({ label: ... })` **RegExp kabul etmez**; seçeneğin `value`
-  değerini okuyup onu geç.
+  değerini okuyup onu geç. (Aşama 5 ve 6'da iki kez yaşandı.)
+- **Aynı testte iki kez giriş yapılamaz:** giriş yapılmış oturumda `/giris`
+  sayfası `/vardiya`'ya yönlendirir. Farklı rolü test edeceksen AYRI
+  `describe` + kendi `beforeEach`'i kullan.
+- Aynı metin iki kartta geçiyorsa `.first()` yanlış kartı seçer; **iki filtre
+  birlikte** kullan (`filter({hasText: ad}).filter({hasText: rozet})`).
+- E2E personel hesapları `e2e_p` önekiyle açılır; global-setup bunları
+  temizler. `e2e_personel` ve `e2e_patron` fixture'ları KORUNUR.
 - Ekranda tr-TR biçimli sayı varsa testte metni ayrıştırma; makine okunur
   `data-*` değeri ekle (stok için `data-stok`).
 - E2E veritabanı **3 Playwright projesi arasında paylaşılır**. "Liste boş"

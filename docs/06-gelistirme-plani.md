@@ -378,21 +378,117 @@ altyapısındaydı.
 
 ---
 
-## Aşama 6 — Yönetici paneli, raporlar, ayarlar
+## Aşama 6 — Personel, patron paneli, raporlar, denetim ✅ TAMAMLANDI (05.10.2026)
+
 **Kapsam**
-- Yönetici ana paneli (doküman 04.8) + tarih aralığı filtresi + grafikler
-- Uyarı merkezi: bitecek abonmanlar, uzun süre içeride kalan araçlar, kasa farkı,
-  tahsil edilmemiş işler, düşük stok
-- Personel yönetimi: ekleme, yetkilendirme (`UserPermission`), devre dışı bırakma,
-  parola sıfırlama, maaş/avans/prim/SGK giderleriyle ilişkilendirme
-- Ayarlar ekranları: tarifeler, yıkama fiyatları, kapasite, işletme künyesi
-- Denetim kayıtları ekranı (filtreli)
+- Personel yönetimi: hesap açma (patron panelinden), düzenleme, pasifleştirme,
+  parola sıfırlama, **izin bazlı yetkilendirme** (`UserPermission`)
+- Personel maliyet profili (maaş / SGK / yemek) — **yalnızca patron**, alan
+  bazlı kısıt: izin yoksa alanlar **sorgulanmaz**
+- **Personel avansı = alacak** (gider değil) + **maaş ödemesinde mahsup**
+- Patron ana paneli: tarih aralığı filtresi (gün/hafta/ay/yıl/özel),
+  gelir-gider kartları, **dönem karşılaştırması**, 30 günlük trend grafiği,
+  aktif vardiyalar
+- **Uyarı merkezi**: tarife yok, tarifesiz park, kasa dışı tahsilat, kasa
+  farkı, bitecek/dolmuş/ödenmemiş abonman, uzun süreli park, tahsil edilmemiş
+  yıkama, fiyatsız yıkama kalemi, kritik stok, açık avans
+- **Personel bazlı tahsilat raporu** (Aşama 5'ten devir)
+- **Denetim kaydı ekranı**: grup ve kişi filtresi, imleç sayfalama, önce/sonra
+  ayrıntısı
+- **Vardiya saatleri** işletme ayarından yönetilir (zorlayıcı değil)
 
 **Tamamlanma kriterleri**
-- [ ] Panel verileri ile rapor verilerinin birebir uyuştuğu test
-- [ ] Maaş verisinin `personnel.cost.view` olmadan sorgulanmadığı test
-- [ ] Mobilde panelin tek kolon kart düzeninde okunabilir olduğu kontrol
-- [ ] Tarife değişikliğinin önizleme + onay + tarihçe ile kaydedildiği E2E
+- [x] Panel verileri ile rapor verilerinin birebir uyuştuğu test
+- [x] Maaş verisinin `personnel.cost.view` olmadan sorgulanmadığı test
+- [x] Mobilde panelin tek kolon kart düzeninde okunabilir olduğu kontrol
+      (yatay kaydırma testi, 3 ekran boyutu)
+- [x] ~~Tarife değişikliğinin önizleme + onay + tarihçe ile kaydedildiği E2E~~
+      → Aşama 2'de yapılmıştı (`tests/e2e/park-akisi.spec.ts`, tarife ekranı);
+      bu aşamada tekrar edilmedi
+- [x] Avansın gider raporuna girmediği ve kasadan bir kez düştüğü test
+- [x] MANAGER rolünün atanamadığı test
+- [x] Son patron hesabının kapatılamadığı / rolünün düşürülemediği test
+- [x] Denetim kaydının değiştirilemediği ve silinemediği test
+
+**Aşama 6'da alınan yapısal kararlar**
+
+| Karar | Gerekçe |
+|---|---|
+| **Personel adları tohum verisine yazılmaz** | Gerçek isimler kod deposuna girmez; hesaplar patron panelinden açılır. Test personeli ayrı fixture (`e2e_p…`) |
+| **Roller: yalnızca PATRON + PERSONEL** | MANAGER enum'da, izin matrisinde ve taban kümesinde **duruyor** ama atanamaz. Silmek yerine kapatmak, ileride tek satırla açmayı mümkün kılar |
+| **Kasa kapatma izni kullanıcı bazında** | Yeni rol tanımlamadan "bu personel kasa kapatabilsin" demenin yolu `UserPermission`. Rol şişmesi olmaz |
+| **Başlangıç parolası bir kez gösterilir** | Veritabanında yalnızca Argon2id özeti durur; patronun bildiği parola personelin kalıcı parolası olmasın diye ilk girişte değiştirme zorunlu |
+| **Hesap kapatınca oturumlar da kapanır** | Aksi halde işten çıkan personel tarayıcısı açık kaldığı sürece işlem yapmaya devam eder |
+| **Son patron korunur** | Tek patronun rolü düşürülemez / hesabı kapatılamaz; sistem yönetilemez hale gelemez |
+| **Maaş alanları izin yoksa SELECT EDİLMEZ** | `null` döndürmek yerine hiç sorgulanmaz: kazara sızma yolu kapanır |
+| **Girilmeyen maaş 0 değil null** | "Maaş 0 ₺" ile "maaş girilmedi" karıştırılmaz (kural 10'un personel karşılığı) |
+| **AVANS GİDER DEĞİL, ALACAK** | Avans verildiğinde kasa azalır ama gider yazılmaz; maaş ödemesinde mahsup edilir. Gider = maaşın tamamı, kasa çıkışı = maaş − mahsup. Toplam kasa çıkışı maaşa eşit |
+| **`AVANS` gider kategorisi kullanım dışı** | Açık kalırsa patron avansı elle gider girer ve tutar iki kez sayılır. Kategori silinmez (geçmiş kayıt kategorisini kaybetmemeli), pasifleştirilir |
+| **Mahsup edilmiş avans iptal edilemez** | Maaş gideri ona dayanıyor; geriye dönük iptal maaş kaydını tutarsız bırakır |
+| **Vardiya penceresi ZORLAYICI DEĞİL** | İşletme "tek vardiya zorunluluğu olmasın" dedi. Pencere yalnızca bilgi/rapor etiketi; saat dışında vardiya açmak serbest, uyarı bile çıkmaz |
+| **Doluluk yüzdesi gösterilmez** | Kapasite tanımsız (sınır yok kararı). `docs/04` 4.8 taslağında DOLULUK kartı var ama anlamsız bir oran göstermek yanlış bilgi olur; kapasite girilirse kart kendiliğinden çizilir |
+| **Yüzde değişimde önceki dönem 0 ise yüzde tanımsız** | "%∞ arttı" yanıltıcı; arayüz "önceki dönem 0" yazar |
+| **Giderde artış KIRMIZI** | Gelirde yeşil olan yön giderde kırmızı olmalı; aksi halde "giderler %40 arttı" yeşil görünür ve yanlış okunur |
+| **Grafik kütüphanesi eklenmedi** | Tek çizgi grafiği için bağımsız paket, mobil paket boyutunu gereksiz büyütür. Satır içi SVG kullanıldı; seriler hem renk hem etiketle ayrılır |
+| **Personel raporu performans aracı değil** | Tahsilat tutarı vardiya yoğunluğuna bağlı. Ekranda açıkça yazılı; kasa farkı araştırması için var |
+
+**Test sayıları (05.10.2026)**
+
+| Katman | Aşama 5 sonu | Aşama 6 eklenen | Toplam |
+|---|---:|---:|---:|
+| Birim | 247 | +40 | **287** |
+| Entegrasyon (gerçek PostgreSQL) | 371 | +78 | **449** |
+| Uçtan uca (3 ekran boyutu) | 249 | +84 | **333** |
+| **Toplam** | 867 | +202 | **1069** |
+
+Başarısız test yok. `tsc --noEmit`, `npm run lint`, `npm run build` temiz,
+migration sürüklenmesi yok.
+
+**Aşama 6'da bulunan ve düzeltilen hatalar**
+
+1. **`"use server"` dosyasından fonksiyon olmayan ihraç (ürün kodu).**
+   `src/server/actions/ayarlar.ts` bir Zod şeması da ihraç ediyordu. Next.js
+   bir Server Action modülünden **yalnızca async fonksiyon** ihraç edilmesine
+   izin verir; derleme bunu yakalamadı, **çalışma anında** işletme ayarları
+   sayfası "server-side exception" ile çöktü. Şema ihracı kaldırıldı.
+   *Kök neden:* kuralın derleme zamanında denetlenmemesi; bu yüzden
+   `CLAUDE.md`'ye kural olarak yazıldı.
+2. **Test yardımcısında tarih biçimi (test kodu).** `Intl` `dateStyle: "short"`
+   biçimi "7.10.2026" veriyor, başındaki sıfırı atıyor. Testler projenin kendi
+   `formatDate`'ini (dd.MM.yyyy) kullanacak şekilde düzeltildi — böylece test
+   ekranda görünen biçimi doğrular.
+3. **`selectOption({ label: RegExp })` yine kullanıldı (test kodu).** Aşama
+   5'te bulunan tuzağın tekrarı: Playwright etiket olarak RegExp kabul etmez.
+   Seçeneğin `value` değerini okuyan ortak yardımcıya çevrildi.
+4. **Aynı testte iki kez giriş (test kodu).** Giriş yapılmış oturumda `/giris`
+   sayfası `/vardiya`'ya yönlendiriliyor; patron olarak giriş yapan
+   `beforeEach`'ten sonra personel olarak giriş yapılamıyordu. Personel yetki
+   testleri ayrı `describe`'a taşındı (Aşama 5'te de yaşanmıştı).
+5. **Satır seçicisi iki kartı birden yakalıyordu (test kodu).** Personel adı
+   hem personel listesinde hem avans kaydında geçiyor; `.first()` yanlış kartı
+   seçiyordu. İki filtre birlikte kullanıldı (ad **ve** rozet).
+
+**Aşama 6 sonunda bilinen eksikler**
+
+- **XLSX ve PDF dışa aktarma hâlâ yok** (Aşama 5'ten devam). CSV var ve
+  testli; XLSX yeni bağımlılık, PDF yazdırma şablonu gerektirir (Aşama 7).
+  Bağımlılık eklemek için onay bekleniyor.
+- **Prim/yüzde sistemi yok** — işletme kararı gereği altyapı eklenmedi
+  (`docs/07` S14). Yıkama iş emri "kim yaptı" bilgisini zaten taşıyor.
+- **KVKK saklama/anonimleştirme otomasyonu yok** — bilinçli erteleme
+  (`docs/07` S12). Aşama 8'de tekrar sorulacak.
+- **Çoklu POS desteği yok** — tek POS kararı gereği (`docs/07` S15). Gerektiğinde
+  `PosTerminal` + `Payment.posTerminalId` eklenir.
+- **Grafikler sade**: tek satır içi SVG çizgi grafik. Çubuk/pasta grafik,
+  yakınlaştırma, gün bazında ipucu (tooltip) yok.
+- **Patron paneli 30 günlük trendi dönem filtresinden BAĞIMSIZ** okur
+  (her zaman son 30 gün). Dönem seçimi kartları ve karşılaştırmayı etkiler,
+  grafiği etkilemez.
+- **Personel maliyetleri (maaş/SGK/yemek) OTOMATİK GİDER ÜRETMEZ.** Profilde
+  saklanır ve maaş ödemesinde ön dolu gelir; her ay kendiliğinden gider
+  yazılmaz. Otomatik tahakkuk istenirse ayrı karar gerekir.
+- **Personel ekranında arama/sayfalama yok**; hesap sayısı onlarla ölçüldüğü
+  için liste tek sayfada veriliyor.
 
 ---
 
