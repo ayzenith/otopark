@@ -43,3 +43,6 @@ otopark-dokumanlar.bundle
 
 # typescript
 *.tsbuildinfo
+
+# panel ekran goruntuleri (gecici, incelemek icin uretilir)
+.ekranlar/
