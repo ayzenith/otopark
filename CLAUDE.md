@@ -41,6 +41,38 @@ Taşınmayan işler (docs/06 sonunda tam liste): XLSX/PDF dışa aktarma
 yok), KVKK otomasyonu (ertelendi), çoklu POS (karar gereği yok), grafiklerin
 zenginleştirilmesi, personel maliyetlerinin otomatik gider üretmesi.
 
+**Son commit:** `7136806` (Aşama 6 tamamlandı, push edildi). Çalışma alanı
+temiz; `main` dalı hâlâ 0 commit, dokunulmadı.
+
+## ⚠️ BU OTURUMDA ÖNCE YAPILACAK — Aşama 7 bloke
+
+Aşama 7 **kurumsal web sitesi**. Siteyi yapmak için gereken bilgilerin
+HİÇBİRİ verilmedi (`docs/07` S17–S20 hâlâ boş). **Kod yazmaya başlamadan
+önce bunları sor; adres, telefon, çalışma saati, fiyat UYDURMA.**
+
+Sorulacaklar (kısa tut, kullanıcı kısa yanıt vermeyi seviyor):
+
+1. **S17 — Alan adı ve barındırma:** Alan adı var mı / kim alacak? Sunucu
+   var mı, biz mi kuralım?
+2. **S18 — İşletme künyesi:** Tam ad, açık adres, telefon, WhatsApp, çalışma
+   saatleri (7/24 mi?), Google Maps bağlantısı, Instagram. Fotoğraf ve logo
+   var mı, yoksa geçici görselle mi başlanacak?
+3. **S19 — Sitede hangi fiyatlar yazılacak?** Otopark tarifesi açıkça yazılsın
+   mı yoksa "bilgi için arayınız" mı? (Abonman fiyatı kişiye özel olduğu için
+   sitede yazılmaması önerildi, onay bekliyor.) Karavan 700 ₺/24 sa ve yıkama
+   600/700/400 ₺ yazılsın mı?
+4. **S20 — Teslim ve erişim:** GitHub deposu işletme adına mı geçecek? Sunucu/
+   veritabanı erişimi kime teslim edilecek? Yedek dış depolama hesabı kimde?
+
+**Yanıt gelmeden yapılabilecek olan** (istenirse onay alıp başla): site
+iskeleti, mobil öncelikli sayfa düzeni, `SitePage` / `SitePublicPrice` /
+`SiteGalleryImage` tablolarını panelden yönetme ekranları. İçerik alanları
+BOŞ kalır ve "patron panelinden girilecek" olarak işaretlenir — tıpkı
+fiyatlarda yapıldığı gibi. Gerçek adres/telefon/fiyat **asla varsayılmaz**.
+
+**Ayrıca Aşama 8 öncesi tekrar sorulacak:** KVKK saklama süresi (S12,
+bilinçli olarak ertelendi) ve XLSX/PDF dışa aktarma için bağımlılık onayı.
+
 ## İşletme sahibinin verdiği KESİN kararlar
 
 Bunlar karara bağlandı, tekrar sorma. Ayrıntı: `docs/05` bölüm 0 ve `docs/07`.
