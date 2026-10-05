@@ -47,7 +47,13 @@ export interface KasaDokumu {
   kasaGirisi: number;
   /** Kasadan cikan para (WITHDRAWAL / BANK_TRANSFER / ADVANCE). */
   kasaCikisi: number;
-  /** Kasadan odenen nakit giderler. */
+  /**
+   * Kasadan odenen nakit giderler.
+   *
+   * Maas giderlerinde AVANS MAHSUBU DUSULMUSTUR: kasadan o an cikan para
+   * `amount - advanceOffsetAmount`'tir, cunku avans zaten verildiginde
+   * kasadan cikmisti (karar 05.10.2026).
+   */
   nakitGider: number;
   /** Beklenen nakit = acilis + tahsilat - iade + giris - cikis - gider. */
   beklenenNakit: number;
@@ -117,7 +123,11 @@ export async function kasaDokumu(cashDrawerSessionId: string): Promise<KasaDokum
     }),
     prisma.expense.aggregate({
       where: { cashDrawerSessionId, status: "CONFIRMED", paymentMethod: "CASH" },
-      _sum: { amount: true },
+      // AVANS MAHSUBU DUSULUR (karar 05.10.2026): maas giderinin tamami
+      // "amount"tir, ama kasadan o an cikan para avans kadar AZDIR - avans
+      // zaten verildiginde kasadan cikmisti. Mahsubu dusmezsek avans
+      // kasadan IKI KEZ dusulur.
+      _sum: { amount: true, advanceOffsetAmount: true },
     }),
   ]);
 
@@ -137,7 +147,8 @@ export async function kasaDokumu(cashDrawerSessionId: string): Promise<KasaDokum
   const nakitIade = topla("CASH", "OUT");
   const kasaGirisi = hareket("IN");
   const kasaCikisi = hareket("OUT");
-  const nakitGider = toKurus(giderler._sum.amount);
+  const nakitGider =
+    toKurus(giderler._sum.amount) - toKurus(giderler._sum.advanceOffsetAmount);
 
   const kartTahsilat = topla("CARD", "IN");
   const kartIade = topla("CARD", "OUT");

@@ -156,7 +156,16 @@ Abonmanı biten müşterinin adı/telefonu ne kadar süre tutulacak?
 (Öneri: abonman bitiminden 2 yıl sonra kişisel alanlar anonimleştirilir,
 finansal kayıtlar — tutar/tarih — korunur.)
 
-> **Yanıt:**
+> **Yanıt:** ⏸️ **ERTELENDİ (05.10.2026): otomasyon ŞİMDİLİK EKLENMEYECEK.**
+> İşletme sahibi veri saklama/anonimleştirme otomasyonunun şu an yazılmamasını
+> istedi. Saklama süresi **hâlâ belirlenmedi**; bir süre varsayılmadı ve
+> zamanlanmış bir silme/anonimleştirme süreci **yoktur**.
+>
+> Not: Bu bir teknik eksik değil, **bilinçli bir erteleme**. Karar verildiğinde
+> yapılacak iş: `Customer` üzerindeki kişisel alanların (ad, telefon)
+> anonimleştirilmesi + finansal satırların korunması. Veri modeli buna hazır
+> (finansal kayıtlar müşteriye `SetNull` ile bağlı, tutarlar kendi
+> satırlarında). Devreye alma öncesinde (Aşama 8) tekrar sorulacak.
 
 ---
 
@@ -194,7 +203,13 @@ Hizmet adları ve fiyatları (araç sınıfına göre değişiyorsa her sınıf 
 Personel mi, dışarıdan anlaşmalı ekip mi? Yıkayan kişiye prim/yüzde veriliyor mu?
 (Veriliyorsa hesaplama kuralı gerekiyor; sisteme otomatik prim hesabı eklenebilir.)
 
-> **Yanıt:**
+> **Yanıt:** ✅ **KARAR (05.10.2026): yıkamayı PERSONEL yapıyor; prim/yüzde
+> sistemi YOK.**
+> Prim altyapısı **şu an eklenmeyecek** — ne alan, ne hesaplama, ne ekran.
+> Yıkama iş emri `assignedUserId` ile zaten "kim yaptı" bilgisini taşıyor;
+> prim kararı verilirse hesaplama bu alandan türetilebilir.
+> `PRIM` gider kategorisi kayıtlı duruyor ama **otomatik prim hesabı yoktur**:
+> patron isterse elle gider girer.
 
 ### S15 — Kart ödemeleri nasıl kaydediliyor?
 - Tek POS mu, birden fazla mı?
@@ -202,7 +217,19 @@ Personel mi, dışarıdan anlaşmalı ekip mi? Yıkayan kişiye prim/yüzde veri
   kendi kart kaydını alır, kapanışta toplam dekontla karşılaştırılır.)
 - Taksitli satış oluyor mu? (Olursa kaydı nasıl tutalım?)
 
-> **Yanıt:**
+> **Yanıt:** ✅ **KARAR (05.10.2026): TEK POS + nakit. TAKSİT YOK.**
+> Mevcut tasarım bunu zaten karşılıyor: her işlem kendi kart kaydını alır
+> (`Payment.method = CARD`, `cardNote` serbest dekont notu), kasa kapanışında
+> **tek** dekont toplamı girilir ve sistemdeki kart tahsilatıyla
+> karşılaştırılır (`CashDrawerSession.declaredCard` / `expectedCard`).
+>
+> **İleride çoklu POS'a genişletilebilir** bırakıldı: o zaman yapılacak iş bir
+> `PosTerminal` tablosu + `Payment.posTerminalId` + kapanışta terminal başına
+> dekont alanıdır. Şimdi **eklenmedi** çünkü kullanılmayan alan, personelin
+> doldurmak zorunda sandığı boş bir kutu üretir.
+>
+> **POS entegrasyonu YOKTUR** (hiç olmadı): kart ödemesi personel tarafından
+> elle kaydedilir.
 
 ### S16 — Personel sayısı, vardiyalar ve yetkiler
 - Kaç personel var ve isimleri/kullanıcı adları?
@@ -210,7 +237,30 @@ Personel mi, dışarıdan anlaşmalı ekip mi? Yıkayan kişiye prim/yüzde veri
 - Hangi personel kasa kapatabilir?
 - `MANAGER` (vardiya sorumlusu) rolü kullanılacak mı, yoksa sadece patron + personel mi?
 
-> **Yanıt:**
+> **Yanıt:** ✅ **KARAR (05.10.2026).**
+>
+> **Personel isimleri sisteme YAZILMAZ.** Gerçek personel adları/kullanıcı
+> adları `prisma/seed.ts`'e **girilmeyecek**; hesaplar **patron panelinden**
+> açılacak (Yönetim → Personel). Seed yalnızca tek bir patron hesabı üretir
+> (kullanıcı adı `OWNER_USERNAME` ortam değişkeninden, varsayılan `patron`).
+> Test/demo personeli gerekiyorsa **ayrı fixture** olarak üretilir
+> (`tests/e2e/global-setup.ts` → `e2e_personel`); üretim verisine karışmaz.
+>
+> **Roller: şimdilik yalnızca PATRON + PERSONEL.** `MANAGER` (vardiya
+> sorumlusu) rolü **aktif olarak kullanılmayacak**; enum, izin taban kümesi ve
+> yetki matrisi altyapıda **duruyor** ve ileride tek satırla açılabilir. Personel
+> ekleme ekranında rol seçimi **Patron / Personel** olarak sunulur.
+>
+> **Kasa kapatma:** patron **+ `cash.drawer.close` izni verilen personel.**
+> Bu izin `STAFF` taban kümesinde YOKTUR; patron, personel bazında
+> (`UserPermission`) verir. Böylece yeni rol tanımlamaya gerek kalmaz.
+>
+> **Vardiya düzeni: TEK VARDİYA ZORUNLULUĞU YOK.** Personel kendi vardiyasını
+> açıp kapatır. **Aynı anda yalnızca bir açık KASA oturumu** olabilir (tek
+> fiziki kasa; veritabanı kısmi unique indeksiyle garanti). Vardiya saatleri
+> **işletme ayarlarından yönetilir** (`BusinessSetting.shiftWindows`) ve
+> yalnızca **bilgilendirme/raporlama etiketidir** — personelin vardiya açmasını
+> ENGELLEMEZ.
 
 ---
 
@@ -280,7 +330,11 @@ girilebilir alanlar olarak kodlanır, sen hazır olduğunda kendi ekranından gi
 > | Motor yıkama ücreti | ⏳ **belirlenmedi — uydurulmadı** |
 > | Diğer yıkama hizmetleri (iç temizlik, pasta/cila…) | ⏳ **belirlenmedi** |
 > | Karavan yıkama ücreti | ⏳ **belirlenmedi** |
-> | S12, S14–S20 | ⏳ yanıt bekliyor |
+> | S12 (KVKK otomasyonu) | ⏸️ **bilinçli olarak ertelendi** |
+> | S14 (yıkama primi) | ✅ prim YOK, altyapı eklenmedi |
+> | S15 (kart ödemesi) | ✅ tek POS + nakit, taksit yok |
+> | S16 (personel/vardiya/yetki) | ✅ patron+personel, kasa kapatma izinle |
+> | S17–S20 (web sitesi, teslim) | ⏳ yanıt bekliyor (Aşama 7–8) |
 Ancak **S5, S7, S9, S10 kararları koda gömülen mantığı belirler** — bunları
 Aşama 2 başlamadan önce yanıtlamak gerekir — **bu dördü 02.10.2026'da karara bağlandı**
 (S5: girişte sabitlenir · S7: takvim günü 00:00 · S9: a+c · S10: a). Dolayısıyla

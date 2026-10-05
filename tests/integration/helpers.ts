@@ -20,6 +20,10 @@ export const prisma = new PrismaClient();
 export async function temizle(): Promise<void> {
   const tablolar = [
     "AuditLog", "LoginAttempt", "Session", "SubscriptionPayment", "Payment",
+    // StaffAdvance: Asama 6'da eklendi. CashMovement ve User'a bagli oldugu
+    // icin CASCADE zaten bosaltirdi; yine de ACIKCA listelenir ki yeni bir
+    // test tablosu sessizce temizlik disinda kalmasin.
+    "StaffAdvance",
     "CashMovement", "InventoryMovement", "WashJobItem", "WashJob",
     "ParkingSession", "SubscriptionVehicle", "SubscriptionPeriod", "Subscription",
     "CashDrawerSession", "Shift", "Expense", "OtherIncome",

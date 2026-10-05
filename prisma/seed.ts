@@ -48,10 +48,30 @@ const ARAC_SINIFLARI = [
   { code: "CEKICI", name: "Çekici / Römork", sortOrder: 70 },
 ];
 
-/** Gider kategorileri - docs/02'deki liste. isSystem olanlar silinemez. */
+/**
+ * Gider kategorileri - docs/02'deki liste. isSystem olanlar silinemez.
+ *
+ * `aktif: false` olanlar olusturulur ama KULLANIM DISIDIR: patron gider
+ * ekranindan secemez. Kategori silinmez cunku gecmis kayitlar kategorisini
+ * kaybetmemelidir.
+ */
 const GIDER_KATEGORILERI = [
   { code: "MAAS", name: "Personel maaşı", isSystem: true, sortOrder: 10 },
-  { code: "AVANS", name: "Personel avansı", isSystem: true, sortOrder: 20 },
+  {
+    code: "AVANS",
+    name: "Personel avansı (kullanım dışı)",
+    isSystem: true,
+    sortOrder: 20,
+    /**
+     * KARAR (05.10.2026): personel avansi GIDER DEGIL, maastan dusulecek
+     * ALACAKTIR. Avans "Yönetim → Personel → Avans" akisindan verilir;
+     * kasadan para cikar ama gider yazilmaz, maas odemesinde mahsup edilir.
+     *
+     * Kategori acik kalirsa patron avansi elle gider olarak girebilir ve
+     * tutar IKI KEZ sayilir. Bu yuzden pasif.
+     */
+    aktif: false,
+  },
   { code: "PRIM", name: "Personel primi", isSystem: true, sortOrder: 30 },
   { code: "SGK", name: "Sigorta / SGK", isSystem: true, sortOrder: 40 },
   { code: "YEMEK", name: "Yemek", isSystem: true, sortOrder: 50 },
@@ -63,7 +83,7 @@ const GIDER_KATEGORILERI = [
   { code: "BAKIM_ONARIM", name: "Bakım ve onarım", isSystem: true, sortOrder: 110 },
   { code: "VERGI", name: "Vergi ve resmî ödemeler", isSystem: true, sortOrder: 120 },
   { code: "DIGER", name: "Diğer işletme gideri", isSystem: true, sortOrder: 999 },
-];
+] as { code: string; name: string; isSystem: boolean; sortOrder: number; aktif?: boolean }[];
 
 async function main() {
   const satirlar: string[] = [];
@@ -80,10 +100,11 @@ async function main() {
 
   // --- Gider kategorileri ---
   for (const k of GIDER_KATEGORILERI) {
+    const { aktif, ...alanlar } = k;
     await prisma.expenseCategory.upsert({
       where: { code: k.code },
-      update: { name: k.name, sortOrder: k.sortOrder, isSystem: k.isSystem },
-      create: k,
+      update: { name: k.name, sortOrder: k.sortOrder, isSystem: k.isSystem, isActive: aktif ?? true },
+      create: { ...alanlar, isActive: aktif ?? true },
     });
   }
   satirlar.push(`Gider kategorisi: ${GIDER_KATEGORILERI.length} kayıt`);

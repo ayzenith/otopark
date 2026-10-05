@@ -100,6 +100,30 @@ Otomobil 600 ₺, SUV 700 ₺, Motosiklet 400 ₺ (İç Dış Yıkama).
 - Abonman oluşturmak tahsilat üretmez; tahsilat ayrı işlem, tahsil edeni
   kaydeder (S9/S10 kararları `docs/05`'te)
 
+### Personel, roller ve vardiya (05.10.2026 — S14/S15/S16)
+- **Gerçek personel adları seed'e YAZILMAZ.** Hesaplar patron panelinden
+  açılır (Yönetim → Personel). Seed yalnızca tek patron hesabı üretir.
+  Test personeli ayrı fixture (`e2e_personel`).
+- **Roller: PATRON + PERSONEL.** `MANAGER` aktif edilmedi; enum ve izin taban
+  kümesi altyapıda duruyor, arayüzden **seçilemez**. Silme/kaldırma yapma.
+- **Kasa kapatma:** patron + `cash.drawer.close` izni kullanıcı bazında
+  verilen personel (`UserPermission`). STAFF taban kümesinde YOK.
+- **Tek vardiya zorunluluğu yok;** personel kendi vardiyasını açıp kapatır.
+  Aynı anda yalnızca **bir açık KASA** olabilir (DB kısmi unique indeks).
+  **Vardiya saatleri işletme ayarından yönetilir** ama ZORLAYICI DEĞİLDİR —
+  yalnızca bilgi/rapor etiketi.
+- **Yıkamayı personel yapıyor; PRİM/YÜZDE YOK.** Prim altyapısı eklenmedi.
+- **Personel avansı GİDER DEĞİL**, maaştan düşülecek **alacak**. Kasadan çıkar
+  (nakit azalır) ama gider raporuna girmez; maaş ödemesinde mahsup edilir.
+  `AVANS` gider kategorisi bu yüzden kullanım dışıdır — elle gider olarak
+  girilirse çifte sayım olur.
+- **Maaş/SGK/yemek** tutulabilir, **yalnızca patron görür**
+  (`personnel.cost.view`; alan bazlı kısıt — izin yoksa sorgulanmaz bile).
+- **Tek POS + nakit, taksit YOK.** Çoklu POS ileride genişletilebilir
+  (`PosTerminal` + `Payment.posTerminalId`); şimdi eklenmedi.
+- **KVKK saklama/anonimleştirme otomasyonu ERTELENDİ** (S12). Saklama süresi
+  belirlenmedi, varsayma. Aşama 8'de tekrar sor.
+
 ### Hâlâ belirlenmeyen (VARSAYMA, sor)
 Motor yıkama ücreti · diğer yıkama hizmetleri (iç temizlik, pasta cila…) ·
 karavan **yıkama** ücreti · S12, S14–S20.

@@ -5,13 +5,26 @@
 | Rol | Kim | Özet |
 |---|---|---|
 | **OWNER** (İşletme Sahibi / Patron) | İşletme sahibi | Her şeyi görür ve yapar. Tek rol ki tarife, maaş, finans ve kullanıcı yönetimine erişir. |
-| **MANAGER** (Vardiya Sorumlusu / Müdür) | Güvenilen kıdemli personel | Personelin tüm işlemleri + kasa kapanışı, abonman açma, iptal onayı, indirim. Maaş ve genel finans raporlarını **görmez**. |
+| **MANAGER** (Vardiya Sorumlusu / Müdür) | — **ŞU AN KULLANILMIYOR** | Personelin tüm işlemleri + kasa kapanışı, abonman açma, iptal onayı, indirim. Maaş ve genel finans raporlarını **görmez**. Karar (05.10.2026): bu rol **aktif edilmedi**, altyapıda ileride açılmak üzere duruyor; personel ekleme ekranında seçilemez. |
 | **STAFF** (Personel) | Vardiyadaki görevli | Araç giriş-çıkış, tahsilat, yıkama, abonman sorgulama. Kendi vardiyasının özetini görür. |
 
 **Ek esneklik:** Roller taban izin kümesini belirler; patron `UserPermission` tablosu ile
-tek tek kullanıcıya izin **ekleyebilir veya kaldırabilir**. Örnek: "Ahmet STAFF ama
-kasa kapanışı yapabilsin" → `cash.close` izni ona ayrıca verilir. Böylece yeni rol
+tek tek kullanıcıya izin **ekleyebilir veya kaldırabilir**. Böylece yeni rol
 tanımlamadan farklı yetki seviyeleri oluşur.
+
+> ### Karar (05.10.2026): PATRON + PERSONEL
+>
+> İşletme şimdilik **yalnızca OWNER ve STAFF** rollerini kullanıyor. MANAGER
+> rolü enum'da, taban izin kümesinde ve aşağıdaki matriste **duruyor** ama
+> arayüzden seçilemez ve hiçbir hesaba atanmaz.
+>
+> **Kasa kapatma bunun ilk uygulaması:** patron + `cash.drawer.close` izni
+> **kullanıcı bazında** verilen personel. İzin `STAFF` taban kümesinde yoktur;
+> patron Yönetim → Personel ekranından verir. (Doküman önceki sürümünde bu izin
+> `cash.close` olarak anılıyordu; koddaki sabit `cash.drawer.close`'dur.)
+>
+> **Personel adları sisteme tohum verisi olarak yazılmaz** — hesaplar patron
+> panelinden açılır (bkz. `docs/07` S16).
 
 ## 3.2 İzin listesi (kod seviyesinde sabitler)
 
@@ -92,6 +105,8 @@ settings.business.edit   audit.view               user.manage
 | user.manage (parola sıfırlama, kilit açma) | ✅ | ❌ | ❌ |
 
 > **Not:** MANAGER rolü istenirse hiç kullanılmaz; patron + personel ile de çalışır.
+> **05.10.2026 kararı tam olarak bu:** MANAGER aktif edilmedi. Matristeki
+> MANAGER kolonu, rol ileride açılırsa geçerli olacak taban kümeyi gösterir.
 > Matristeki "izinle açılabilir" satırları `UserPermission` ile kişiye özel verilir.
 
 ## 3.4 Uygulama şekli (iki katmanlı zorunluluk)

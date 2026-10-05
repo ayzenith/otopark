@@ -138,6 +138,17 @@ enum CashMovementType {
   CORRECTION
 }
 
+/// Personel avansinin durumu.
+///
+/// OPEN     : verildi, henuz maastan dusulmedi (isletmenin ALACAGI)
+/// SETTLED  : bir maas odemesiyle mahsup edildi
+/// VOIDED   : hatali kayit; iptal edildi (silinmez)
+enum StaffAdvanceStatus {
+  OPEN
+  SETTLED
+  VOIDED
+}
+
 enum InventoryMovementType {
   PURCHASE
   CONSUMPTION
@@ -202,6 +213,8 @@ model User {
   createdExpenses     Expense[]           @relation("ExpenseCreatedBy")
   createdOtherIncomes OtherIncome[]       @relation("OtherIncomeCreatedBy")
   inventoryMovements  InventoryMovement[] @relation("InventoryMovementCreatedBy")
+  advances            StaffAdvance[]      @relation("AdvanceOwner")
+  createdAdvances     StaffAdvance[]      @relation("AdvanceCreatedBy")
 
   @@index([isActive])
   @@index([role])
@@ -943,8 +956,53 @@ model CashMovement {
   cashDrawerSession CashDrawerSession @relation(fields: [cashDrawerSessionId], references: [id], onDelete: Cascade)
   expense           Expense?          @relation(fields: [expenseId], references: [id], onDelete: SetNull)
   createdBy         User?             @relation("CashMovementCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  staffAdvance      StaffAdvance?
 
   @@index([cashDrawerSessionId])
+}
+
+/// PERSONEL AVANSI - GIDER DEGIL, ALACAK.
+///
+/// Karar (05.10.2026): avans dogrudan gider sayilmaz; maastan dusulecek bir
+/// alacak olarak izlenir. Kasadan para cikisi `cashMovement` (ADVANCE/OUT) ile
+/// olusur, boylece beklenen nakit dogru hesaplanir; gider raporuna GIRMEZ.
+///
+/// Mahsup: maas gideri olusturulurken acik avanslar secilir; her biri
+/// SETTLED olur ve `settledByExpenseId` ile o gidere baglanir. Giderin
+/// `advanceOffsetAmount` alani mahsup toplamini tasir.
+///
+/// SILINMEZ: hatali avans VOIDED yapilir (DB tetikleyicisi DELETE'i reddeder).
+model StaffAdvance {
+  id      String             @id @default(cuid())
+  code    String             @unique
+  userId  String
+  amount  Decimal            @db.Decimal(12, 2)
+  givenAt DateTime           @default(now())
+  status  StaffAdvanceStatus @default(OPEN)
+  note    String?
+
+  /// Kasadan cikisi temsil eden hareket (kasa acikken verilen avanslarda dolu).
+  cashMovementId String? @unique
+
+  /// Mahsup edildigi maas gideri.
+  settledByExpenseId String?
+  settledAt          DateTime?
+
+  voidedAt   DateTime?
+  voidedById String?
+  voidReason String?
+
+  idempotencyKey String?  @unique
+  createdAt      DateTime @default(now())
+  createdById    String?
+
+  user             User          @relation("AdvanceOwner", fields: [userId], references: [id])
+  createdBy        User?         @relation("AdvanceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  cashMovement     CashMovement? @relation(fields: [cashMovementId], references: [id], onDelete: SetNull)
+  settledByExpense Expense?      @relation("AdvanceSettledByExpense", fields: [settledByExpenseId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([status, givenAt])
 }
 
 model ExpenseCategory {
@@ -980,6 +1038,21 @@ model Expense {
   /// Idempotency anahtari (mimari kural 7): personel butona iki kez basinca
   /// ikinci kayit OLUSMAZ. Eski kayitlar ve betik uretimi satirlar icin null
   /// olabilir; PostgreSQL'de unique indeks birden fazla null'a izin verir.
+  /// BU GIDERIN NE KADARI DAHA ONCE VERILMIS AVANSLARDAN KARSILANDI?
+  ///
+  /// Karar (05.10.2026): personel avansi GIDER DEGILDIR, maastan dusulecek
+  /// ALACAKTIR. Avans verildiginde kasadan para cikar ama gider yazilmaz.
+  /// Maas odenirken giderin TAMAMI (maasin kendisi) yazilir; ancak kasadan
+  /// o an cikan para maastan avans kadar AZDIR.
+  ///
+  ///   amount              = maasin tamami (gerceklesen maliyet)
+  ///   advanceOffsetAmount = daha once avans olarak odenmis kisim
+  ///   kasadan cikan       = amount - advanceOffsetAmount
+  ///
+  /// Bu alan olmadan ya avans iki kez kasadan dusulur ya da maas gideri
+  /// eksik yazilir.
+  advanceOffsetAmount Decimal @default(0) @db.Decimal(12, 2)
+
   idempotencyKey String? @unique
 
   createdAt   DateTime @default(now())
@@ -991,6 +1064,8 @@ model Expense {
   cashDrawerSession  CashDrawerSession?  @relation(fields: [cashDrawerSessionId], references: [id], onDelete: SetNull)
   cashMovements      CashMovement[]
   inventoryMovements InventoryMovement[]
+  /// Bu gider (maas odemesi) ile mahsup edilen personel avanslari.
+  settledAdvances    StaffAdvance[]      @relation("AdvanceSettledByExpense")
 
   @@index([expenseDate, expenseCategoryId])
   @@index([status])
@@ -1060,22 +1135,33 @@ model SiteGalleryImage {
 }
 
 model BusinessSetting {
-  id                   String   @id @default("singleton")
-  businessName         String   @default("Londra Camping Otopark")
-  addressText          String   @default("")
+  id                   String  @id @default("singleton")
+  businessName         String  @default("Londra Camping Otopark")
+  addressText          String  @default("")
   mapsUrl              String?
   latitude             Float?
   longitude            Float?
-  phone                String   @default("")
+  phone                String  @default("")
   whatsappPhone        String?
-  workingHoursText     String   @default("")
+  workingHoursText     String  @default("")
   instagramUrl         String?
-  timezone             String   @default("Europe/Istanbul")
+  timezone             String  @default("Europe/Istanbul")
   /// Isletme gununun basladigi saat. Karar 02.10.2026: takvim gunu => 0.
-  businessDayStartHour Int      @default(0)
-  currency             String   @default("TRY")
-  updatedAt            DateTime @updatedAt
-  updatedById          String?
+  businessDayStartHour Int     @default(0)
+  currency             String  @default("TRY")
+
+  /// VARDIYA PENCERELERI (karar 05.10.2026).
+  ///
+  /// `[{ ad, baslangicDakika, bitisDakika }]` listesi; okunurken Zod ile
+  /// dogrulanir (src/server/settings/shift-windows.ts).
+  ///
+  /// YALNIZCA BILGI VE RAPOR ETIKETIDIR. Personelin vardiya acmasini
+  /// ENGELLEMEZ, saat kontrolu YAPMAZ: isletmenin karari "tek vardiya
+  /// zorunlulugu olmasin". Bos liste = vardiya penceresi tanimli degil.
+  shiftWindows Json @default("[]")
+
+  updatedAt   DateTime @updatedAt
+  updatedById String?
 }
 
 // ---------------------------------------------------------------------------
