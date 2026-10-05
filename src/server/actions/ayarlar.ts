@@ -17,6 +17,7 @@ import {
   vardiyaPencereleriKaydet,
   type VardiyaPenceresi,
 } from "@/server/settings/shift-windows";
+import { isletmeKunyesiKaydet } from "@/server/settings/business";
 
 /**
  * Form gönderimi: `ad1/baslangic1/bitis1 … ad6/baslangic6/bitis6`.
@@ -75,5 +76,36 @@ export async function vardiyaPencereleriAction(
     revalidatePath("/vardiya");
     revalidatePath("/kasa");
     return { adet: pencereler.length };
+  });
+}
+
+/**
+ * İŞLETME KÜNYESİ (Aşama 7)
+ *
+ * Adres, telefon, çalışma saatleri hem panelde hem kurumsal sitede görünür.
+ * İşletme bu bilgileri vermedi (docs/07 S18); girilmeyen alan BOŞ kalır,
+ * uydurulmaz ve sitede o bölüm çizilmez.
+ */
+export async function isletmeKunyesiAction(
+  girdi: unknown,
+): Promise<ActionResult<{ isletmeAdi: string }>> {
+  return runAction(async () => {
+    const user = await requirePermission(PERMISSIONS.SETTINGS_BUSINESS_EDIT);
+    const veri = nesneye(girdi);
+
+    const kayit = await isletmeKunyesiKaydet(user, {
+      isletmeAdi: (veri.isletmeAdi ?? "").trim(),
+      adres: veri.adres ?? "",
+      telefon: veri.telefon ?? "",
+      whatsapp: veri.whatsapp ?? "",
+      calismaSaatleri: veri.calismaSaatleri ?? "",
+      mapsUrl: veri.mapsUrl ?? "",
+      instagramUrl: veri.instagramUrl ?? "",
+    });
+
+    revalidatePath("/yonetim/ayarlar/isletme");
+    // Künye sitenin her sayfasında (başlık ve alt bilgi) görünür.
+    revalidatePath("/", "layout");
+    return { isletmeAdi: kayit.businessName };
   });
 }

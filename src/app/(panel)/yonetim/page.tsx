@@ -296,6 +296,7 @@ export default async function YonetimPaneli({
           { href: "/yonetim/raporlar/personel", etiket: "Personel bazlı tahsilat" },
           { href: "/yonetim/personel", etiket: "Personel yönetimi" },
           { href: "/yonetim/denetim", etiket: "Denetim kayıtları" },
+          { href: "/yonetim/site", etiket: "Web sitesi" },
         ].map((b) => (
           <Link
             key={b.href}

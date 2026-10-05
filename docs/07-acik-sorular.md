@@ -340,3 +340,27 @@ Aşama 2 başlamadan önce yanıtlamak gerekir — **bu dördü 02.10.2026'da ka
 (S5: girişte sabitlenir · S7: takvim günü 00:00 · S9: a+c · S10: a). Dolayısıyla
 Aşama 1 ve Aşama 2 için mantıksal engel kalmadı; eksik olan yalnızca fiyat
 **değerleri**, onlar da panelden girilebilir.
+
+
+---
+
+## 05.10.2026 — Aşama 7 sonrası durum
+
+Kurumsal sitenin **iskeleti tamamlandı**; içerik hâlâ girilmedi.
+
+| Soru | Durum |
+|---|---|
+| S17 alan adı / sunucu | Kullanıcı ".com alacağım, yarın olur" dedi (05.10.2026). Sunucu sağlayıcı kararı YOK. |
+| S18 işletme künyesi | VERİLMEDİ. Site alanları boş; panelden girilecek. Logo ve fotoğraf da yok — PWA ikonu geçici. |
+| S19 sitedeki fiyatlar | KARAR YOK. Site fiyatı tarifeden otomatik akmaz; patron hangi satırı yazarsa o görünür. Satır yoksa "arayınız" denir. |
+| S20 teslim ve erişim | KARAR YOK. |
+| S12 KVKK saklama süresi | Ertelendi, Aşama 8'de tekrar sorulacak. |
+
+Aşama 7'de alınan teknik karar: **site, otopark tarifesini ve yıkama fiyat
+tablosunu KENDİ OKUMAZ.** Yalnızca `SitePublicPrice` satırlarını gösterir.
+Gerekçe: tarifede yapılan bir düzeltmenin sitede istenmeden yayına çıkmaması
+ve S19'un hâlâ açık olması. (Mimari kural 11'in site karşılığı.)
+
+Site, bilgiler girilene kadar **arama motorlarına kapalıdır**
+(`robots: index false`); yarım bir sayfanın indekslenmesi sonradan zor
+düzelir. Aşama 8'de açılacak.

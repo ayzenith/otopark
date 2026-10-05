@@ -304,6 +304,14 @@ export default async function globalSetup() {
       );
       await tx.$executeRawUnsafe(`DELETE FROM "OtherIncome" WHERE "label" LIKE 'E2E %'`);
 
+      // --- ASAMA 7: site testlerinin biraktigi fiyat satiri / gorsel ---
+      //
+      // Site icerigi UC proje arasinda paylasilir. Test kendi satirini
+      // silerek bitse de, yarida kesilen bir kosu satiri birakabilir; o
+      // zaman sonraki kosuda "sitede fiyat yok" beklentisi sessizce bozulur.
+      await tx.$executeRawUnsafe(`DELETE FROM "SitePublicPrice" WHERE "label" LIKE 'E2E %'`);
+      await tx.$executeRawUnsafe(`DELETE FROM "SiteGalleryImage" WHERE "alt" LIKE 'E2E %'`);
+
       // --- ASAMA 6: testlerin actigi personel hesaplari ve avanslari ---
       //
       // Olcut: kullanici adi "e2e_p" ile baslayanlar. Patron (e2e_patron) ve

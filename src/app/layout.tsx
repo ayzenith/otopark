@@ -8,6 +8,13 @@ export const metadata: Metadata = {
   },
   description: "Londra Camping Otopark işletme yönetim sistemi.",
   robots: { index: false, follow: false }, // panel indekslenmez; public site kendi metadata'sini verir
+  // iOS ana ekrana ekleme manifestteki ikonlari KULLANMAZ, apple-touch-icon
+  // arar. Logo verilmedigi icin ikon gecicidir (docs/07 S18).
+  icons: {
+    icon: [{ url: "/ikon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/ikon-192.png", sizes: "192x192", type: "image/png" }],
+  },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Londra Camping" },
 };
 
 export const viewport: Viewport = {

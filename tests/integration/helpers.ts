@@ -35,6 +35,10 @@ export async function temizle(): Promise<void> {
     // Aksi halde bir testte eklenen sinif (ornek: TICARI) sonraki kosuda
     // "kod zaten kullaniliyor" hatasi verir ve testler birbirini etkiler.
     "VehicleClass",
+    // Site icerigi (Asama 7). Temizlik listesine ALINMAZSA bir testte
+    // yayinlanan sayfa/fiyat satiri sonraki kosuda sitede gorunur ve
+    // "eksik bilgi" beklentisini sessizce bozar.
+    "SitePage", "SitePublicPrice", "SiteGalleryImage",
     // Gider kategorileri AYNI NEDENLE temizlenir (Asama 5'te yasandi):
     // testlerin olusturdugu kategoriler birikiyor ve bir sonraki kosuda
     // "kod zaten kullaniliyor" hatasi tum dosyayi dusuruyordu. Kategoriler

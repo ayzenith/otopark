@@ -29,10 +29,10 @@ dokunma (hâlâ 0 commit). Her aşama sonunda commit + push.
 | 4 | Oto yıkama | ✅ |
 | 5 | Kasa, gelir-gider, malzeme stoğu, CSV dışa aktarma | ✅ |
 | 6 | Personel yönetimi, avans/maaş, patron paneli, uyarı merkezi, denetim ekranı | ✅ |
-| **7** | **SIRADAKİ:** kurumsal web sitesi | ⏳ |
-| 8 | Devreye alma, gerçek cihaz testleri | ⏳ |
+| 7 | Kurumsal web sitesi (iskelet + panelden içerik yönetimi) | ✅ |
+| **8** | **SIRADAKİ:** devreye alma, gerçek cihaz testleri | ⏳ |
 
-**1069 test geçiyor**, başarısız yok: 287 birim + 449 entegrasyon + 333 E2E
+**1123 test geçiyor**, başarısız yok: 303 birim + 463 entegrasyon + 357 E2E
 (3 ekran boyutu). Her aşamada önce mevcut testleri çalıştır, sonra yenileri
 ekle, sonra hepsini tekrar çalıştır.
 
@@ -41,37 +41,30 @@ Taşınmayan işler (docs/06 sonunda tam liste): XLSX/PDF dışa aktarma
 yok), KVKK otomasyonu (ertelendi), çoklu POS (karar gereği yok), grafiklerin
 zenginleştirilmesi, personel maliyetlerinin otomatik gider üretmesi.
 
-**Son commit:** `7136806` (Aşama 6 tamamlandı, push edildi). Çalışma alanı
-temiz; `main` dalı hâlâ 0 commit, dokunulmadı.
+**Son commit:** Aşama 7 (kurumsal site iskeleti) tamamlandı ve push edildi.
+`main` dalı hâlâ 0 commit, dokunulmadı.
 
-## ⚠️ BU OTURUMDA ÖNCE YAPILACAK — Aşama 7 bloke
+## ⚠️ AŞAMA 8 ÖNCESİ SORULACAKLAR (hâlâ cevapsız)
 
-Aşama 7 **kurumsal web sitesi**. Siteyi yapmak için gereken bilgilerin
-HİÇBİRİ verilmedi (`docs/07` S17–S20 hâlâ boş). **Kod yazmaya başlamadan
-önce bunları sor; adres, telefon, çalışma saati, fiyat UYDURMA.**
+Aşama 7'nin **iskeleti bitti**: site çalışıyor, tüm içerik panelden giriliyor
+(Yönetim → Web sitesi + Yönetim → İşletme ayarları). İçerik alanları BOŞ ve
+hiçbir şey uydurulmadı — girilmeyen bölüm sitede hiç çizilmiyor.
 
-Sorulacaklar (kısa tut, kullanıcı kısa yanıt vermeyi seviyor):
+Site yayına çıkmadan önce gereken bilgiler (docs/07 S17–S20):
 
-1. **S17 — Alan adı ve barındırma:** Alan adı var mı / kim alacak? Sunucu
-   var mı, biz mi kuralım?
-2. **S18 — İşletme künyesi:** Tam ad, açık adres, telefon, WhatsApp, çalışma
-   saatleri (7/24 mi?), Google Maps bağlantısı, Instagram. Fotoğraf ve logo
-   var mı, yoksa geçici görselle mi başlanacak?
-3. **S19 — Sitede hangi fiyatlar yazılacak?** Otopark tarifesi açıkça yazılsın
-   mı yoksa "bilgi için arayınız" mı? (Abonman fiyatı kişiye özel olduğu için
-   sitede yazılmaması önerildi, onay bekliyor.) Karavan 700 ₺/24 sa ve yıkama
-   600/700/400 ₺ yazılsın mı?
-4. **S20 — Teslim ve erişim:** GitHub deposu işletme adına mı geçecek? Sunucu/
-   veritabanı erişimi kime teslim edilecek? Yedek dış depolama hesabı kimde?
+1. **S17 — Alan adı ve barındırma:** kullanıcı 05.10.2026'da ".com alacağım,
+   yarın olur" dedi. Alan adı gelince sunucu kurulumu yapılacak. Sunucu
+   sağlayıcı kararı verilmedi.
+2. **S18 — İşletme künyesi:** tam ad, açık adres, telefon, WhatsApp, çalışma
+   saatleri, Google Maps bağlantısı, Instagram. **Fotoğraf ve logo da yok** —
+   PWA ikonu GEÇİCİ ("LC" harfleri, `public/ikon-*.png`).
+3. **S19 — Sitede hangi fiyatlar yazılacak?** Site fiyatı tarifeden otomatik
+   akmaz; patron hangi satırı yazarsa o görünür. Hiç satır girilmezse site
+   "arayınız" der. Abonman fiyatının sitede yazılmaması önerildi.
+4. **S20 — Teslim ve erişim:** depo/sunucu/yedek kimde olacak?
 
-**Yanıt gelmeden yapılabilecek olan** (istenirse onay alıp başla): site
-iskeleti, mobil öncelikli sayfa düzeni, `SitePage` / `SitePublicPrice` /
-`SiteGalleryImage` tablolarını panelden yönetme ekranları. İçerik alanları
-BOŞ kalır ve "patron panelinden girilecek" olarak işaretlenir — tıpkı
-fiyatlarda yapıldığı gibi. Gerçek adres/telefon/fiyat **asla varsayılmaz**.
-
-**Ayrıca Aşama 8 öncesi tekrar sorulacak:** KVKK saklama süresi (S12,
-bilinçli olarak ertelendi) ve XLSX/PDF dışa aktarma için bağımlılık onayı.
+Ayrıca: **KVKK saklama süresi (S12)** ve **XLSX/PDF dışa aktarma için
+bağımlılık onayı** Aşama 8'de tekrar sorulacak.
 
 ## İşletme sahibinin verdiği KESİN kararlar
 
@@ -218,6 +211,11 @@ ekranında "fiyat girilmemiş" uyarısı çıkar (mimari kural 10).
     farkı göremedi). React 19'da `<form action={fn}>` formu da SIFIRLAR;
     hata sonrası değer kaybetmemesi gereken formlar kontrollü olmalı.
 
+19. **Site hiçbir şey uydurmaz.** Girilmemiş adres/telefon/saat/fiyat için yer
+    tutucu metin yazılmaz; o bölüm hiç çizilmez ve patron panelinde "eksik
+    bilgi" olarak listelenir. Sitedeki fiyat SERBEST METİNDİR ve tarife
+    motorundan otomatik akmaz — kural 11'in site karşılığı.
+
 ## Kod haritası
 
 ```
@@ -242,16 +240,21 @@ src/server/staff/  users.ts (hesap, izin sapmaları, maliyet profili) ·
 src/server/reports/ range.ts (dönem aralığı, SAF) · dashboard.ts (panel,
                    trend, personel tahsilatı) · alerts.ts (uyarı merkezi) ·
                    audit-query.ts (denetim filtreleri)
-src/server/settings/ shift-windows.ts (vardiya pencereleri, ZORLAYICI DEĞİL)
+src/server/settings/ shift-windows.ts (vardiya pencereleri, ZORLAYICI DEĞİL) ·
+                   business.ts (işletme künyesi; site bundan okur)
+src/server/site/   queries.ts (public okuma + eksik bilgi listesi) ·
+                   admin.ts (sayfa/fiyat/galeri yazma, denetim kaydı)
 src/server/actions/ ince kabuk: yetki + Zod + servis çağrısı
 src/components/panel/ islem-paneli.tsx (7 adımlık park akışı) ·
                    yikama-paneli.tsx · abonman-karti.tsx · kasa-paneli.tsx ·
                    rapor-araclari.tsx (dönem filtresi, SVG trend, denetim)
+src/app/(site)/    kurumsal site: ana sayfa · fiyatlar · iletisim (oturum YOK)
+src/app/manifest.ts  ana ekrana ekleme (PWA); ikon GEÇİCİ
 src/app/(panel)/   vardiya · araclar · yikama · abonmanlar · musteriler ·
                    abonmanli-araclar · tarife · kasa · stok · yonetim/**
                    (yonetim/finans · yonetim/finans/giderler ·
                     yonetim/finans/csv (route handler) · yonetim/kasa ·
-                    yonetim/personel[/id] · yonetim/denetim ·
+                    yonetim/personel[/id] · yonetim/denetim · yonetim/site ·
                     yonetim/raporlar/personel)
 scripts/baslangic-fiyatlari.ts   fiyatları DB'ye yazar (idempotent)
 ```
@@ -260,9 +263,9 @@ scripts/baslangic-fiyatlari.ts   fiyatları DB'ye yazar (idempotent)
 
 ```bash
 npm run typecheck && npm run lint && npm run build
-npm run test              # birim (287)
-npm run test:integration  # entegrasyon, gerçek PostgreSQL (449)
-npm run test:e2e          # Playwright, 3 ekran boyutu (333)
+npm run test              # birim (303)
+npm run test:integration  # entegrasyon, gerçek PostgreSQL (463)
+npm run test:e2e          # Playwright, 3 ekran boyutu (357)
 npm run fiyatlar:kur      # başlangıç fiyatları (mevcut fiyatları ezmez)
 npm run db:seed           # araç sınıfları, kategoriler, patron hesabı
 ```

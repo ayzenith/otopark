@@ -502,11 +502,40 @@ migration sürüklenmesi yok.
 - Performans: görsel optimizasyonu, Lighthouse mobil ≥ 90
 
 **Tamamlanma kriterleri**
-- [ ] Public sayfaların **hiçbir** müşteri/abonman/finans verisi okumadığı test
-  (otomatik kontrol: `(public)` altında yasaklı model kullanımı taraması)
-- [ ] Panelden fiyat metni değiştirilince sitede göründüğü E2E
+- [x] Public sayfaların **hiçbir** müşteri/abonman/finans verisi okumadığı test
+  (`tests/unit/site-veri-sinirlari.test.ts`: `(site)` altındaki her dosyanın içe
+  aktarmaları taranır; yalnızca `@/server/site/queries` serbesttir)
+- [x] Panelden fiyat metni değiştirilince sitede göründüğü E2E
+  (`tests/e2e/site-akisi.spec.ts`)
 - [ ] Lighthouse mobil: performans ≥ 90, erişilebilirlik ≥ 95
-- [ ] WhatsApp ve telefon bağlantılarının mobil cihazda çalıştığı kontrol
+- [ ] WhatsApp ve telefon bağlantılarının gerçek mobil cihazda çalıştığı kontrol
+
+### 05.10.2026 — Aşama 7'de YAPILAN
+
+- `src/server/site/` okuma + yönetim katmanı; her değişiklik denetim kaydı üretir
+- `src/app/(site)/`: ana sayfa, fiyatlar, iletişim (oturum gerektirmez, mobil
+  öncelikli, yatay kaydırma yok — E2E ile doğrulandı)
+- Kök adres artık **site**; personel panele "Personel girişi" bağlantısından
+  ya da doğrudan `/giris` adresinden ulaşır (`giris.spec.ts` buna göre güncellendi)
+- `/yonetim/site`: sayfa metinleri, sitede gösterilecek fiyat satırları, galeri
+- `/yonetim/ayarlar/isletme`: işletme künyesi (ad, adres, telefon, WhatsApp,
+  çalışma saatleri, harita, Instagram) — site bunu okur
+- `src/app/manifest.ts`: telefonda ana ekrana eklenince tam ekran açılır (PWA).
+  **Çevrimdışı çalışma bilerek eklenmedi:** tahsilat kuyruğa alınırsa çifte
+  tahsilat riski doğar
+- Test: +16 birim, +14 entegrasyon, +24 E2E → toplam **1123**
+  (303 birim + 463 entegrasyon + 357 E2E)
+
+### Aşama 7'de YAPILMAYAN (gerekçeli)
+
+| İş | Neden |
+|---|---|
+| SEO: `sitemap.xml`, `robots.txt`, Open Graph, LocalBusiness verisi | Hepsi **gerçek alan adı** ister (mutlak URL, kanonik adres). Alan adı alınınca Aşama 8'de eklenecek. Site şu an bilerek `noindex`. |
+| Lighthouse ölçümü | Anlamlı ölçüm gerçek içerik ve gerçek görsellerle yapılır; ikisi de yok. |
+| SSS bölümü | İşletmeden soru/cevap metni gelmedi; uydurulmadı. |
+| Abonman tanıtım sayfası | Abonman fiyatı kişiye özel (S19); sitede ne yazacağına karar verilmedi. |
+| Logo ve gerçek ikon | Verilmedi. PWA ikonu geçici ("LC"), `public/ikon-*.png` değiştirilerek güncellenir, kod değişmez. |
+| Görsel optimizasyonu (`next/image`) | Uzak görsel alan adı yapılandırması ister; hangi adresten servis edileceği belli değil. |
 
 ---
 

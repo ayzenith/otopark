@@ -1,16 +1,18 @@
 import { Alert, Card, CardBody, CardHeader, CardTitle } from "@/components/ui";
 import { prisma } from "@/server/db";
-import { KapasiteFormu, VardiyaPencereleriFormu } from "./formlar";
+import { KapasiteFormu, VardiyaPencereleriFormu, IsletmeKunyesiFormu } from "./formlar";
 import { dakikayiSaate, vardiyaPencereleri } from "@/server/settings/shift-windows";
+import { isletmeKunyesi } from "@/server/settings/business";
 
 export const metadata = { title: "İşletme ayarları" };
 export const dynamic = "force-dynamic";
 
 export default async function IsletmeAyarlariSayfasi() {
-  const [kapasite, aktifArac, pencereler] = await Promise.all([
+  const [kapasite, aktifArac, pencereler, kunye] = await Promise.all([
     prisma.parkingCapacitySetting.findUnique({ where: { id: "singleton" } }),
     prisma.parkingSession.count({ where: { status: "ACTIVE" } }),
     vardiyaPencereleri(),
+    isletmeKunyesi(),
   ]);
 
   return (
@@ -51,11 +53,29 @@ export default async function IsletmeAyarlariSayfasi() {
         </CardBody>
       </Card>
 
-      <Alert tur="bilgi" baslik="Diğer işletme bilgileri Aşama 7'de eklenecek">
-        İşletme adı, adres, telefon, WhatsApp, çalışma saatleri ve harita bilgileri kurumsal web
-        sitesiyle birlikte (Aşama 7) yönetilecek. Bu bilgiler henüz girilmedi; varsayılmadı
-        (bkz. docs/07 S18).
-      </Alert>
+      <Card>
+        <CardHeader>
+          <CardTitle>İşletme bilgileri</CardTitle>
+        </CardHeader>
+        <CardBody className="space-y-3">
+          <Alert tur="bilgi" baslik="Bu bilgiler kurumsal sitede görünür">
+            Boş bıraktığınız alan sitede hiç gösterilmez. Hiçbiri varsayılmadı; ne yazarsanız o
+            görünür.
+          </Alert>
+          <IsletmeKunyesiFormu
+            mevcut={{
+              isletmeAdi: kunye?.businessName ?? "",
+              adres: kunye?.addressText ?? "",
+              telefon: kunye?.phone ?? "",
+              whatsapp: kunye?.whatsappPhone ?? "",
+              calismaSaatleri: kunye?.workingHoursText ?? "",
+              mapsUrl: kunye?.mapsUrl ?? "",
+              instagramUrl: kunye?.instagramUrl ?? "",
+            }}
+          />
+        </CardBody>
+      </Card>
+
     </div>
   );
 }

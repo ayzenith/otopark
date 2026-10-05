@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Alert, Button, Input } from "@/components/ui";
 import { kapasiteAction } from "@/server/actions/tarife";
-import { vardiyaPencereleriAction } from "@/server/actions/ayarlar";
+import { vardiyaPencereleriAction, isletmeKunyesiAction } from "@/server/actions/ayarlar";
 
 export function KapasiteFormu({
   mevcutKapasite,
@@ -163,6 +163,104 @@ export function VardiyaPencereleriFormu({
         data-test="vardiya-penceresi-kaydet"
       >
         {bekliyor ? "Kaydediliyor…" : "VARDİYA SAATLERİNİ KAYDET"}
+      </Button>
+    </form>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// İŞLETME KÜNYESİ (Aşama 7 - kurumsal site bu bilgileri kullanır)
+// ---------------------------------------------------------------------------
+
+/**
+ * Adres, telefon, çalışma saatleri hem panelde hem SİTEDE görünür.
+ *
+ * Boş bırakılan alan sitede HİÇ ÇİZİLMEZ: yanlış bilgi göstermektense hiç
+ * göstermemek doğrudur (docs/07 S18 hâlâ açık, hiçbiri varsayılmadı).
+ */
+export function IsletmeKunyesiFormu({
+  mevcut,
+}: {
+  mevcut: {
+    isletmeAdi: string;
+    adres: string;
+    telefon: string;
+    whatsapp: string;
+    calismaSaatleri: string;
+    mapsUrl: string;
+    instagramUrl: string;
+  };
+}) {
+  const router = useRouter();
+  const [hata, setHata] = useState<string | null>(null);
+  const [basari, setBasari] = useState<string | null>(null);
+  const [bekliyor, basla] = useTransition();
+
+  return (
+    <form
+      className="space-y-3"
+      action={(formData) => {
+        setHata(null);
+        setBasari(null);
+        basla(async () => {
+          const sonuc = await isletmeKunyesiAction(formData);
+          if (!sonuc.ok) setHata(sonuc.error);
+          else {
+            setBasari("İşletme bilgileri kaydedildi. Sitede hemen görünür.");
+            router.refresh();
+          }
+        });
+      }}
+    >
+      {hata ? <Alert tur="hata" baslik={hata} /> : null}
+      {basari ? <Alert tur="basari" baslik={basari} /> : null}
+
+      <Input name="isletmeAdi" etiket="İşletme adı" defaultValue={mevcut.isletmeAdi} required />
+      <Input
+        name="adres"
+        etiket="Açık adres"
+        defaultValue={mevcut.adres}
+        placeholder="Girilmedi"
+        yardim="Boş bırakılırsa sitede adres bölümü hiç görünmez."
+      />
+      <Input
+        name="telefon"
+        etiket="Telefon"
+        defaultValue={mevcut.telefon}
+        placeholder="Girilmedi"
+        yardim="Sitede tek dokunuşla aranabilir buton olur."
+      />
+      <Input
+        name="whatsapp"
+        etiket="WhatsApp numarası"
+        defaultValue={mevcut.whatsapp}
+        placeholder="Girilmedi"
+        yardim="Ülke koduyla yazın (905xx…). Boşsa WhatsApp butonu çıkmaz."
+      />
+      <Input
+        name="calismaSaatleri"
+        etiket="Çalışma saatleri"
+        defaultValue={mevcut.calismaSaatleri}
+        placeholder="Girilmedi"
+        yardim="Serbest metin. Örnek yazım: 7/24 açık."
+      />
+      <Input
+        name="mapsUrl"
+        etiket="Google Maps bağlantısı"
+        defaultValue={mevcut.mapsUrl}
+        placeholder="Girilmedi"
+        yardim="https:// ile başlamalı. Boşsa 'Yol tarifi al' butonu çıkmaz."
+      />
+      <Input
+        name="instagramUrl"
+        etiket="Instagram bağlantısı"
+        defaultValue={mevcut.instagramUrl}
+        placeholder="Girilmedi"
+        yardim="https:// ile başlamalı."
+      />
+
+      <Button type="submit" variant="birincil" size="ikincil" tamGenislik disabled={bekliyor}>
+        {bekliyor ? "Kaydediliyor…" : "KAYDET"}
       </Button>
     </form>
   );

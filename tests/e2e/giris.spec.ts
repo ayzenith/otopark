@@ -73,9 +73,19 @@ test.describe("yetkisiz erişim", () => {
     }
   });
 
-  test("kök adres giriş ekranına yönlendirir", async ({ page }) => {
+  /**
+   * ASAMA 7 DEGISIKLIGI: kok adres artik KURUMSAL SITEdir.
+   *
+   * Once "/" oturumu olmayani /giris'e yonlendiriyordu. Site yayina girince
+   * ziyaretcinin karsisina giris ekrani cikmasi yanlis olurdu; personel
+   * panele sitedeki "Personel girisi" baglantisindan (ya da dogrudan /giris
+   * adresinden) ulasir. Panel sayfalari KORUMALI kalmaya devam eder -
+   * ustteki test bunu dogrular.
+   */
+  test("kök adres oturum olmadan kurumsal siteyi açar", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveURL(/\/giris/);
+    await expect(page).not.toHaveURL(/\/giris/);
+    await expect(page.getByRole("link", { name: "Personel girişi" })).toBeVisible();
   });
 });
 
