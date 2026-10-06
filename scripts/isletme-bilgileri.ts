@@ -14,17 +14,13 @@
  * ===========================================================================
  * KAYNAK: işletme sahibi, 05.10.2026.
  *
- *   · WhatsApp numarası : 0555 056 79 79
+ *   · Telefon / WhatsApp: 0555 056 79 79 — AYNI NUMARA (teyit 06.10.2026)
  *   · Google Maps       : verilen kısa bağlantı
  *   · Çalışma saatleri  : "7/24 açık" — sahibinin ifadesiyle "bu bilgi
  *                         kesin olsun, çok önemli"
  *
  * VERİLMEYEN ve BU YÜZDEN YAZILMAYAN alanlar:
  *   · açık adres metni  — yalnızca harita bağlantısı verildi
- *   · sabit/çağrı telefonu — verilen numara WhatsApp olarak bildirildi;
- *     aynı numaradan arama alınıp alınmadığı TEYİT EDİLMEDİ, bu yüzden
- *     `phone` alanı BOŞ bırakılır ve sitede arama butonu çıkmaz.
- *     Teyit gelince panelden girilir (ya da buraya eklenir).
  *   · Instagram adresi
  *   · işletmenin tam ticari unvanı
  * ===========================================================================
@@ -36,6 +32,8 @@ const prisma = new PrismaClient();
 
 /** İşletme sahibinin 05.10.2026'da verdiği değerler. */
 const VERILENLER = {
+  /** 06.10.2026: sahibi "numara aynı" dedi — hem arama hem WhatsApp. */
+  phone: "0555 056 79 79",
   whatsappPhone: "0555 056 79 79",
   mapsUrl: "https://maps.app.goo.gl/rLR4CvWx5VsCNLr5A",
   workingHoursText: "7/24 AÇIK",
@@ -57,6 +55,7 @@ async function main() {
   const mevcut = await prisma.businessSetting.findUnique({ where: { id: "singleton" } });
 
   const yazilacak: Record<string, string> = {};
+  if (bos(mevcut?.phone)) yazilacak.phone = VERILENLER.phone;
   if (bos(mevcut?.whatsappPhone)) yazilacak.whatsappPhone = VERILENLER.whatsappPhone;
   if (bos(mevcut?.mapsUrl)) yazilacak.mapsUrl = VERILENLER.mapsUrl;
   if (bos(mevcut?.workingHoursText)) yazilacak.workingHoursText = VERILENLER.workingHoursText;
@@ -95,8 +94,6 @@ async function main() {
   console.log(cizgi);
   console.log("  HENÜZ VERİLMEDİ (kasıtlı olarak boş, uydurulmadı):");
   console.log("    · Açık adres metni (yalnızca harita bağlantısı var)");
-  console.log("    · Arama için telefon — verilen numara WhatsApp olarak bildirildi;");
-  console.log("      aynı numaradan arama alınıyorsa panelden girilir");
   console.log("    · Instagram adresi, logo ve fotoğraflar");
   console.log(cizgi);
   console.log("  Bu bilgiler bundan sonra PANELDEN değiştirilir:");

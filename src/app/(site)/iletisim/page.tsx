@@ -32,7 +32,7 @@ export default async function IletisimSayfasi() {
     !kunye.adres && !kunye.telefon && !kunye.whatsapp && !kunye.calismaSaatleri && !kunye.mapsUrl;
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-3xl space-y-6 px-5 py-10">
       <h1 className="text-2xl font-bold text-lacivert-700">İletişim</h1>
 
       {sayfa ? <SiteMetni govde={sayfa.govde} /> : null}
