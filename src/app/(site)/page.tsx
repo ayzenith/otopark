@@ -4,16 +4,22 @@ import { telHref, whatsappHref } from "@/lib/telefon";
 import { SiteMetni } from "./metin";
 import {
   AbonmanIkonu,
+  BinaIkonu,
   Bolum,
+  EtiketIkonu,
   HizmetKarti,
+  KalkanIkonu,
+  KameraIkonu,
   KaravanIkonu,
   KonumIkonu,
   OtoparkIkonu,
   OzellikSatiri,
   SaatIkonu,
   TelefonIkonu,
+  UlasimSatiri,
   WhatsappIkonu,
   YikamaIkonu,
+  YuruyusIkonu,
 } from "./parcalar";
 
 /**
@@ -83,8 +89,11 @@ export default async function SiteAnaSayfa() {
             {kunye.isletmeAdi}
           </h1>
 
+          {/* İşletme sahibinin 06.10.2026'da verdiği bilgiler: 7/24 güvenlik,
+              kamera sistemi ve merkezi konum. Hiçbiri uydurulmadı. */}
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-lacivert-100 sm:text-xl">
-            Aracınızı güvenle bırakın, tertemiz teslim alın. Otopark ve oto yıkama tek noktada.
+            Metrobüse 2, metroya 3 dakika. 7/24 güvenlik ve kamera sistemiyle korunan otopark;
+            yanında profesyonel oto yıkama. Aracınız emin ellerde.
           </p>
 
           {/* ---- Ana eylemler ---- */}
@@ -130,19 +139,19 @@ export default async function SiteAnaSayfa() {
           {/* ---- Kısa güven bilgileri: hepsi sistemde tanımlı GERÇEK hizmetler ---- */}
           <div className="mt-12 grid gap-6 border-t border-white/10 pt-8 sm:grid-cols-3">
             <OzellikSatiri
-              ikon={<SaatIkonu className="h-6 w-6" />}
-              baslik="Kesintisiz hizmet"
-              aciklama="Gece gündüz fark etmez, kapımız her saat açık."
+              ikon={<KalkanIkonu className="h-6 w-6" />}
+              baslik="7/24 Güvenlik"
+              aciklama="Aracınız profesyonel güvenlik ekibimiz tarafından 7/24 korunur."
             />
             <OzellikSatiri
-              ikon={<KaravanIkonu className="h-6 w-6" />}
-              baslik="Karavan kabul"
-              aciklama="Karavanınız için ayrı ve geniş park alanı."
+              ikon={<KameraIkonu className="h-6 w-6" />}
+              baslik="7/24 Kamera Sistemi"
+              aciklama="Otoparkımız kesintisiz kamera sistemi ile sürekli izlenmektedir."
             />
             <OzellikSatiri
-              ikon={<AbonmanIkonu className="h-6 w-6" />}
-              baslik="Aylık abonman"
-              aciklama="Düzenli park edenler için sınırsız giriş çıkış."
+              ikon={<EtiketIkonu className="h-6 w-6" />}
+              baslik="Uygun Fiyatlı Park"
+              aciklama="Merkezi konumda, bütçenizi zorlamayan saatlik ve günlük park."
             />
           </div>
         </div>
@@ -152,17 +161,17 @@ export default async function SiteAnaSayfa() {
       </section>
 
       {/* ================= HİZMETLER ================= */}
-      <Bolum etiket="Hizmetlerimiz" baslik="İki iş, tek durak" className="pt-14 sm:pt-20">
+      <Bolum etiket="Hizmetlerimiz" baslik="Güvenli park, profesyonel yıkama" className="pt-14 sm:pt-20">
         <div className="mt-8 grid gap-5 sm:grid-cols-2">
           <HizmetKarti
             ikon={<OtoparkIkonu className="h-8 w-8" />}
             baslik={otopark?.baslik ?? "Otopark"}
-            aciklama="Saatlik, günlük ve aylık park. Otomobil, SUV, minibüs ve karavan kabul edilir."
+            aciklama="Saatlik, günlük ve aylık park. Otomobil, SUV, minibüs ve karavan kabul edilir. Düzenli park edenler için aylık abonman: sınırsız giriş çıkış."
           />
           <HizmetKarti
             ikon={<YikamaIkonu className="h-8 w-8" />}
             baslik={yikama?.baslik ?? "Oto yıkama"}
-            aciklama="İç dış yıkama ve ek hizmetler. Siz işinizi hallederken aracınız hazır olur."
+            aciklama="Profesyonel ekip ve ekipmanla iç dış yıkama. Park süresi boyunca aracınız bakımlı hale gelir; siz işinizi hallederken hazır olur."
           />
         </div>
       </Bolum>
@@ -243,7 +252,7 @@ export default async function SiteAnaSayfa() {
           <div className="p-7 sm:p-10">
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-mavi-300">Konum</p>
             <h2 className="mt-2 text-3xl font-extrabold leading-tight sm:text-4xl">
-              Yola çıkın, biz buradayız
+              Şehrin tam merkezinde
             </h2>
 
             {kunye.adres ? (
@@ -251,6 +260,32 @@ export default async function SiteAnaSayfa() {
                 {kunye.adres}
               </p>
             ) : null}
+
+            {/* ULAŞIM — işletme sahibinin 06.10.2026'da verdiği bilgiler.
+                Konum işletmenin en güçlü satış noktası olduğu için metin
+                olarak değil, tek tek okunabilir satırlar halinde durur. */}
+            <ul className="mt-7 grid gap-3 sm:grid-cols-2">
+              <UlasimSatiri
+                ikon={<YuruyusIkonu className="h-6 w-6" />}
+                yer="Metrobüs"
+                mesafe="Yürüyerek 2 dakika"
+              />
+              <UlasimSatiri
+                ikon={<YuruyusIkonu className="h-6 w-6" />}
+                yer="Metro"
+                mesafe="Yürüyerek 3 dakika"
+              />
+              <UlasimSatiri
+                ikon={<BinaIkonu className="h-6 w-6" />}
+                yer="Nef Selenium Ataköy Towers"
+                mesafe="Hemen arkasında"
+              />
+              <UlasimSatiri
+                ikon={<BinaIkonu className="h-6 w-6" />}
+                yer="Kültür Üniversitesi · Airport AVM"
+                mesafe="Hemen arkasında"
+              />
+            </ul>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               {kunye.mapsUrl ? (

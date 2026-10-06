@@ -40,10 +40,11 @@ const VERILENLER = {
 } as const;
 
 /** Sitede ana sayfada görünecek tanıtım metni (sahibinin verdiği bilgiyle sınırlı). */
-const ANASAYFA_METNI = `Otoparkımız ve oto yıkamamız 7 gün 24 saat açıktır.
+const ANASAYFA_METNI = `Londra Camping Otopark; metrobüs ve metroya yürüme mesafesinde, şehrin merkezinde 7 gün 24 saat açık bir otoparktır.
 
-- Otopark
-- Oto yıkama`;
+Aracınız profesyonel güvenlik ekibimiz ve kesintisiz çalışan kamera sistemiyle korunur. Saatlik, günlük ve aylık park seçenekleri vardır; karavanlar da kabul edilir.
+
+Aynı çatı altında profesyonel oto yıkama hizmeti veriyoruz. Deneyimli ekibimiz ve profesyonel ekipmanlarımızla iç dış yıkama yapılır; aracınızı park ettiğiniz süre değerlendirilir, işiniz bittiğinde bakımlı ve tertemiz teslim alırsınız.`;
 
 function bos(deger: string | null | undefined): boolean {
   return (deger ?? "").trim() === "";

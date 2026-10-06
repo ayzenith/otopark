@@ -116,6 +116,83 @@ export function TelefonIkonu({ className }: IkonOzellikleri) {
   );
 }
 
+
+export function KalkanIkonu({ className }: IkonOzellikleri) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
+      <path
+        d="M24 5 9 11v12c0 10 6.4 17.6 15 20 8.6-2.4 15-10 15-20V11L24 5Z"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+      <path
+        d="m18 23.5 4.3 4.3L31 19"
+        stroke="currentColor"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function KameraIkonu({ className }: IkonOzellikleri) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
+      <path
+        d="M6 16.5 34 9l3 10.5L9 27 6 16.5Z"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+      <path d="M13 25.5 15 33" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <path d="M28 21 42 17v12l-9-3" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
+      <circle cx="19" cy="38" r="5" stroke="currentColor" strokeWidth="3" />
+    </svg>
+  );
+}
+
+export function EtiketIkonu({ className }: IkonOzellikleri) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
+      <path
+        d="M24.8 6H40a2 2 0 0 1 2 2v15.2a4 4 0 0 1-1.2 2.8L24.6 42.2a2 2 0 0 1-2.8 0L5.8 26.2a2 2 0 0 1 0-2.8L22 7.2A4 4 0 0 1 24.8 6Z"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+      <circle cx="33" cy="15" r="3.4" stroke="currentColor" strokeWidth="3" />
+    </svg>
+  );
+}
+
+export function YuruyusIkonu({ className }: IkonOzellikleri) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
+      <circle cx="26" cy="9" r="4.5" stroke="currentColor" strokeWidth="3" />
+      <path
+        d="M25 18c-3 .6-4.6 2.4-5.4 4.8L17 31l-5 11M25 18c3 0 5 1.6 6 4l2.4 5.6L39 31M25 18l-.6 11.4L30 42"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function BinaIkonu({ className }: IkonOzellikleri) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
+      <path d="M8 42V12l12-6v36" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
+      <path d="M20 42V18l20-6v30" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
+      <path d="M4 42h40" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <path d="M27 24h6M27 31h6" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /** Vitrin bölümü: üstte küçük etiket, altında büyük başlık. */
 export function Bolum({
   etiket,
@@ -184,5 +261,32 @@ export function OzellikSatiri({
         <p className="mt-0.5 text-sm leading-relaxed text-lacivert-100">{aciklama}</p>
       </div>
     </div>
+  );
+}
+
+/**
+ * Ulaşım satırı: yakındaki bir nokta ve oraya olan mesafe.
+ *
+ * İşletme sahibinin 06.10.2026'da verdiği konum bilgileri için kullanılır.
+ */
+export function UlasimSatiri({
+  ikon,
+  yer,
+  mesafe,
+}: {
+  ikon: React.ReactNode;
+  yer: string;
+  mesafe: string;
+}) {
+  return (
+    <li className="flex items-center gap-4 rounded-2xl bg-white/5 p-4 ring-1 ring-inset ring-white/10">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-mavi-200">
+        {ikon}
+      </div>
+      <div className="min-w-0">
+        <p className="font-bold leading-tight text-white">{yer}</p>
+        <p className="mt-0.5 text-sm text-lacivert-100">{mesafe}</p>
+      </div>
+    </li>
   );
 }
