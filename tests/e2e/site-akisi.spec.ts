@@ -97,8 +97,40 @@ test.describe("kurumsal site - ziyaretçi", () => {
     await expect(page.getByRole("heading", { name: "İletişim", level: 1 })).toBeVisible();
   });
 
+  /**
+   * ISLETMENIN 06.10.2026 ISTEGI: ust menude Ana sayfa / Otopark / Oto Yikama
+   * secenekleri olsun, tiklayinca detayli bilgi gelsin.
+   */
+  test("üst menüden otopark ve oto yıkama sayfalarına gidilir", async ({ page }) => {
+    await page.goto("/");
+
+    // Telefonda menu saran etiket satiridir; masaustunde baslik icindedir.
+    const menu = page.getByRole("link", { name: "Otopark", exact: true });
+    await menu.first().click();
+    await expect(page).toHaveURL(/\/otopark$/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("otopark");
+
+    await page.getByRole("link", { name: "Oto Yıkama", exact: true }).first().click();
+    await expect(page).toHaveURL(/\/oto-yikama$/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("oto yıkama");
+  });
+
+  test("hizmet kartları ilgili sayfaya götürür", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("link", { name: /Oto yıkama/ }).first().click();
+    await expect(page).toHaveURL(/\/oto-yikama$/);
+  });
+
+  test("hizmet sayfalarında iletişim butonları vardır", async ({ page }) => {
+    for (const yol of ["/otopark", "/oto-yikama"]) {
+      await page.goto(yol);
+      await expect(page.getByTestId("whatsapp"), `${yol} WhatsApp`).toBeVisible();
+      await expect(page.getByTestId("yol-tarifi"), `${yol} yol tarifi`).toBeVisible();
+    }
+  });
+
   test("sitede yatay kaydırma yoktur", async ({ page }) => {
-    for (const yol of ["/", "/fiyatlar", "/iletisim"]) {
+    for (const yol of ["/", "/otopark", "/oto-yikama", "/fiyatlar", "/iletisim"]) {
       await page.goto(yol);
       const tasma = await page.evaluate(
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,

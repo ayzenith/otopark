@@ -165,11 +165,13 @@ export default async function SiteAnaSayfa() {
         <div className="mt-8 grid gap-5 sm:grid-cols-2">
           <HizmetKarti
             ikon={<OtoparkIkonu className="h-8 w-8" />}
+            yol="/otopark"
             baslik={otopark?.baslik ?? "Otopark"}
             aciklama="Saatlik, günlük ve aylık park. Otomobil, SUV, minibüs ve karavan kabul edilir. Düzenli park edenler için aylık abonman: sınırsız giriş çıkış."
           />
           <HizmetKarti
             ikon={<YikamaIkonu className="h-8 w-8" />}
+            yol="/oto-yikama"
             baslik={yikama?.baslik ?? "Oto yıkama"}
             aciklama="Profesyonel ekip ve ekipmanla iç dış yıkama. Park süresi boyunca aracınız bakımlı hale gelir; siz işinizi hallederken hazır olur."
           />

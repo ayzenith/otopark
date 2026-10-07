@@ -37,6 +37,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const BAGLANTILAR = [
   { yol: "/", ad: "Ana sayfa" },
+  { yol: "/otopark", ad: "Otopark" },
+  { yol: "/oto-yikama", ad: "Oto Yıkama" },
   { yol: "/fiyatlar", ad: "Fiyatlar" },
   { yol: "/iletisim", ad: "İletişim" },
 ];
@@ -66,7 +68,7 @@ export default async function SiteDuzeni({ children }: { children: React.ReactNo
             ))}
           </nav>
 
-          {/* Telefonda başlıkta yalnızca iki ikon: menü yerine doğrudan eylem. */}
+          {/* Telefonda başlıkta yalnızca iki ikon; menü aşağıdaki satırda. */}
           <div className="flex items-center gap-2 sm:hidden">
             {whatsapp ? (
               <a
@@ -90,6 +92,26 @@ export default async function SiteDuzeni({ children }: { children: React.ReactNo
             ) : null}
           </div>
         </div>
+
+        {/* TELEFON MENÜSÜ
+            Beş bağlantı başlık satırına sığmaz. Açılır menü yerine SARAN bir
+            etiket satırı kullanılır: tek dokunuşla gidilir, gizli bir adım
+            yoktur ve yatay kaydırma oluşmaz (mobil öncelikli kural). */}
+        <nav
+          aria-label="Site (telefon)"
+          data-test="telefon-menu"
+          className="mx-auto flex w-full max-w-5xl flex-wrap gap-2 px-5 pb-4 sm:hidden"
+        >
+          {BAGLANTILAR.map((b) => (
+            <Link
+              key={b.yol}
+              href={b.yol}
+              className="flex h-11 items-center rounded-xl bg-white/10 px-4 text-sm font-semibold text-white"
+            >
+              {b.ad}
+            </Link>
+          ))}
+        </nav>
       </header>
 
       <main className="flex-1">{children}</main>

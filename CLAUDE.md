@@ -32,7 +32,7 @@ dokunma (hâlâ 0 commit). Her aşama sonunda commit + push.
 | 7 | Kurumsal web sitesi (iskelet + panelden içerik yönetimi) | ✅ |
 | **8** | **SIRADAKİ:** devreye alma, gerçek cihaz testleri | ⏳ |
 
-**1146 test geçiyor**, başarısız yok: 314 birim + 463 entegrasyon + 369 E2E
+**1155 test geçiyor**, başarısız yok: 314 birim + 463 entegrasyon + 378 E2E
 (3 ekran boyutu). Her aşamada önce mevcut testleri çalıştır, sonra yenileri
 ekle, sonra hepsini tekrar çalıştır.
 
@@ -258,7 +258,8 @@ src/server/actions/ ince kabuk: yetki + Zod + servis çağrısı
 src/components/panel/ islem-paneli.tsx (7 adımlık park akışı) ·
                    yikama-paneli.tsx · abonman-karti.tsx · kasa-paneli.tsx ·
                    rapor-araclari.tsx (dönem filtresi, SVG trend, denetim)
-src/app/(site)/    kurumsal site: ana sayfa · fiyatlar · iletisim (oturum YOK)
+src/app/(site)/    kurumsal site: ana sayfa · otopark · oto-yikama · fiyatlar ·
+                   iletisim (oturum YOK) · parcalar.tsx (ikon/bolum parcalari)
 src/app/manifest.ts  ana ekrana ekleme (PWA); ikon GEÇİCİ
 src/app/(panel)/   vardiya · araclar · yikama · abonmanlar · musteriler ·
                    abonmanli-araclar · tarife · kasa · stok · yonetim/**
@@ -275,7 +276,7 @@ scripts/baslangic-fiyatlari.ts   fiyatları DB'ye yazar (idempotent)
 npm run typecheck && npm run lint && npm run build
 npm run test              # birim (314)
 npm run test:integration  # entegrasyon, gerçek PostgreSQL (463)
-npm run test:e2e          # Playwright, 3 ekran boyutu (369)
+npm run test:e2e          # Playwright, 3 ekran boyutu (378)
 npm run isletme:kur       # işletme künyesi başlangıç değerleri (idempotent)
 npm run fiyatlar:kur      # başlangıç fiyatları (mevcut fiyatları ezmez)
 npm run db:seed           # araç sınıfları, kategoriler, patron hesabı

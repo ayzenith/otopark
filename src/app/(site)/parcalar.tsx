@@ -1,3 +1,4 @@
+import Link from "next/link";
 /**
  * SİTE TASARIM PARÇALARI
  *
@@ -220,25 +221,49 @@ export function Bolum({
   );
 }
 
-/** Hizmet kartı: ikon, başlık, açıklama. */
+/**
+ * Hizmet kartı: ikon, başlık, açıklama.
+ *
+ * `yol` verilirse kartın TAMAMI bağlantı olur — telefonda küçük bir "devamı"
+ * yazısına nişan almak yerine kartın herhangi bir yerine dokunmak yeter.
+ */
 export function HizmetKarti({
   ikon,
   baslik,
   aciklama,
+  yol,
 }: {
   ikon: React.ReactNode;
   baslik: string;
   aciklama: string;
+  yol?: string;
 }) {
-  return (
-    <div className="group rounded-3xl border border-slate-200 bg-white p-6 transition-shadow hover:shadow-lg sm:p-7">
+  const icerik = (
+    <>
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-lacivert-50 text-lacivert-600">
         {ikon}
       </div>
       <h3 className="mt-5 text-xl font-bold text-lacivert-700">{baslik}</h3>
       <p className="mt-2 leading-relaxed text-slate-600">{aciklama}</p>
-    </div>
+      {yol ? (
+        <p className="mt-4 font-bold text-mavi-700">
+          Detaylı bilgi <span aria-hidden>›</span>
+        </p>
+      ) : null}
+    </>
   );
+
+  const sinif =
+    "block rounded-3xl border border-slate-200 bg-white p-6 transition-shadow hover:shadow-lg sm:p-7";
+
+  if (yol) {
+    return (
+      <Link href={yol} className={sinif}>
+        {icerik}
+      </Link>
+    );
+  }
+  return <div className={sinif}>{icerik}</div>;
 }
 
 /** Kısa güven bilgisi: ikon + tek satır. */
@@ -288,5 +313,116 @@ export function UlasimSatiri({
         <p className="mt-0.5 text-sm text-lacivert-100">{mesafe}</p>
       </div>
     </li>
+  );
+}
+
+/** Numaralı adım: "nasıl işliyor" anlatımları için. */
+export function Adim({
+  numara,
+  baslik,
+  aciklama,
+}: {
+  numara: number;
+  baslik: string;
+  aciklama: string;
+}) {
+  return (
+    <li className="flex gap-4">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-lacivert-600 text-lg font-extrabold text-white">
+        {numara}
+      </span>
+      <div className="pt-1.5">
+        <p className="text-lg font-bold text-lacivert-700">{baslik}</p>
+        <p className="mt-1 leading-relaxed text-slate-600">{aciklama}</p>
+      </div>
+    </li>
+  );
+}
+
+/** Madde listesi satırı: onay işaretli, kısa fayda cümlesi. */
+export function OnayliMadde({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-3">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden className="mt-0.5 h-6 w-6 shrink-0 text-emerald-600">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+        <path
+          d="m8 12.5 2.5 2.5L16 9.5"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <span className="leading-relaxed text-slate-700">{children}</span>
+    </li>
+  );
+}
+
+/**
+ * Sayfa sonu iletişim kutusu.
+ *
+ * Her hizmet sayfasının sonunda aynı eylemler durur: yol tarifi, WhatsApp,
+ * arama. Ziyaretçi sayfayı okuduktan sonra ne yapacağını aramak zorunda
+ * kalmaz. Girilmemiş bilgi için buton ÇİZİLMEZ (mimari kural 19).
+ */
+export function IletisimKutusu({
+  mapsUrl,
+  whatsappHref: wa,
+  telHref: tel,
+  telefon,
+  baslik = "Yardımcı olalım",
+  aciklama = "Aklınıza takılan her şey için arayın ya da WhatsApp'tan yazın.",
+}: {
+  mapsUrl: string | null;
+  whatsappHref: string | null;
+  telHref: string | null;
+  telefon: string | null;
+  baslik?: string;
+  aciklama?: string;
+}) {
+  if (!mapsUrl && !wa && !tel) return null;
+
+  return (
+    <div className="overflow-hidden rounded-3xl bg-lacivert-600 p-7 text-white sm:p-10">
+      <h2 className="text-3xl font-extrabold leading-tight sm:text-4xl">{baslik}</h2>
+      <p className="mt-3 max-w-md text-lg leading-relaxed text-lacivert-100">{aciklama}</p>
+
+      <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        {wa ? (
+          <a
+            href={wa}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-test="whatsapp"
+            className="inline-flex h-16 items-center justify-center gap-3 rounded-2xl bg-emerald-500 px-7 text-lg font-bold text-white"
+          >
+            <WhatsappIkonu className="h-6 w-6" />
+            WhatsApp
+          </a>
+        ) : null}
+        {tel ? (
+          <a
+            href={tel}
+            data-test="ara"
+            className="inline-flex h-16 items-center justify-center gap-3 rounded-2xl bg-white px-7 text-lg font-extrabold text-lacivert-700"
+          >
+            <TelefonIkonu className="h-6 w-6" />
+            {telefon}
+          </a>
+        ) : null}
+        {mapsUrl ? (
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-test="yol-tarifi"
+            className="inline-flex h-16 items-center justify-center gap-3 rounded-2xl px-7 text-lg font-bold text-white ring-2 ring-inset ring-white/30"
+          >
+            <KonumIkonu className="h-6 w-6" />
+            Yol tarifi
+          </a>
+        ) : null}
+      </div>
+    </div>
   );
 }
