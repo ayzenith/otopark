@@ -18,16 +18,42 @@ function rakamlar(metin: string): string {
 }
 
 /**
+ * Metindeki İLK telefon numarasını ayıklar.
+ *
+ * İşletmeler tek alana birden fazla numara yazar:
+ *   "+90 (212) 555 00 00 / 0555 056 79 79"
+ *   "0212 555 00 00 - 0555 056 79 79 (WhatsApp)"
+ *
+ * Tüm rakamları birleştirmek `tel:+90212555000005550567979` gibi YANLIŞ BİR
+ * NUMARA üretir ve müşteri hiçbir yeri arayamaz. Bu yüzden ayraçtan önceki
+ * ilk parça alınır.
+ *
+ * Ayraç sayılanlar: / , ; | • – — ve "ve" bağlacı. Parantez ve tire
+ * numaranın KENDİ İÇİNDE geçtiği için ayraç sayılmaz.
+ */
+function ilkNumaraParcasi(ham: string): string {
+  const parca = ham.split(/\s*(?:[/,;|•]|\s[–—]\s|\sve\s)\s*/)[0] ?? ham;
+  return parca.trim() === "" ? ham : parca;
+}
+
+/**
+ * E.164 bir numarayı en fazla 15 haneyle sınırlar. Daha uzunu numara
+ * değildir; bağlantı üretilmez ki sessizce yanlış yere aranmasın.
+ */
+const EN_FAZLA_HANE = 15;
+
+/**
  * `tel:` bağlantısı. Kullanıcının yazdığı biçim korunur, yalnızca boşluk ve
  * ayraçlar temizlenir; başındaki + işareti kalır.
  */
 export function telHref(telefon: string | null | undefined): string | null {
-  const ham = (telefon ?? "").trim();
-  if (ham === "") return null;
+  const tam = (telefon ?? "").trim();
+  if (tam === "") return null;
 
+  const ham = ilkNumaraParcasi(tam);
   const artiVarMi = ham.startsWith("+");
   const sayilar = rakamlar(ham);
-  if (sayilar.length < 7) return null;
+  if (sayilar.length < 7 || sayilar.length > EN_FAZLA_HANE) return null;
 
   return `tel:${artiVarMi ? "+" : ""}${sayilar}`;
 }
@@ -42,11 +68,12 @@ export function telHref(telefon: string | null | undefined): string | null {
  *   +49 170 1234567  → 491701234567  (yabancı numaraya dokunulmaz)
  */
 export function whatsappHref(numara: string | null | undefined): string | null {
-  const ham = (numara ?? "").trim();
-  if (ham === "") return null;
+  const tam = (numara ?? "").trim();
+  if (tam === "") return null;
 
+  const ham = ilkNumaraParcasi(tam);
   const sayilar = rakamlar(ham);
-  if (sayilar.length < 7) return null;
+  if (sayilar.length < 7 || sayilar.length > EN_FAZLA_HANE) return null;
 
   // Ulke kodu acikca yazilmis (+ ile baslayan): oldugu gibi kullanilir.
   if (ham.startsWith("+")) return `https://wa.me/${sayilar}`;

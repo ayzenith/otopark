@@ -226,3 +226,104 @@ test.describe("site yönetimi - personel", () => {
     await expect(page).toHaveURL(/\/vardiya/);
   });
 });
+
+/**
+ * EN KÖTÜ VERİ (break-ui becerisiyle bulundu, 08.10.2026)
+ *
+ * ============================================================================
+ * Site içeriğinin TAMAMI panelden serbest metin olarak giriliyor. Tasarım
+ * kibar veriyle yapıldı: kısa işletme adı, tek telefon, "7/24 AÇIK". Gerçek
+ * işletmeler böyle yazmıyor.
+ *
+ * Bu testler şema sınırları içinde kalan GERÇEKÇİ en kötü değerleri yazar ve
+ * sayfanın kırılmadığını doğrular. Bulunan dört gerçek hata:
+ *   1. Tek alana iki numara → tel: bağlantısı var olmayan numara üretiyordu
+ *   2. Uzun Instagram adresi → 320px'te 296px yatay taşma
+ *   3. Yüklenemeyen galeri görseli → kırık görsel ikonu
+ *   4. (Ayrıca) kaydırma animasyonu JS'e bağlıydı; betik çalışmazsa sayfanın
+ *      yarısı görünmüyordu — CSS'e taşındı
+ *
+ * Veri E2E veritabanına yazılır ve test SONUNDA GERİ ALINIR; diğer testler
+ * künyenin sabit değerlerine güveniyor.
+ * ============================================================================
+ */
+test.describe("en kötü veri", () => {
+  const UZUN_UNVAN =
+    "E2E Londra Camping Otopark Oto Yıkama ve Turizm İşletmeciliği Sanayi ve Ticaret Limited Şirketi";
+  const IKI_NUMARA = "+90 (212) 555 00 00 / 0555 000 00 00";
+  const UZUN_SAAT =
+    "E2E Hafta içi 07:00–23:00, hafta sonu ve resmî tatillerde 08:00–22:00; bayramın birinci günü kapalıdır";
+  const UZUN_INSTAGRAM =
+    "https://www.instagram.com/londracampingotoparkotoyikamaistanbulatakoy/?hl=tr&utm_source=qr";
+
+  test("uzun unvan, iki numara ve uzun Instagram adresi sayfayı bozmaz", async ({ page }) => {
+    // Veriyi panelden yaz: gercek sinir bu yoldan gecer.
+    await page.goto("/giris");
+    await page.getByLabel("Kullanıcı adı").fill(E2E_PATRON);
+    await page.getByLabel("Parola").fill(E2E_PAROLA);
+    await page.getByRole("button", { name: /GİRİŞ YAP/i }).click();
+    await expect(page).toHaveURL(/\/vardiya/);
+
+    await page.goto("/yonetim/ayarlar/isletme");
+    await page.getByLabel("İşletme adı").fill(UZUN_UNVAN);
+    await page.getByLabel("Telefon").fill(IKI_NUMARA);
+    await page.getByLabel("Çalışma saatleri").fill(UZUN_SAAT);
+    await page.getByLabel("Instagram bağlantısı").fill(UZUN_INSTAGRAM);
+    await page.getByRole("button", { name: "KAYDET" }).last().click();
+    await expect(page.getByText("İşletme bilgileri kaydedildi").first()).toBeVisible({
+      timeout: 15_000,
+    });
+
+    try {
+      // 1. Tel baglantisi YALNIZCA ilk numarayi icerir.
+      await page.goto("/");
+      const ara = page.getByTestId("ara").first();
+      await expect(ara).toHaveAttribute("href", "tel:+902125550000");
+
+      // 2. Hicbir sayfada yatay tasma yok (320px dahil).
+      await page.setViewportSize({ width: 320, height: 720 });
+      for (const yol of ["/", "/otopark", "/oto-yikama", "/fiyatlar", "/iletisim"]) {
+        await page.goto(yol);
+        const tasma = await page.evaluate(
+          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        );
+        expect(tasma, `${yol} yatay taşma üretiyor`).toBeLessThanOrEqual(1);
+      }
+
+      // 3. Instagram adresinin TAMAMI basilmaz; kullanici adi gosterilir.
+      await page.goto("/iletisim");
+      const govde = await page.locator("body").innerText();
+      expect(govde).not.toContain("utm_source");
+    } finally {
+      // Kunyeyi geri al: diger testler sabit degerlere guveniyor.
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto("/yonetim/ayarlar/isletme");
+      await page.getByLabel("İşletme adı").fill("Londra Camping Otopark");
+      await page.getByLabel("Telefon").fill("");
+      await page.getByLabel("Çalışma saatleri").fill(E2E_SITE_SAAT);
+      await page.getByLabel("Instagram bağlantısı").fill("");
+      await page.getByRole("button", { name: "KAYDET" }).last().click();
+      await expect(page.getByText("İşletme bilgileri kaydedildi").first()).toBeVisible({
+        timeout: 15_000,
+      });
+    }
+  });
+
+  test("betikler çalışmasa da sayfa içeriği görünür", async ({ browser }) => {
+    // Kaydirma animasyonu CSS'e tasindi; JS olmadan da her bolum okunur.
+    const ctx = await browser.newContext({ javaScriptEnabled: false });
+    const sayfa = await ctx.newPage();
+    await sayfa.goto("/", { waitUntil: "domcontentloaded" });
+
+    await expect(sayfa.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(sayfa.getByText("Hizmetlerimiz")).toBeVisible();
+    await expect(sayfa.getByText("Konum").first()).toBeVisible();
+
+    // Esik, E2E veritabanindaki metne gore degil, "sayfa bos degil"e gore.
+    // Onceki surumde bu deger 0'a yakindi: bolumler opacity:0 ile gizliydi.
+    const metin = await sayfa.locator("body").innerText();
+    expect(metin.length, "JS kapalıyken içerik kayboluyor").toBeGreaterThan(900);
+
+    await ctx.close();
+  });
+});

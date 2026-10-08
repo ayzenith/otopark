@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { siteIcerigi, SITE_SAYFA_ANAHTARLARI } from "@/server/site/queries";
 import { telHref, whatsappHref } from "@/lib/telefon";
 import { SiteMetni } from "../metin";
-import { Belir } from "../belir";
 import {
   Adim,
   Bolum,
@@ -73,8 +72,7 @@ export default async function OtoYikamaSayfasi() {
       </section>
 
       {/* ---- Nasıl işliyor ---- */}
-      <Belir>
-      <Bolum numara="01" etiket="Nasıl işliyor" baslik="Üç adımda tertemiz" className="pt-20 sm:pt-28">
+            <Bolum numara="01" etiket="Nasıl işliyor" baslik="Üç adımda tertemiz" className="site-belir pt-20 sm:pt-28">
         <ol className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8">
           <Adim
             numara={1}
@@ -93,11 +91,9 @@ export default async function OtoYikamaSayfasi() {
           />
         </ol>
       </Bolum>
-      </Belir>
-
+      
       {/* ---- Hizmetler ---- */}
-      <Belir>
-      <Bolum numara="02" etiket="Yıkama hizmetleri" baslik="Ne yapıyoruz" className="pt-20 sm:pt-28">
+            <Bolum numara="02" etiket="Yıkama hizmetleri" baslik="Ne yapıyoruz" className="site-belir pt-20 sm:pt-28">
         <div className="mt-12 grid gap-10 sm:grid-cols-2 sm:gap-12">
           <HizmetKarti
             ikon={<YikamaIkonu className="h-8 w-8" />}
@@ -118,11 +114,9 @@ export default async function OtoYikamaSayfasi() {
           <OnayliMadde>Park ve yıkama ücretleri birbirine karıştırılmaz</OnayliMadde>
         </ul>
       </Bolum>
-      </Belir>
-
+      
       {/* ---- Neden burada yıkatmalı ---- */}
-      <Belir>
-      <Bolum numara="03" etiket="Neden burada" baslik="Zaman kazandırır" className="pt-20 sm:pt-28">
+            <Bolum numara="03" etiket="Neden burada" baslik="Zaman kazandırır" className="site-belir pt-20 sm:pt-28">
         <div className="mt-12 grid gap-10 sm:grid-cols-2 sm:gap-12">
           <HizmetKarti
             ikon={<SaatIkonu className="h-8 w-8" />}
@@ -136,12 +130,10 @@ export default async function OtoYikamaSayfasi() {
           />
         </div>
       </Bolum>
-      </Belir>
-
+      
       {/* ---- Panelden girilen metin ---- */}
       {sayfa ? (
-        <Belir>
-        <Bolum className="pt-20 sm:pt-28">
+                <Bolum className="site-belir pt-20 sm:pt-28">
           <div className="max-w-2xl border-t border-murekkep-900/12 pt-10">
             <h2 className="site-baslik text-murekkep-900">{sayfa.baslik}</h2>
             <div className="mt-6 text-murekkep-700/85">
@@ -149,12 +141,10 @@ export default async function OtoYikamaSayfasi() {
             </div>
           </div>
         </Bolum>
-        </Belir>
-      ) : null}
+              ) : null}
 
       {/* ---- İletişim ---- */}
-      <Belir>
-      <Bolum className="pt-20 sm:pt-28">
+            <Bolum className="site-belir pt-20 sm:pt-28">
         <IletisimKutusu
           mapsUrl={kunye.mapsUrl}
           whatsappHref={whatsapp}
@@ -164,7 +154,6 @@ export default async function OtoYikamaSayfasi() {
           aciklama="Aracınızın tipine göre fiyat ve süre bilgisi almak için arayın ya da WhatsApp'tan yazın."
         />
       </Bolum>
-      </Belir>
-    </>
+          </>
   );
 }

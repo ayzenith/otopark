@@ -66,3 +66,40 @@ describe("WhatsApp bağlantısı", () => {
     expect(whatsappHref("12345678")).toBe("https://wa.me/12345678");
   });
 });
+
+/**
+ * BİRDEN FAZLA NUMARA (break-ui ile bulundu, 08.10.2026)
+ *
+ * İşletmeler tek alana iki numara yazar. Tüm rakamlar birleştirilince
+ * `tel:+90212555000005550567979` gibi var olmayan bir numara üretiliyordu;
+ * müşteri butona basınca hiçbir yere ulaşamazdı.
+ */
+describe("tek alana yazılmış birden fazla numara", () => {
+  it("eğik çizgiyle ayrılmış iki numaradan İLKİNİ alır", () => {
+    expect(telHref("+90 (212) 555 00 00 / 0555 056 79 79")).toBe("tel:+902125550000");
+  });
+
+  it("virgül, noktalı virgül ve dikey çizgi de ayraçtır", () => {
+    expect(telHref("0212 555 00 00, 0555 056 79 79")).toBe("tel:02125550000");
+    expect(telHref("0212 555 00 00; 0555 056 79 79")).toBe("tel:02125550000");
+    expect(telHref("0212 555 00 00 | 0555 056 79 79")).toBe("tel:02125550000");
+  });
+
+  it("'ve' bağlacı ayraçtır", () => {
+    expect(telHref("0212 555 00 00 ve 0555 056 79 79")).toBe("tel:02125550000");
+  });
+
+  it("numaranın kendi içindeki parantez ve tire ayraç SAYILMAZ", () => {
+    expect(telHref("(0212) 555-00-00")).toBe("tel:02125550000");
+  });
+
+  it("WhatsApp bağlantısı da ilk numarayı kullanır", () => {
+    expect(whatsappHref("0555 056 79 79 / 0555 111 22 33")).toBe("https://wa.me/905550567979");
+  });
+
+  it("15 haneyi aşan değer için bağlantı üretilmez", () => {
+    // Sessizce yanlış yere aramaktansa buton hiç çizilmesin.
+    expect(telHref("0212555000005550567979")).toBeNull();
+    expect(whatsappHref("0212555000005550567979")).toBeNull();
+  });
+});

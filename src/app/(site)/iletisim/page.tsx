@@ -28,6 +28,15 @@ export default async function IletisimSayfasi() {
   const ara = telHref(kunye.telefon);
   const whatsapp = whatsappHref(kunye.whatsapp);
 
+  /**
+   * Instagram adresinin TAMAMI yazılmaz: 88 karakterlik gerçek bir adres
+   * 320px ekranda 296px taşma ve yatay kaydırma üretiyordu (break-ui,
+   * 08.10.2026). Bunun yerine kullanıcı adı gösterilir; bağlantı aynı.
+   */
+  const instagramAdi = kunye.instagram
+    ? (kunye.instagram.replace(/\/+$/, "").split("?")[0]!.split("/").pop() ?? "").trim()
+    : "";
+
   const hicBilgiYok =
     !kunye.adres && !kunye.telefon && !kunye.whatsapp && !kunye.calismaSaatleri && !kunye.mapsUrl;
 
@@ -85,12 +94,12 @@ export default async function IletisimSayfasi() {
             <dt className="site-etiket text-murekkep-700/45">Instagram</dt>
             <dd className="mt-2">
               <a
-                className="site-bag font-semibold text-murekkep-900"
+                className="site-bag font-semibold break-words text-murekkep-900"
                 href={kunye.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                {kunye.instagram}
+                {instagramAdi ? `@${instagramAdi}` : "Instagram"}
               </a>
             </dd>
           </div>

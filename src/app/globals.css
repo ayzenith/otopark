@@ -236,18 +236,25 @@ a,
 }
 
 /* --- Kaydırınca belirme ---
-   Görünür alana giren bölüm bir kez belirir. IntersectionObserver
-   `data-belir="acik"` yazar; CSS gerisini yapar. */
-[data-belir] {
-  opacity: 0;
-  transform: translateY(18px);
-  transition:
-    opacity 620ms var(--ease-cikis),
-    transform 620ms var(--ease-cikis);
-}
-[data-belir="acik"] {
-  opacity: 1;
-  transform: translateY(0);
+   JS İLE DEĞİL, CSS İLE. Önceki sürüm IntersectionObserver kullanıyordu ve
+   bölümleri `opacity: 0` ile başlatıyordu; betikler çalışmazsa (kapalı JS,
+   yüklenemeyen paket) SAYFANIN YARISI GÖRÜNMÜYORDU. break-ui bunu yakaladı.
+
+   Artık içerik VARSAYILAN OLARAK GÖRÜNÜR. Tarayıcı kaydırma eksenli
+   animasyonu destekliyorsa bölüm, görünür alana girerken yükselerek belirir;
+   desteklemiyorsa hiçbir şey olmaz — içerik yine oradadır.
+
+   `animation-range: entry 0% entry 40%`: bölüm ekranın altından girmeye
+   başlayınca başlar, %40 görünürken biter. Zaten ekranda olan bölümler
+   (sayfa açılışındaki ilk bölüm) bitmiş sayılır ve anında görünür. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .site-belir {
+      animation: site-yukari linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+  }
 }
 
 /* --- Bağlantı altı çizgisi: soldan sağa açılır --- */
@@ -267,11 +274,6 @@ a,
   .site-gir,
   .site-alt-cubuk {
     animation: none;
-  }
-  [data-belir] {
-    opacity: 1;
-    transform: none;
-    transition: none;
   }
   .site-basilabilir {
     transition: none;

@@ -61,7 +61,7 @@ export default async function SiteDuzeni({ children }: { children: React.ReactNo
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-4 sm:px-8 sm:py-5">
           <Link
             href="/"
-            className="site-basilabilir text-base font-extrabold uppercase tracking-[0.12em] sm:text-lg"
+            className="site-basilabilir line-clamp-2 text-base font-extrabold uppercase tracking-[0.12em] sm:text-lg"
           >
             {kunye.isletmeAdi}
           </Link>

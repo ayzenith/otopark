@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { siteIcerigi, SITE_SAYFA_ANAHTARLARI } from "@/server/site/queries";
 import { telHref, whatsappHref } from "@/lib/telefon";
 import { SiteMetni } from "../metin";
-import { Belir } from "../belir";
 import {
   AbonmanIkonu,
   BinaIkonu,
@@ -76,8 +75,7 @@ export default async function OtoparkSayfasi() {
       </section>
 
       {/* ---- Güvenlik ---- */}
-      <Belir>
-      <Bolum numara="01" etiket="Güvenlik" baslik="Aracınız göz önünde" className="pt-20 sm:pt-28">
+            <Bolum numara="01" etiket="Güvenlik" baslik="Aracınız göz önünde" className="site-belir pt-20 sm:pt-28">
         <div className="mt-12 grid gap-10 sm:grid-cols-2 sm:gap-12">
           <HizmetKarti
             ikon={<KalkanIkonu className="h-8 w-8" />}
@@ -98,15 +96,13 @@ export default async function OtoparkSayfasi() {
           <OnayliMadde>Ücret çıkışta, aracınızı teslim alırken ödenir</OnayliMadde>
         </ul>
       </Bolum>
-      </Belir>
-
+      
       {/* ---- Park seçenekleri ---- */}
-      <Belir>
-      <Bolum
+            <Bolum
         numara="02"
         etiket="Park seçenekleri"
         baslik="Bir saat de olur, bir ay da"
-        className="pt-20 sm:pt-28"
+        className="site-belir pt-20 sm:pt-28"
       >
         <div className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8">
           <HizmetKarti
@@ -131,11 +127,9 @@ export default async function OtoparkSayfasi() {
           ya da WhatsApp&apos;tan yazın.
         </p>
       </Bolum>
-      </Belir>
-
+      
       {/* ---- Konum ---- */}
-      <Belir>
-      <Bolum className="pt-20 sm:pt-28">
+            <Bolum className="site-belir pt-20 sm:pt-28">
         <div className="relative overflow-hidden rounded-2xl bg-murekkep-900 p-8 text-kagit-50 sm:p-12">
           <div
             aria-hidden
@@ -178,12 +172,10 @@ export default async function OtoparkSayfasi() {
           </ul>
         </div>
       </Bolum>
-      </Belir>
-
+      
       {/* ---- Panelden girilen metin ---- */}
       {sayfa ? (
-        <Belir>
-        <Bolum className="pt-20 sm:pt-28">
+                <Bolum className="site-belir pt-20 sm:pt-28">
           <div className="max-w-2xl border-t border-murekkep-900/12 pt-10">
             <h2 className="site-baslik text-murekkep-900">{sayfa.baslik}</h2>
             <div className="mt-6 text-murekkep-700/85">
@@ -191,12 +183,10 @@ export default async function OtoparkSayfasi() {
             </div>
           </div>
         </Bolum>
-        </Belir>
-      ) : null}
+              ) : null}
 
       {/* ---- İletişim ---- */}
-      <Belir>
-      <Bolum className="pt-20 sm:pt-28">
+            <Bolum className="site-belir pt-20 sm:pt-28">
         <IletisimKutusu
           mapsUrl={kunye.mapsUrl}
           whatsappHref={whatsapp}
@@ -206,8 +196,7 @@ export default async function OtoparkSayfasi() {
           aciklama="Abonman, karavan ve uzun süreli park için bize ulaşın. 7/24 açığız."
         />
       </Bolum>
-      </Belir>
-
+      
       {/* Sayfa imzası: mürekkep rengin en açık tonunda, sessiz bir nokta. */}
       <div aria-hidden className="mx-auto mt-20 flex max-w-5xl justify-center px-6 text-murekkep-900/10">
         <OtoparkIkonu className="h-10 w-10" />

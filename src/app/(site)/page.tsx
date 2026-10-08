@@ -2,7 +2,7 @@ import Link from "next/link";
 import { siteIcerigi, SITE_SAYFA_ANAHTARLARI } from "@/server/site/queries";
 import { telHref, whatsappHref } from "@/lib/telefon";
 import { SiteMetni } from "./metin";
-import { Belir } from "./belir";
+import { GaleriGorseli } from "./galeri";
 import {
   BinaIkonu,
   Bolum,
@@ -70,9 +70,9 @@ export default async function SiteAnaSayfa() {
           {kunye.calismaSaatleri ? (
             <p
               data-test="calisma-saatleri-rozeti"
-              className="site-gir site-etiket inline-flex items-center gap-2.5 text-sinyal-400"
+              className="site-gir site-etiket inline-flex max-w-full items-start gap-2.5 text-balance text-sinyal-400 [-webkit-box-orient:vertical] [-webkit-line-clamp:2] [display:-webkit-box] overflow-hidden"
             >
-              <span className="relative flex h-1.5 w-1.5">
+              <span className="relative mt-1.5 flex h-1.5 w-1.5 shrink-0">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sinyal-400 opacity-70" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-sinyal-400" />
               </span>
@@ -150,12 +150,11 @@ export default async function SiteAnaSayfa() {
       </section>
 
       {/* ======================= HİZMETLER ======================= */}
-      <Belir>
-        <Bolum
+              <Bolum
           numara="01"
           etiket="Hizmetlerimiz"
           baslik="Güvenli park, profesyonel yıkama"
-          className="pt-20 sm:pt-28"
+          className="site-belir pt-20 sm:pt-28"
         >
           <div className="mt-12 grid gap-10 sm:grid-cols-2 sm:gap-12">
             <HizmetKarti
@@ -172,23 +171,19 @@ export default async function SiteAnaSayfa() {
             />
           </div>
         </Bolum>
-      </Belir>
-
+      
       {/* ---- Panelden girilen tanıtım metni ---- */}
       {anasayfa ? (
-        <Belir>
-          <Bolum className="pt-20 sm:pt-28">
+                  <Bolum className="site-belir pt-20 sm:pt-28">
             <div className="max-w-2xl border-t border-murekkep-900/12 pt-10 text-murekkep-700/85">
               <SiteMetni govde={anasayfa.govde} />
             </div>
           </Bolum>
-        </Belir>
-      ) : null}
+              ) : null}
 
       {/* ======================= FİYATLAR ======================= */}
       {fiyatlar.length > 0 ? (
-        <Belir>
-          <Bolum numara="02" etiket="Fiyatlar" baslik="Ne kadar?" className="pt-20 sm:pt-28">
+                  <Bolum numara="02" etiket="Fiyatlar" baslik="Ne kadar?" className="site-belir pt-20 sm:pt-28">
             <ul className="mt-10">
               {fiyatlar.slice(0, 5).map((f) => (
                 <li
@@ -208,35 +203,21 @@ export default async function SiteAnaSayfa() {
               </Link>
             ) : null}
           </Bolum>
-        </Belir>
-      ) : null}
+              ) : null}
 
       {/* ======================= GALERİ ======================= */}
       {galeri.length > 0 ? (
-        <Belir>
-          <Bolum numara="03" etiket="Galeri" baslik="Buradayız" className="pt-20 sm:pt-28">
+                  <Bolum numara="03" etiket="Galeri" baslik="Buradayız" className="site-belir pt-20 sm:pt-28">
             <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3">
               {galeri.map((g) => (
-                /* eslint-disable-next-line @next/next/no-img-element --
-                   Görseller panelden girilen serbest adreslerdir; next/image
-                   uzak alan adı yapılandırması ister ve hangi alan adının
-                   kullanılacağı henüz belli değil. */
-                <img
-                  key={g.id}
-                  src={g.url}
-                  alt={g.alt}
-                  loading="lazy"
-                  className="h-48 w-full rounded-xl object-cover"
-                />
+                <GaleriGorseli key={g.id} url={g.url} alt={g.alt} />
               ))}
             </div>
           </Bolum>
-        </Belir>
-      ) : null}
+              ) : null}
 
       {/* ======================= KONUM ======================= */}
-      <Belir>
-        <Bolum className="pt-20 sm:pt-28">
+              <Bolum className="site-belir pt-20 sm:pt-28">
           <div className="relative overflow-hidden rounded-2xl bg-murekkep-900 p-8 text-kagit-50 sm:p-12">
             <div
               aria-hidden
@@ -302,8 +283,7 @@ export default async function SiteAnaSayfa() {
             </div>
           </div>
         </Bolum>
-      </Belir>
-
+      
       {/* ============ SABİT EYLEM ÇUBUĞU (telefon) ============
           Sayfa açılır açılmaz değil, 700ms sonra aşağıdan kayarak gelir:
           önce içerik görünür, sonra eylem sunulur. */}

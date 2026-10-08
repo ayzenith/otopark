@@ -32,7 +32,7 @@ dokunma (hâlâ 0 commit). Her aşama sonunda commit + push.
 | 7 | Kurumsal web sitesi (iskelet + panelden içerik yönetimi) | ✅ |
 | **8** | **SIRADAKİ:** devreye alma, gerçek cihaz testleri | ⏳ |
 
-**1155 test geçiyor**, başarısız yok: 314 birim + 463 entegrasyon + 378 E2E
+**1167 test geçiyor**, başarısız yok: 320 birim + 463 entegrasyon + 384 E2E
 (3 ekran boyutu). Her aşamada önce mevcut testleri çalıştır, sonra yenileri
 ekle, sonra hepsini tekrar çalıştır.
 
@@ -221,7 +221,15 @@ ekranında "fiyat girilmemiş" uyarısı çıkar (mimari kural 10).
     farkı göremedi). React 19'da `<form action={fn}>` formu da SIFIRLAR;
     hata sonrası değer kaybetmemesi gereken formlar kontrollü olmalı.
 
-19. **Site hiçbir şey uydurmaz.** Girilmemiş adres/telefon/saat/fiyat için yer
+19. **Panelden gelen her metin EN KÖTÜ HÂLİYLE denenir.** İşletme tek alana
+    iki telefon yazar, 92 karakterlik ticari unvan girer, 88 karakterlik
+    Instagram adresi yapıştırır, silinmiş bir fotoğrafın adresini bırakır.
+    Tasarım kibar veriyle yapılır, üretimde kibar veri yoktur. Sitenin
+    hareketi de JS'e BAĞLANMAZ: betik çalışmazsa içerik yine görünür
+    (`animation-timeline: view()`, `IntersectionObserver` değil).
+    Bu tuzakların hepsi 08.10.2026'da gerçekten yaşandı; `tests/e2e/
+    site-akisi.spec.ts` "en kötü veri" bölümü bunları koruyor.
+20. **Site hiçbir şey uydurmaz.** Girilmemiş adres/telefon/saat/fiyat için yer
     tutucu metin yazılmaz; o bölüm hiç çizilmez ve patron panelinde "eksik
     bilgi" olarak listelenir. Sitedeki fiyat SERBEST METİNDİR ve tarife
     motorundan otomatik akmaz — kural 11'in site karşılığı.
@@ -274,9 +282,9 @@ scripts/baslangic-fiyatlari.ts   fiyatları DB'ye yazar (idempotent)
 
 ```bash
 npm run typecheck && npm run lint && npm run build
-npm run test              # birim (314)
+npm run test              # birim (320)
 npm run test:integration  # entegrasyon, gerçek PostgreSQL (463)
-npm run test:e2e          # Playwright, 3 ekran boyutu (378)
+npm run test:e2e          # Playwright, 3 ekran boyutu (384)
 npm run isletme:kur       # işletme künyesi başlangıç değerleri (idempotent)
 npm run fiyatlar:kur      # başlangıç fiyatları (mevcut fiyatları ezmez)
 npm run db:seed           # araç sınıfları, kategoriler, patron hesabı
