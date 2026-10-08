@@ -89,12 +89,19 @@ test.describe("kurumsal site - ziyaretçi", () => {
     await expect(page.getByTestId("yol-tarifi")).toHaveAttribute("href", E2E_SITE_MAPS);
   });
 
+  /**
+   * Sayfa baslikleri tasarim diliyle birlikte degisebilir (ornek: "Fiyatlar"
+   * basligi "Fiyat bilgisi" oldu, bolum adi ustteki etikette duruyor). Bu
+   * yuzden test SABIT METNE degil, YAPIYA bakar: sayfa aciliyor mu, tek bir
+   * h1 var mi, bos mu degil mi.
+   */
   test("fiyatlar ve iletişim sayfaları açılır", async ({ page }) => {
-    await page.goto("/fiyatlar");
-    await expect(page.getByRole("heading", { name: "Fiyatlar", level: 1 })).toBeVisible();
-
-    await page.goto("/iletisim");
-    await expect(page.getByRole("heading", { name: "İletişim", level: 1 })).toBeVisible();
+    for (const yol of ["/fiyatlar", "/iletisim"]) {
+      await page.goto(yol);
+      const baslik = page.getByRole("heading", { level: 1 });
+      await expect(baslik, `${yol} başlığı`).toHaveCount(1);
+      await expect(baslik, `${yol} başlığı boş`).not.toHaveText("");
+    }
   });
 
   /**

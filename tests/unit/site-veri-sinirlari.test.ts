@@ -28,6 +28,8 @@ const IZINLI_ICE_AKTARMALAR = [
   "@/server/site/queries",
   "@/lib/site-metin",
   "@/lib/telefon",
+  // Kaydirinca belirme bileseninin tek bagimliligi React.
+  "react",
 ];
 
 function tsxDosyalari(klasor: string): string[] {

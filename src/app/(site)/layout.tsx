@@ -15,12 +15,19 @@ export const dynamic = "force-dynamic";
 /**
  * KURUMSAL SİTE KABUĞU
  *
- * Panelin aksine burası HERKESE AÇIKTIR: oturum sorulmaz, müşteri/işlem
- * verisine dokunulmaz. Yalnızca `BusinessSetting` + `Site*` tabloları okunur.
+ * ============================================================================
+ * TASARIM DİLİ: mürekkep + kâğıt + tek sinyal rengi.
  *
- * Başlık koyu zeminlidir ve ana sayfanın vitrin bölümüyle BİRLEŞİR; bu
- * yüzden sayfa genişliğini burası DEĞİL, her sayfa kendisi belirler.
- * Mobil öncelikli: tek sütun, büyük dokunma hedefleri, yatay kaydırma yok.
+ * Panelin aksine burası bir VİTRİN. Panel yoğun ve tanıdık olmalı; site
+ * geniş nefes almalı. Bu yüzden:
+ *   · yüzeyler ya mürekkep (koyu) ya kâğıt (sıcak beyaz) — ara ton yok,
+ *   · ayrımlar KUTU ile değil İNCE ÇİZGİ ile yapılır,
+ *   · tek vurgu rengi var: yol işaretlerinin sarısı (sinyal),
+ *   · başlıklar büyük ve sıkı harf aralıklı, etiketler monospace ve geniş.
+ *
+ * Başlık çubuğu SABİT DEĞİLDİR: telefonda ekranın üstünü yemek yerine
+ * sayfayla birlikte kayar. Eylemler zaten alttaki sabit çubukta.
+ * ============================================================================
  */
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -49,26 +56,29 @@ export default async function SiteDuzeni({ children }: { children: React.ReactNo
   const whatsapp = whatsappHref(kunye.whatsapp);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white">
-      <header className="bg-lacivert-700 text-white">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-5 py-4">
-          <Link href="/" className="text-lg font-extrabold tracking-tight sm:text-xl">
+    <div className="flex min-h-dvh flex-col bg-kagit-50">
+      <header className="bg-murekkep-950 text-kagit-50">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-4 sm:px-8 sm:py-5">
+          <Link
+            href="/"
+            className="site-basilabilir text-base font-extrabold uppercase tracking-[0.12em] sm:text-lg"
+          >
             {kunye.isletmeAdi}
           </Link>
 
-          <nav aria-label="Site" className="hidden items-center gap-1 sm:flex">
-            {BAGLANTILAR.map((b) => (
+          <nav aria-label="Site" className="hidden items-center gap-6 sm:flex">
+            {BAGLANTILAR.slice(1).map((b) => (
               <Link
                 key={b.yol}
                 href={b.yol}
-                className="flex h-11 items-center rounded-xl px-4 text-sm font-semibold text-lacivert-100 transition-colors hover:bg-white/10 hover:text-white"
+                className="site-bag text-sm font-semibold text-kagit-200/70 transition-colors duration-200 hover:text-kagit-50"
               >
                 {b.ad}
               </Link>
             ))}
           </nav>
 
-          {/* Telefonda başlıkta yalnızca iki ikon; menü aşağıdaki satırda. */}
+          {/* Telefonda başlıkta yalnızca iki eylem; menü aşağıdaki satırda. */}
           <div className="flex items-center gap-2 sm:hidden">
             {whatsapp ? (
               <a
@@ -76,7 +86,7 @@ export default async function SiteDuzeni({ children }: { children: React.ReactNo
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="WhatsApp ile yazın"
-                className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500 text-white"
+                className="site-basilabilir flex h-11 w-11 items-center justify-center rounded-lg ring-1 ring-inset ring-kagit-50/25"
               >
                 <WhatsappIkonu className="h-5 w-5" />
               </a>
@@ -85,7 +95,7 @@ export default async function SiteDuzeni({ children }: { children: React.ReactNo
               <a
                 href={ara}
                 aria-label="Telefonla arayın"
-                className="flex h-11 w-11 items-center justify-center rounded-xl ring-1 ring-inset ring-white/30"
+                className="site-basilabilir flex h-11 w-11 items-center justify-center rounded-lg bg-sinyal-400 text-murekkep-950"
               >
                 <TelefonIkonu className="h-5 w-5" />
               </a>
@@ -95,18 +105,21 @@ export default async function SiteDuzeni({ children }: { children: React.ReactNo
 
         {/* TELEFON MENÜSÜ
             Beş bağlantı başlık satırına sığmaz. Açılır menü yerine SARAN bir
-            etiket satırı kullanılır: tek dokunuşla gidilir, gizli bir adım
-            yoktur ve yatay kaydırma oluşmaz (mobil öncelikli kural). */}
+            etiket satırı: tek dokunuşla gidilir, gizli bir adım yoktur ve
+            yatay kaydırma oluşmaz (mobil öncelikli kural). */}
         <nav
           aria-label="Site (telefon)"
           data-test="telefon-menu"
-          className="mx-auto flex w-full max-w-5xl flex-wrap gap-2 px-5 pb-4 sm:hidden"
+          className="mx-auto flex w-full max-w-5xl flex-wrap gap-x-4 gap-y-1 border-t border-kagit-50/10 px-6 pb-3 pt-2.5 sm:hidden"
         >
-          {BAGLANTILAR.map((b) => (
+          {/* "Ana sayfa" telefonda listeye KONULMAZ: başlıktaki işletme adı
+              zaten ana sayfaya götürür ve beş bağlantı tek satıra sığmayıp
+              vitrini aşağı itiyordu. */}
+          {BAGLANTILAR.slice(1).map((b) => (
             <Link
               key={b.yol}
               href={b.yol}
-              className="flex h-11 items-center rounded-xl bg-white/10 px-4 text-sm font-semibold text-white"
+              className="site-bag flex h-8 items-center text-sm font-semibold text-kagit-200/75"
             >
               {b.ad}
             </Link>
@@ -116,34 +129,39 @@ export default async function SiteDuzeni({ children }: { children: React.ReactNo
 
       <main className="flex-1">{children}</main>
 
-      <footer className="mt-16 border-t border-slate-200 bg-slate-50">
-        {/* Telefonda alttaki SABİT eylem çubuğu (ana sayfa) alt bilgiyi
-            örtmesin diye fazladan boşluk bırakılır. Örtünce "Personel girişi"
-            bağlantısına dokunulamıyordu — E2E testi yakaladı. */}
-        <div className="mx-auto w-full max-w-5xl px-5 pb-32 pt-10 sm:pb-10">
-          <div className="grid gap-8 sm:grid-cols-2">
+      <footer className="mt-24 border-t border-murekkep-900/12 bg-kagit-100">
+        {/* Telefonda alttaki SABİT eylem çubuğu alt bilgiyi örtmesin diye
+            fazladan boşluk. Örtünce "Personel girişi" bağlantısına
+            dokunulamıyordu — E2E testi yakaladı. */}
+        <div className="mx-auto w-full max-w-5xl px-6 pb-32 pt-14 sm:px-8 sm:pb-14">
+          <div className="grid gap-10 sm:grid-cols-[1.2fr_1fr]">
             <div>
               {/* Girilmemiş künye alanı YAZILMAZ: yanlış adres/telefon
-                  göstermektense hiç göstermemek doğrudur (mimari kural 19). */}
-              <p className="text-lg font-extrabold text-lacivert-700">{kunye.isletmeAdi}</p>
+                  göstermektense hiç göstermemek doğrudur (kural 19). */}
+              <p className="text-xl font-extrabold uppercase tracking-[0.12em] text-murekkep-900">
+                {kunye.isletmeAdi}
+              </p>
               {kunye.calismaSaatleri ? (
-                <p className="mt-1 font-semibold text-emerald-700">{kunye.calismaSaatleri}</p>
+                <p className="site-etiket mt-3 text-sinyal-600">{kunye.calismaSaatleri}</p>
               ) : null}
-              {kunye.adres ? <p className="mt-3 text-slate-600">{kunye.adres}</p> : null}
+              {kunye.adres ? (
+                <p className="mt-4 max-w-sm leading-relaxed text-murekkep-700/75">{kunye.adres}</p>
+              ) : null}
             </div>
 
-            <div className="space-y-2">
+            <div>
               {ara ? (
-                <p>
-                  <a className="text-lg font-bold text-lacivert-700" href={ara}>
-                    {kunye.telefon}
-                  </a>
-                </p>
+                <a
+                  className="text-2xl font-extrabold tracking-tight text-murekkep-900"
+                  href={ara}
+                >
+                  {kunye.telefon}
+                </a>
               ) : null}
               {kunye.instagram ? (
-                <p>
+                <p className="mt-3">
                   <a
-                    className="font-semibold text-mavi-700 underline"
+                    className="site-bag font-semibold text-murekkep-700"
                     href={kunye.instagram}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -152,9 +170,13 @@ export default async function SiteDuzeni({ children }: { children: React.ReactNo
                   </a>
                 </p>
               ) : null}
-              <nav aria-label="Alt bilgi" className="flex flex-wrap gap-x-4 gap-y-1 pt-2">
+              <nav aria-label="Alt bilgi" className="mt-6 flex flex-col gap-2">
                 {BAGLANTILAR.map((b) => (
-                  <Link key={b.yol} href={b.yol} className="text-slate-600 underline">
+                  <Link
+                    key={b.yol}
+                    href={b.yol}
+                    className="site-bag self-start text-murekkep-700/80"
+                  >
                     {b.ad}
                   </Link>
                 ))}
@@ -162,8 +184,8 @@ export default async function SiteDuzeni({ children }: { children: React.ReactNo
             </div>
           </div>
 
-          <p className="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-400">
-            <Link href="/giris" className="underline">
+          <p className="mt-14 border-t border-murekkep-900/10 pt-6">
+            <Link href="/giris" className="site-bag text-sm text-murekkep-700/45">
               Personel girişi
             </Link>
           </p>

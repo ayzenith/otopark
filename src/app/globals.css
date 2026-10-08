@@ -123,3 +123,157 @@ a,
     display: none !important;
   }
 }
+
+/* ==========================================================================
+   KURUMSAL SİTE — TASARIM DİLİ
+   Panelden AYRI tutulur: panel bir iş aracıdır (yoğun, hızlı, tanıdık),
+   site bir vitrindir (geniş nefes, büyük tipografi, bilinçli hareket).
+   Buradaki her şey `.site-` önekiyle yaşar; panel ekranlarına dokunmaz.
+
+   Hareket kuralları (Emil Kowalski, .claude/skills/emil-design-eng):
+     · Giren öğe HER ZAMAN ease-out — ease-in arayüzü ağır hissettirir
+     · Arayüz animasyonları 300ms'in altında kalır
+     · Hiçbir şey scale(0)'dan büyümez; 0.95'ten + opaklıkla gelir
+     · Basılabilir her öğenin :active halinde scale'i düşer
+     · `transition: all` KULLANILMAZ; hangi özellik animasyon olacaksa yazılır
+   ========================================================================== */
+@theme {
+  /* Mürekkep ve kâğıt: sitenin iki ana yüzeyi */
+  --color-murekkep-950: #070b14;
+  --color-murekkep-900: #0b1120;
+  --color-murekkep-800: #121a2b;
+  --color-murekkep-700: #1b2538;
+  --color-kagit-50: #fbfaf8;
+  --color-kagit-100: #f4f2ee;
+  --color-kagit-200: #e7e3dc;
+
+  /* Sinyal rengi: otopark/yol işaretlerinin sarısı. Tek ve keskin. */
+  --color-sinyal-300: #fcd34d;
+  --color-sinyal-400: #fbbf24;
+  --color-sinyal-500: #f59e0b;
+  --color-sinyal-600: #d97706;
+}
+
+:root {
+  /* Güçlü easing eğrileri. Tarayıcının hazır eğrileri fazla yumuşak kalır. */
+  --ease-cikis: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-giris-cikis: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-cekmece: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* --- Tipografi: ölçüye göre harf aralığı ve satır yüksekliği ---
+   Büyük yazı büyüdükçe harfler birbirinden uzak görünür; sıkılır.
+   Küçük yazıda tam tersi gerekir. Tek bir letter-spacing her boyutta
+   yanlıştır (apple-design §15). */
+.site-dev {
+  font-size: clamp(2.5rem, 9vw, 5.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  font-weight: 800;
+}
+
+.site-baslik {
+  font-size: clamp(1.75rem, 4.5vw, 2.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.022em;
+  font-weight: 800;
+}
+
+.site-govde {
+  font-size: clamp(1.0625rem, 1.6vw, 1.25rem);
+  line-height: 1.65;
+  letter-spacing: -0.003em;
+}
+
+/* Küçük büyük harfli etiket: bölümleri numaralandırır, ritim verir. */
+.site-etiket {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* --- Basılabilir öğeler: dokunuşa anında cevap --- */
+.site-basilabilir {
+  transition: transform 160ms var(--ease-cikis);
+}
+.site-basilabilir:active {
+  transform: scale(0.97);
+}
+
+/* --- Giriş hareketi ---
+   Sayfa açılırken öğeler aşağıdan hafifçe yükselir. Gecikmeler satır
+   satır artar (stagger): göz sırayı takip eder, her şey aynı anda
+   patlamaz. scale KULLANILMAZ çünkü metin bulanıklaşır. */
+@keyframes site-yukari {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.site-gir {
+  animation: site-yukari 520ms var(--ease-cikis) both;
+}
+.site-gir-1 { animation-delay: 60ms; }
+.site-gir-2 { animation-delay: 120ms; }
+.site-gir-3 { animation-delay: 180ms; }
+.site-gir-4 { animation-delay: 240ms; }
+.site-gir-5 { animation-delay: 300ms; }
+
+/* Sabit eylem çubuğu: önce içerik görünsün, sonra eylem sunulsun. */
+@keyframes site-alttan {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.site-alt-cubuk {
+  animation: site-alttan 420ms var(--ease-cekmece) 700ms both;
+}
+
+/* --- Kaydırınca belirme ---
+   Görünür alana giren bölüm bir kez belirir. IntersectionObserver
+   `data-belir="acik"` yazar; CSS gerisini yapar. */
+[data-belir] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 620ms var(--ease-cikis),
+    transform 620ms var(--ease-cikis);
+}
+[data-belir="acik"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- Bağlantı altı çizgisi: soldan sağa açılır --- */
+.site-bag {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1px;
+  transition: background-size 220ms var(--ease-cikis);
+}
+.site-bag:hover {
+  background-size: 100% 1px;
+}
+
+/* --- Hareketi azalt: kullanıcı istemiyorsa hiçbir şey oynamaz --- */
+@media (prefers-reduced-motion: reduce) {
+  .site-gir,
+  .site-alt-cubuk {
+    animation: none;
+  }
+  [data-belir] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .site-basilabilir {
+    transition: none;
+  }
+}

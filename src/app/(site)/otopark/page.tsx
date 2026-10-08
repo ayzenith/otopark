@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { siteIcerigi, SITE_SAYFA_ANAHTARLARI } from "@/server/site/queries";
 import { telHref, whatsappHref } from "@/lib/telefon";
 import { SiteMetni } from "../metin";
+import { Belir } from "../belir";
 import {
   AbonmanIkonu,
   BinaIkonu,
@@ -56,17 +57,17 @@ export default async function OtoparkSayfasi() {
   return (
     <>
       {/* ---- Başlık ---- */}
-      <section className="relative overflow-hidden bg-lacivert-700 text-white">
+      <section className="relative overflow-hidden bg-murekkep-950 text-kagit-50">
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-mavi-500/25 blur-3xl"
+          className="pointer-events-none absolute -right-28 -top-36 h-[28rem] w-[28rem] rounded-full bg-sinyal-500/12 blur-3xl"
         />
-        <div className="relative mx-auto w-full max-w-5xl px-5 pb-12 pt-10 sm:pb-16 sm:pt-14">
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-mavi-300">Hizmetimiz</p>
-          <h1 className="mt-2 text-balance text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">
+        <div className="relative mx-auto w-full max-w-5xl px-6 pb-16 pt-14 sm:px-8 sm:pb-20 sm:pt-20">
+          <p className="site-gir site-etiket text-sinyal-400">Hizmetimiz</p>
+          <h1 className="site-gir site-gir-1 site-dev mt-6 text-balance">
             Güvenlikli, kameralı otopark
           </h1>
-          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-lacivert-100 sm:text-xl">
+          <p className="site-gir site-gir-2 site-govde mt-7 max-w-2xl text-kagit-200/80">
             Aracınızı rastgele bir boşluğa değil, gece gündüz göz önünde duran bir otoparka
             bırakın. Profesyonel güvenlik ekibimiz ve kesintisiz kamera sistemimiz 7 gün 24 saat
             iş başında.
@@ -75,8 +76,9 @@ export default async function OtoparkSayfasi() {
       </section>
 
       {/* ---- Güvenlik ---- */}
-      <Bolum etiket="Güvenlik" baslik="Aracınız göz önünde" className="pt-14 sm:pt-20">
-        <div className="mt-8 grid gap-5 sm:grid-cols-2">
+      <Belir>
+      <Bolum numara="01" etiket="Güvenlik" baslik="Aracınız göz önünde" className="pt-20 sm:pt-28">
+        <div className="mt-12 grid gap-10 sm:grid-cols-2 sm:gap-12">
           <HizmetKarti
             ikon={<KalkanIkonu className="h-8 w-8" />}
             baslik="7/24 güvenlik ekibi"
@@ -89,17 +91,24 @@ export default async function OtoparkSayfasi() {
           />
         </div>
 
-        <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+        <ul className="mt-12 grid gap-x-12 sm:grid-cols-2">
           <OnayliMadde>Her araç giriş ve çıkışı fiş numarasıyla kayıt altına alınır</OnayliMadde>
           <OnayliMadde>Gece, hafta sonu ve bayram fark etmez; aynı güvenlik</OnayliMadde>
           <OnayliMadde>Aracınızı teslim ederken plakanız kayda geçer</OnayliMadde>
           <OnayliMadde>Ücret çıkışta, aracınızı teslim alırken ödenir</OnayliMadde>
         </ul>
       </Bolum>
+      </Belir>
 
       {/* ---- Park seçenekleri ---- */}
-      <Bolum etiket="Park seçenekleri" baslik="Bir saat de olur, bir ay da" className="pt-14 sm:pt-20">
-        <div className="mt-8 grid gap-5 sm:grid-cols-3">
+      <Belir>
+      <Bolum
+        numara="02"
+        etiket="Park seçenekleri"
+        baslik="Bir saat de olur, bir ay da"
+        className="pt-20 sm:pt-28"
+      >
+        <div className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8">
           <HizmetKarti
             ikon={<SaatIkonu className="h-8 w-8" />}
             baslik="Saatlik ve günlük"
@@ -117,67 +126,77 @@ export default async function OtoparkSayfasi() {
           />
         </div>
 
-        <p className="mt-6 text-slate-600">
+        <p className="mt-10 max-w-xl leading-relaxed text-murekkep-700/75">
           Abonman fiyatı araç tipine ve kullanımınıza göre belirlenir. Size özel fiyat için arayın
           ya da WhatsApp&apos;tan yazın.
         </p>
       </Bolum>
+      </Belir>
 
       {/* ---- Konum ---- */}
-      <Bolum className="pt-14 sm:pt-20">
-        <div className="overflow-hidden rounded-3xl bg-lacivert-600 p-7 text-white sm:p-10">
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-mavi-300">Konum</p>
-          <h2 className="mt-2 text-3xl font-extrabold leading-tight sm:text-4xl">
-            Merkezi konum, kolay ulaşım
-          </h2>
-          <p className="mt-4 max-w-xl text-lg leading-relaxed text-lacivert-100">
+      <Belir>
+      <Bolum className="pt-20 sm:pt-28">
+        <div className="relative overflow-hidden rounded-2xl bg-murekkep-900 p-8 text-kagit-50 sm:p-12">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-32 -right-20 h-80 w-80 rounded-full bg-sinyal-500/12 blur-3xl"
+          />
+          <p className="site-etiket flex items-center gap-3 text-sinyal-400">
+            <span className="text-kagit-50/30">03</span> Konum
+          </p>
+          <h2 className="site-baslik mt-4 text-balance">Merkezi konum, kolay ulaşım</h2>
+          <p className="site-govde mt-5 max-w-xl text-kagit-200/75">
             Aracınızı bırakıp toplu taşımaya yürüyerek geçebilirsiniz. Şehir merkezine inmek için
             otoparkta yer aramakla uğraşmayın.
           </p>
 
           {kunye.adres ? (
-            <p className="mt-4 max-w-xl text-lacivert-100">{kunye.adres}</p>
+            <p className="mt-5 max-w-xl text-kagit-200/70">{kunye.adres}</p>
           ) : null}
 
-          <ul className="mt-7 grid gap-3 sm:grid-cols-2">
+          <ul className="relative mt-10">
             <UlasimSatiri
               ikon={<YuruyusIkonu className="h-6 w-6" />}
               yer="Metrobüs"
-              mesafe="Yürüyerek 2 dakika"
+              mesafe="2 dakika"
             />
             <UlasimSatiri
               ikon={<YuruyusIkonu className="h-6 w-6" />}
               yer="Metro"
-              mesafe="Yürüyerek 3 dakika"
+              mesafe="3 dakika"
             />
             <UlasimSatiri
               ikon={<BinaIkonu className="h-6 w-6" />}
               yer="Nef Selenium Ataköy Towers"
-              mesafe="Hemen arkasında"
+              mesafe="Hemen arkası"
             />
             <UlasimSatiri
               ikon={<BinaIkonu className="h-6 w-6" />}
               yer="Kültür Üniversitesi · Airport AVM"
-              mesafe="Hemen arkasında"
+              mesafe="Hemen arkası"
             />
           </ul>
         </div>
       </Bolum>
+      </Belir>
 
       {/* ---- Panelden girilen metin ---- */}
       {sayfa ? (
-        <Bolum className="pt-14 sm:pt-20">
-          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-9">
-            <h2 className="text-2xl font-bold text-lacivert-700">{sayfa.baslik}</h2>
-            <div className="mt-4">
+        <Belir>
+        <Bolum className="pt-20 sm:pt-28">
+          <div className="max-w-2xl border-t border-murekkep-900/12 pt-10">
+            <h2 className="site-baslik text-murekkep-900">{sayfa.baslik}</h2>
+            <div className="mt-6 text-murekkep-700/85">
               <SiteMetni govde={sayfa.govde} />
             </div>
           </div>
         </Bolum>
+        </Belir>
       ) : null}
 
       {/* ---- İletişim ---- */}
-      <Bolum className="pb-16 pt-14 sm:pt-20">
+      <Belir>
+      <Bolum className="pt-20 sm:pt-28">
         <IletisimKutusu
           mapsUrl={kunye.mapsUrl}
           whatsappHref={whatsapp}
@@ -187,10 +206,10 @@ export default async function OtoparkSayfasi() {
           aciklama="Abonman, karavan ve uzun süreli park için bize ulaşın. 7/24 açığız."
         />
       </Bolum>
+      </Belir>
 
-      {/* Hizmet ikonunun sayfada hiç kullanılmaması tuhaf durmasın diye
-          başlıkta değil, burada küçük bir imza olarak durur. */}
-      <div aria-hidden className="mx-auto mb-10 flex max-w-5xl justify-center px-5 text-lacivert-100">
+      {/* Sayfa imzası: mürekkep rengin en açık tonunda, sessiz bir nokta. */}
+      <div aria-hidden className="mx-auto mt-20 flex max-w-5xl justify-center px-6 text-murekkep-900/10">
         <OtoparkIkonu className="h-10 w-10" />
       </div>
     </>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { siteIcerigi, SITE_SAYFA_ANAHTARLARI } from "@/server/site/queries";
 import { telHref, whatsappHref } from "@/lib/telefon";
 import { SiteMetni } from "../metin";
+import { Belir } from "../belir";
 import {
   Adim,
   Bolum,
@@ -49,31 +50,32 @@ export default async function OtoYikamaSayfasi() {
   return (
     <>
       {/* ---- Başlık ---- */}
-      <section className="relative overflow-hidden bg-lacivert-700 text-white">
+      <section className="relative overflow-hidden bg-murekkep-950 text-kagit-50">
         <div
           aria-hidden
-          className="pointer-events-none absolute -left-20 -top-28 h-80 w-80 rounded-full bg-mavi-400/25 blur-3xl"
+          className="pointer-events-none absolute -left-28 -top-36 h-[28rem] w-[28rem] rounded-full bg-mavi-500/12 blur-3xl"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -bottom-32 right-0 h-72 w-72 rounded-full bg-emerald-400/15 blur-3xl"
+          className="pointer-events-none absolute -bottom-40 right-0 h-80 w-80 rounded-full bg-sinyal-500/10 blur-3xl"
         />
-        <div className="relative mx-auto w-full max-w-5xl px-5 pb-12 pt-10 sm:pb-16 sm:pt-14">
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-mavi-300">Hizmetimiz</p>
-          <h1 className="mt-2 text-balance text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">
+        <div className="relative mx-auto w-full max-w-5xl px-6 pb-16 pt-14 sm:px-8 sm:pb-20 sm:pt-20">
+          <p className="site-gir site-etiket text-sinyal-400">Hizmetimiz</p>
+          <h1 className="site-gir site-gir-1 site-dev mt-6 text-balance">
             Profesyonel oto yıkama
           </h1>
-          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-lacivert-100 sm:text-xl">
+          <p className="site-gir site-gir-2 site-govde mt-7 max-w-2xl text-kagit-200/80">
             Aracınızı park ettiğiniz süre boş geçmesin. Deneyimli ekibimiz, profesyonel ekipman ve
-            araca zarar vermeyen ürünlerle içten dışa özenle yıkar. Siz işinizi hallederken aracınız
-            hazır olur.
+            araca zarar vermeyen ürünlerle içten dışa özenle yıkar. Siz işinizi hallederken
+            aracınız hazır olur.
           </p>
         </div>
       </section>
 
       {/* ---- Nasıl işliyor ---- */}
-      <Bolum etiket="Nasıl işliyor" baslik="Üç adımda tertemiz" className="pt-14 sm:pt-20">
-        <ol className="mt-8 space-y-7">
+      <Belir>
+      <Bolum numara="01" etiket="Nasıl işliyor" baslik="Üç adımda tertemiz" className="pt-20 sm:pt-28">
+        <ol className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8">
           <Adim
             numara={1}
             baslik="Aracınızı getirin"
@@ -91,10 +93,12 @@ export default async function OtoYikamaSayfasi() {
           />
         </ol>
       </Bolum>
+      </Belir>
 
       {/* ---- Hizmetler ---- */}
-      <Bolum etiket="Yıkama hizmetleri" baslik="Ne yapıyoruz" className="pt-14 sm:pt-20">
-        <div className="mt-8 grid gap-5 sm:grid-cols-2">
+      <Belir>
+      <Bolum numara="02" etiket="Yıkama hizmetleri" baslik="Ne yapıyoruz" className="pt-20 sm:pt-28">
+        <div className="mt-12 grid gap-10 sm:grid-cols-2 sm:gap-12">
           <HizmetKarti
             ikon={<YikamaIkonu className="h-8 w-8" />}
             baslik="İç dış yıkama"
@@ -107,17 +111,19 @@ export default async function OtoYikamaSayfasi() {
           />
         </div>
 
-        <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+        <ul className="mt-12 grid gap-x-12 sm:grid-cols-2">
           <OnayliMadde>Araç tipine uygun ürün ve basınç; boyaya zarar verilmez</OnayliMadde>
           <OnayliMadde>Yıkama sırasında aracınız yine otopark güvenliğinde</OnayliMadde>
           <OnayliMadde>Yıkama fişi ayrı kesilir; ne ödediğiniz kayıt altındadır</OnayliMadde>
           <OnayliMadde>Park ve yıkama ücretleri birbirine karıştırılmaz</OnayliMadde>
         </ul>
       </Bolum>
+      </Belir>
 
       {/* ---- Neden burada yıkatmalı ---- */}
-      <Bolum etiket="Neden burada" baslik="Zaman kazandırır" className="pt-14 sm:pt-20">
-        <div className="mt-8 grid gap-5 sm:grid-cols-2">
+      <Belir>
+      <Bolum numara="03" etiket="Neden burada" baslik="Zaman kazandırır" className="pt-20 sm:pt-28">
+        <div className="mt-12 grid gap-10 sm:grid-cols-2 sm:gap-12">
           <HizmetKarti
             ikon={<SaatIkonu className="h-8 w-8" />}
             baslik="Ayrı bir yere gitmeyin"
@@ -130,21 +136,25 @@ export default async function OtoYikamaSayfasi() {
           />
         </div>
       </Bolum>
+      </Belir>
 
       {/* ---- Panelden girilen metin ---- */}
       {sayfa ? (
-        <Bolum className="pt-14 sm:pt-20">
-          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-9">
-            <h2 className="text-2xl font-bold text-lacivert-700">{sayfa.baslik}</h2>
-            <div className="mt-4">
+        <Belir>
+        <Bolum className="pt-20 sm:pt-28">
+          <div className="max-w-2xl border-t border-murekkep-900/12 pt-10">
+            <h2 className="site-baslik text-murekkep-900">{sayfa.baslik}</h2>
+            <div className="mt-6 text-murekkep-700/85">
               <SiteMetni govde={sayfa.govde} />
             </div>
           </div>
         </Bolum>
+        </Belir>
       ) : null}
 
       {/* ---- İletişim ---- */}
-      <Bolum className="pb-16 pt-14 sm:pt-20">
+      <Belir>
+      <Bolum className="pt-20 sm:pt-28">
         <IletisimKutusu
           mapsUrl={kunye.mapsUrl}
           whatsappHref={whatsapp}
@@ -154,6 +164,7 @@ export default async function OtoYikamaSayfasi() {
           aciklama="Aracınızın tipine göre fiyat ve süre bilgisi almak için arayın ya da WhatsApp'tan yazın."
         />
       </Bolum>
+      </Belir>
     </>
   );
 }
