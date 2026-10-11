@@ -25,3 +25,9 @@
 		}
 	}
 }
+
+# www -> kok yonlendirmesi (kalici). "www" A kaydi ayni IP'ye bakmali;
+# kayit yoksa bu blogu silin, yoksa Caddy bosuna sertifika almaya calisir.
+www.{$SITE_ADDRESS} {
+	redir https://{$SITE_ADDRESS}{uri} permanent
+}

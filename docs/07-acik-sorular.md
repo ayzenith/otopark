@@ -422,6 +422,21 @@ Ayrıca alan adının 29 karakter olduğu, telefonda söylemesi ve yazması zor
 olacağı söylendi; `londracampingotopark.com` / `atakoyotopark.com` gibi kısa
 alternatifler önerildi. **Karar kullanıcıda.**
 
+
+### ✅ Alan adı karara bağlandı (11.10.2026, aynı gün içinde)
+
+Kullanıcı kısa alternatifleri değerlendirdi ve **`londracampingtandircioglu.com`**
+adında karar kıldı. Bu kalem kapandı; alternatif önerilmeyecek.
+
+- Kanonik adres `https://londracampingtandircioglu.com`, `www` köke
+  yönlendirilecek (Caddy).
+- Alan adı koda sabitlenmeyecek; mutlak URL gereken yerler
+  `NEXT_PUBLIC_SITE_URL` ortam değişkeninden okunacak.
+- **S17'nin kalan yarısı hâlâ açık:** sunucu. Paylaşımlı hosting
+  alınmayacak, VPS gerekiyor; IP ve SSH erişimi bekleniyor.
+- LocalBusiness yapısal verisi için alan adı yetmiyor; **açık adres** ve
+  **tam ticari unvan** hâlâ verilmedi (S18). Gelmeden yazılmayacak.
+
 ### Aşama 7 kapandı
 
 Site tamamlandı: beş sayfa, panelden içerik yönetimi, yeni tasarım dili

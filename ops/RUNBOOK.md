@@ -93,8 +93,22 @@ systemctl restart ssh
 
 ### 2.2 Alan adı
 
-Alan adının DNS `A` kaydını sunucunun IP adresine yönlendirin. Caddy SSL
-sertifikasını bu kayıt doğruyken otomatik alır.
+Alan adı: **`londracampingtandircioglu.com`** (karar 11.10.2026, kayıt
+Turhost). İki `A` kaydını da sunucunun IP adresine yönlendirin:
+
+| Ad | Tür | Değer |
+|---|---|---|
+| `@` (kök) | A | sunucunun IP adresi |
+| `www` | A | sunucunun IP adresi |
+
+Caddy SSL sertifikasını bu kayıtlar doğruyken otomatik alır ve
+`www.londracampingtandircioglu.com` adresini köke kalıcı (301)
+yönlendirir. **`www` kaydını açmayacaksanız** `ops/Caddyfile` içindeki
+`www.{$SITE_ADDRESS}` bloğunu silin; yoksa Caddy o ad için boşuna
+sertifika almaya çalışır ve kayıtlara hata yazar.
+
+DNS yayılmasını beklemeden Caddy'yi başlatmayın; Let's Encrypt
+doğrulaması başarısız olursa yeniden deneme aralığı uzar.
 
 ### 2.3 Uygulama
 

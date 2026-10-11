@@ -41,8 +41,10 @@ Taşınmayan işler (docs/06 sonunda tam liste): XLSX/PDF dışa aktarma
 yok), KVKK otomasyonu (ertelendi), çoklu POS (karar gereği yok), grafiklerin
 zenginleştirilmesi, personel maliyetlerinin otomatik gider üretmesi.
 
-**Son commit:** `7285843` — "Site: en kötü veriyle kırılan dört gerçek hata
-düzeltildi". Çalışma alanı temiz, push edilmiş. `main` dalı hâlâ 0 commit.
+**Son commitler:** `7285843` ("Site: en kötü veriyle kırılan dört gerçek
+hata düzeltildi") → `d69ba69` (hafıza tazelendi) → alan adı kararı
+(`git log -1` ile doğrula). Çalışma alanı temiz, push edilmiş.
+`main` dalı hâlâ 0 commit.
 
 Aşama 7 commit zinciri: `94497f2` (iskelet) → `4914513` (7/24 + yol tarifi) →
 `aa412eb` (üst menü + Otopark/Oto Yıkama sayfaları) → `9b38ec1` (tasarım
@@ -83,13 +85,19 @@ dolu alanı ezmez). Kaynak: işletme sahibi, 05.10.2026.
 
 ## ⚠️ ALAN ADI VE SUNUCU — 11.10.2026 durumu
 
-**Kullanıcı Turhost'tan alan adı alıyor.** Düşündüğü ad:
-`londracampingtandircioglu.com` (.com 2,90 $ ilk yıl, **yenileme 21,99 $**;
-.com.tr 14,99 $). Henüz alınmadı.
+### ✅ ALAN ADI KARARA BAĞLANDI (11.10.2026)
 
-Adın 29 karakter olduğu, telefonda söylemesi ve yazması zor olacağı söylendi;
-`londracampingotopark.com` / `atakoyotopark.com` gibi kısa alternatifler
-önerildi. Karar kullanıcıda.
+**`londracampingtandircioglu.com`** — kullanıcının kararı. Alternatif
+önerilmeyecek, tekrar sorulmayacak. (.com 2,90 $ ilk yıl, **yenileme
+21,99 $**.) Turhost'tan alınıyor; satın alma teyidi henüz gelmedi.
+
+- Kanonik adres: `https://londracampingtandircioglu.com`
+  (`www` → köke yönlendirilecek, Caddy'de)
+- Ad 29 karakter; telefonda söylemesi zor olacağı söylendi, kullanıcı yine
+  bu adı seçti. **Bu konu kapandı.**
+- Alan adı **hiçbir yere koda sabitlenmeyecek**: mutlak URL gerektiren her
+  şey (sitemap, canonical, Open Graph, LocalBusiness) `NEXT_PUBLIC_SITE_URL`
+  ortam değişkeninden okunacak (Aşama 8'de eklenecek).
 
 ### 🚨 PAYLAŞIMLI HOSTING ALINMAYACAK — tekrar uyar
 
@@ -124,7 +132,9 @@ BİR KEZ DAHA doğrula.
 
 ### Kurulum için gerekenler (kullanıcı verecek)
 
-1. Alan adı · 2. VPS'in IP adresi · 3. SSH kullanıcı adı ve erişimi
+1. ~~Alan adı~~ ✅ `londracampingtandircioglu.com` (karar verildi 11.10.2026;
+   satın alma teyidi bekleniyor) · 2. **VPS'in IP adresi** · 3. **SSH
+   kullanıcı adı ve erişimi**
 
 Gelince: `ops/docker-compose.yml` + Caddy ile kurulum, otomatik HTTPS,
 gece yedekleri, alan adı yönlendirmesi. Tahmini 1–2 saat.
@@ -138,7 +148,10 @@ gece yedekleri, alan adı yönlendirmesi. Tahmini 1–2 saat.
 4. **Motor yıkama ve karavan yıkama ücreti** — hizmetler hâlâ fiyatsız
 5. Site yayına çıkarken `robots: index false` KALDIRILACAK
    (`src/app/(site)/layout.tsx`); SEO (sitemap, Open Graph, LocalBusiness)
-   gerçek alan adı gerektirdiği için Aşama 8'e bırakıldı
+   mutlak URL gerektirdiği için Aşama 8'e bırakıldı. Alan adı artık belli
+   (`londracampingtandircioglu.com`), ama **LocalBusiness yapısal verisi
+   için hâlâ eksik:** açık adres metni ve işletmenin tam ticari unvanı.
+   Bu ikisi gelmeden yapısal veri yazılmaz — uydurma yok (mimari kural 20)
 
 ## İşletme sahibinin verdiği KESİN kararlar
 

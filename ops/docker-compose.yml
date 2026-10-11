@@ -38,7 +38,7 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-otopark}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-otopark}?schema=public
       AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET zorunludur - uretmek icin: openssl rand -base64 32}
-      AUTH_URL: ${AUTH_URL:?AUTH_URL zorunludur - ornek: https://otopark.ornek.com}
+      AUTH_URL: ${AUTH_URL:?AUTH_URL zorunludur - ornek: https://londracampingtandircioglu.com}
       TZ: Europe/Istanbul
     expose:
       - "3000"
@@ -53,7 +53,7 @@ services:
       - "443:443"
     environment:
       # Caddy bu alan adi icin Let's Encrypt sertifikasini OTOMATIK alir ve yeniler.
-      SITE_ADDRESS: ${SITE_ADDRESS:?SITE_ADDRESS zorunludur - ornek: otopark.ornek.com}
+      SITE_ADDRESS: ${SITE_ADDRESS:?SITE_ADDRESS zorunludur - ornek: londracampingtandircioglu.com}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-verisi:/data
