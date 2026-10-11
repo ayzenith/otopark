@@ -16,7 +16,7 @@ import { useState } from "react";
 export function GaleriGorseli({
   url,
   alt,
-  className = "h-48 w-full rounded-xl bg-kagit-200 object-cover",
+  className = "h-48 w-full rounded-xl bg-showroom-100 object-cover",
 }: {
   url: string;
   alt: string;

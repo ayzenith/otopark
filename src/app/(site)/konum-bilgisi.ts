@@ -1,12 +1,14 @@
 /**
  * KONUM BİLGİSİ — TEK KAYNAK
  *
- * Kaynak: işletme sahibi (06.10.2026 ulaşım süreleri, 11.10.2026 Dünya
- * Ticaret Merkezi, Fuar Merkezi ve Nivo). Sürelerin yürüyerek mi araçla mı
- * olduğu söylenmedi; sitede belirtilmez (PRODUCT.md).
+ * Kaynak: işletme sahibi. Ulaşım süreleri 06.10.2026 (metrobüs, metro) ve
+ * 11.10.2026 (Dünya Ticaret Merkezi, Fuar Merkezi). Sürelerin yürüyerek mi
+ * araçla mı olduğu söylenmedi; sitede belirtilmez (PRODUCT.md).
  *
- * Yakın çevre noktaları için uzaklık iddiası YAZILMAZ: sahibi yalnızca
- * "hemen arkası / yakını" dedi, nokta nokta ölçü vermedi.
+ * Çevre noktaları için dakika VERİLMEDİ; yalnızca sahibinin ifadesi
+ * yazılır: "Nef … hemen arkası", "Kültür Üniversitesi / Airport AVM
+ * arkası" (06.10.2026). Teknik veriler tablosunda gösterilecek noktalar
+ * 11.10.2026'da seçildi: Nef, Kültür Üniversitesi, Airport AVM.
  */
 
 export type UlasimTuru = "metrobus" | "metro" | "fuar";
@@ -23,11 +25,8 @@ export const ULASIM: readonly { yer: string; kisaAd: string; sure: string; tur: 
   { yer: "İstanbul Fuar Merkezi", kisaAd: "Fuar Merkezi", sure: "7 dk", tur: "fuar" },
 ];
 
-export const YAKIN_CEVRE: readonly string[] = [
-  "Nef",
-  "Selenium",
-  "Ataköy Towers",
-  "Nivo",
-  "Kültür Üniversitesi",
-  "Airport AVM",
+export const CEVRE: readonly { yer: string; konum: string }[] = [
+  { yer: "Nef", konum: "Hemen arkasında" },
+  { yer: "Kültür Üniversitesi", konum: "Arkasında" },
+  { yer: "Airport AVM", konum: "Arkasında" },
 ];

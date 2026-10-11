@@ -54,7 +54,7 @@ becerileri) → `724c3ef` (tasarım dili) → `7285843` (en kötü veri düzeltm
 edildi. Telif hakları işletmede.
 - `public/logo.png` — renkli, şeffaf arka plan (1278×1076)
 - `public/logo-beyaz.png` — beyaz mono, şeffaf arka plan (koyu yüzey için)
-- Site header: koyu arka planda `logo-beyaz.png`; footer: açık arka planda `logo.png`
+- Site header ve footer lacivert zeminde `logo-beyaz.png` (11.10.2026 Teknik Veri)
 - PWA ikonları (`ikon-192.png`, `ikon-512.png`, `ikon-maskeli-512.png`) logodan üretildi
 - `favicon.ico` — 16/32/48px kare kırpılmış
 
@@ -84,11 +84,16 @@ dolu alanı ezmez). Kaynak: işletme sahibi, 05.10.2026.
 - **Profesyonel oto yıkama** vurgusu istendi ("dilerseniz yıkanmış teslim alın"
   ifadesi zayıf bulundu, değiştirildi)
 
+11.10.2026'da ayrıca verilenler: **açık hava otopark** · **oto yıkama
+7/24** · **kamyonet kabul edilir** · **yer ayırtma hizmeti YOK** ·
+Dünya Ticaret Merkezi 6 dk, Fuar Merkezi 7 dk · Nef "hemen arkası" ·
+logo renkleri marka rengidir (pankart kırmızısı değil).
+
 **HÂLÂ VERİLMEYEN — VARSAYMA:**
 - **Açık adres metni** (yalnızca harita bağlantısı var; kısa bağlantı bu
   konteynerden açılamıyor, adres oradan da okunamadı)
-- **Otopark kapalı mı açık mı** — müşterinin ilk sorduğu şey, sorulacak
-- Instagram · **logo** · **fotoğraflar** · işletmenin tam ticari unvanı
+- Instagram · işletmenin tam ticari unvanı · ek fotoğraflar (şimdilik tek
+  giriş fotoğrafı var; yıkama fotoğrafı YOK)
 - Pasta cila / detaylı iç temizlik / vale gibi ek hizmetler var mı
 
 ## ⚠️ ALAN ADI VE SUNUCU — 11.10.2026 durumu
@@ -324,44 +329,51 @@ ekranında "fiyat girilmemiş" uyarısı çıkar (mimari kural 10).
     bilgi" olarak listelenir. Sitedeki fiyat SERBEST METİNDİR ve tarife
     motorundan otomatik akmaz — kural 11'in site karşılığı.
 
-## Kurumsal sitenin tasarım dili (07-08.10.2026)
+## Kurumsal sitenin tasarım dili — "TEKNİK VERİ" (11.10.2026)
 
-Kullanıcı ilk sürümü "hayatımda gördüğüm en basit, yapay zeka olduğu belli
-tema" diye reddetti. Tasarım baştan kuruldu. **İçerik aynı kaldı; sayfa
-düzeni, tipografi, boşluk ve hareket değişti.**
+**Kaynak belge: `DESIGN.md`** (tokenlar + kurallar) · ürün gerçekleri
+`PRODUCT.md` · yön sözleşmesi `.impeccable/surfaces/src-app-site-page-tsx.md`
+· eleştiri raporu `.impeccable/critique/`.
 
-### Kurallar
+Geçmiş: 07.10 ilk sürüm "yapay zeka olduğu belli" diye reddedildi → 08.10
+mürekkep+kâğıt+sarı dil → 11.10 Impeccable eleştirisi 18/32 (jenerik,
+fotoğraf dipnot gibi, tipografi yok) → kullanıcı önce "Otoyol Tabelası"nı
+seçti, kodlanmış hâlini görünce **"Teknik Veri"ye** geçti. ESKİ DİL
+(sarı, mürekkep/kâğıt, numaralı bölümler, `.site-etiket`) KALDIRILDI.
 
-- **İki yüzey:** mürekkep (koyu, `--color-murekkep-*`) ve kâğıt (sıcak beyaz,
-  `--color-kagit-*`). Ara ton yok.
-- **Tek vurgu rengi:** yol işaretlerinin sarısı (`--color-sinyal-*`). Panelin
-  lacivert+yeşil+mavi üçlüsü siteye TAŞINMAZ.
-- **Ayrım kutuyla değil İNCE ÇİZGİYLE.** Kart kenarlığı sayfayı parçalıyor.
-- **Bölümler numaralı** (01, 02…), etiketler monospace + geniş harf aralığı
-  (`.site-etiket`).
-- **Tipografi ölçüye göre:** `.site-dev` (negatif harf aralığı, 0.98 satır),
-  `.site-baslik`, `.site-govde`. Tek bir letter-spacing her boyutta yanlıştır.
-- Tüm site stilleri `.site-` öneklidir ve `(site)` grubundadır.
-  **PANELE DOKUNMA** — panel bir iş aracı, site bir vitrin.
+- Otomobil lansman broşürü: tam genişlik GERÇEK giriş fotoğrafı + üstünde
+  işaretler (Güvenlik, Kamera, Giriş — pankartı ÖRTMEZ), fotoğrafa binen
+  model adı sekmesi, **Teknik veriler** tablosu (Hizmet / Ulaşım / Çevre).
+- **Renkler LOGODAN** (işletme kararı): lacivert `#002C72`, mavi `#0159E6`
+  (mavi = YALNIZCA yol tarifi), zemin showroom `#EEF1F6`. Sarı/gradyan YOK.
+- **Yazı: Archivo** (OFL, `public/yazitipi/`, dış sunucu yok), üç genişlik.
+  `.site-model`, `.site-bro-baslik`, `.site-bro-etiket`, `.site-veri`.
+- Başlık üstü etiket ve süs numarası YASAK (impeccable craft floor).
+- Telefonda eylem çubuğu HER sayfada; kapak geçilince yükselir (CSS scroll
+  timeline). WhatsApp/Ara logolu kare butonlar.
+- Konum TEK KAYNAK: `src/app/(site)/konum-bilgisi.ts`.
+- Tek sütunlu ızgarada `grid-cols-[minmax(0,1fr)]` ŞART — uzun numara
+  ızgarayı genişletip sayfayı taşırıyor (11.10'da iki kez yaşandı,
+  "en kötü veri" E2E testi yakaladı).
+- `pkill -f next-server` komut zincirinde kendi kabuğunu da öldürür (metin
+  komut satırında geçiyor): `pkill -f "[n]ext-server"` kullan, AYRI komutta.
 
 ### Hareket kuralları (bunlara uy)
 
-- Easing: `--ease-cikis: cubic-bezier(0.23, 1, 0.32, 1)`. Tarayıcının hazır
-  eğrileri fazla yumuşak.
-- **Giren öğede ASLA `ease-in`** — arayüzü ağır hissettirir.
-- Arayüz animasyonları **300ms altında**. Basılabilir öğe `:active` →
-  `scale(0.97)`, 160ms (`.site-basilabilir`).
-- **`scale(0)`'dan büyüme yok**, `transition: all` yok.
-- **Kaydırınca belirme CSS iledir** (`animation-timeline: view()`,
-  `.site-belir`). IntersectionObserver'a DÖNME: betik çalışmazsa içerik
-  görünmez olur (mimari kural 19).
+- Easing: `--ease-cikis: cubic-bezier(0.23, 1, 0.32, 1)`. Giren öğede
+  ASLA `ease-in`. Arayüz animasyonları 300ms altında; `:active` →
+  `scale(0.97)` (`.site-basilabilir`). `transition: all` yok.
+- İmza hareketi: fotoğraf işaretleri yüklemede bir kez çizilir.
+- Kaydırınca belirme CSS iledir (`.site-belir`, `animation-timeline:
+  view()`); IntersectionObserver'a DÖNME (mimari kural 19).
 - `prefers-reduced-motion` her hareketi kapatır.
 
 ### Site sayfaları
 
-`/` ana sayfa · `/otopark` · `/oto-yikama` · `/fiyatlar` · `/iletisim`
-Üst menüde beşi de var; telefonda açılır menü yerine saran etiket satırı
-("Ana sayfa" telefonda listede YOK, başlıktaki işletme adı oraya götürür).
+`/` · `/otopark` · `/oto-yikama` · `/iletisim` · `/fiyatlar`.
+Menüde Otopark, Oto Yıkama, İletişim; **Fiyatlar yalnızca panelden fiyat
+satırı girildiyse görünür** (11.10.2026). Telefonda saran menü satırı,
+bağlantılar 48px.
 
 ## Tasarım becerileri (`.claude/skills/`)
 

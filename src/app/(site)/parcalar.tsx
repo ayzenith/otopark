@@ -1,4 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
+import { CEVRE, ULASIM } from "./konum-bilgisi";
 /**
  * SİTE TASARIM PARÇALARI
  *
@@ -168,226 +170,143 @@ export function EtiketIkonu({ className }: IkonOzellikleri) {
   );
 }
 
-export function YuruyusIkonu({ className }: IkonOzellikleri) {
-  return (
-    <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
-      <circle cx="26" cy="9" r="4.5" stroke="currentColor" strokeWidth="3" />
-      <path
-        d="M25 18c-3 .6-4.6 2.4-5.4 4.8L17 31l-5 11M25 18c3 0 5 1.6 6 4l2.4 5.6L39 31M25 18l-.6 11.4L30 42"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-export function BinaIkonu({ className }: IkonOzellikleri) {
-  return (
-    <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
-      <path d="M8 42V12l12-6v36" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-      <path d="M20 42V18l20-6v30" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-      <path d="M4 42h40" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-      <path d="M27 24h6M27 31h6" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 /* ==========================================================================
-   OTOYOL TABELASI PARÇALARI (11.10.2026)
+   TEKNİK VERİ PARÇALARI (11.10.2026)
    ========================================================================== */
 
 /**
- * Tabela oku: kalın gövde + dolu üçgen uç, logodaki okun yönüyle (sağ üst).
- * Unicode "↗" değil, çizilmiş: her yazı tipinde aynı kalınlıkta durur.
+ * Ok: logodaki okun yönü (sağa), kalın gövde + dolu üçgen uç.
+ * Unicode "→" değil, çizilmiş: her yazı tipinde aynı ağırlıkta durur.
  */
 export function OkIkonu({ className }: IkonOzellikleri) {
   return (
     <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
-      <path d="M9 39 29 19" stroke="currentColor" strokeWidth="6.5" strokeLinecap="square" />
-      <path d="M19 9h20v20L19 9Z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M6 24h24" stroke="currentColor" strokeWidth="6" strokeLinecap="square" />
+      <path d="M26 10 42 24 26 38V10Z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
     </svg>
   );
-}
-
-export function MetroPiktogrami({ className }: IkonOzellikleri) {
-  return (
-    <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
-      <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="3" />
-      <path
-        d="M14.5 33V15.5L24 27l9.5-11.5V33"
-        stroke="currentColor"
-        strokeWidth="3.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-export function MetrobusPiktogrami({ className }: IkonOzellikleri) {
-  return (
-    <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
-      <rect x="10" y="5" width="28" height="33" rx="5" stroke="currentColor" strokeWidth="3" />
-      <path d="M10 22h28" stroke="currentColor" strokeWidth="3" />
-      <path d="M16 11h16" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-      <circle cx="17" cy="30" r="2.4" fill="currentColor" />
-      <circle cx="31" cy="30" r="2.4" fill="currentColor" />
-      <path d="M15 38v5M33 38v5" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-/** Fuar / ticaret merkezi: geniş çatılı salon. */
-export function FuarPiktogrami({ className }: IkonOzellikleri) {
-  return (
-    <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
-      <path d="M5 20 24 8l19 12" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
-      <path d="M9 18v22h30V18" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-      <path d="M19 40V29h10v11" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-      <path d="M4 40h40" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-export function UlasimPiktogrami({
-  tur,
-  className,
-}: {
-  tur: "metrobus" | "metro" | "fuar";
-  className?: string;
-}) {
-  if (tur === "metro") return <MetroPiktogrami className={className} />;
-  if (tur === "metrobus") return <MetrobusPiktogrami className={className} />;
-  return <FuarPiktogrami className={className} />;
 }
 
 /**
- * LEVHA
- *
- * Gerçek otoyol levhası gibi: renkli zemin, içte 3px beyaz kenar, yuvarlak
- * köşe. `ana` = logonun laciverti (yer adı levhası), `yon` = logonun mavisi
- * (varış/yön levhası), `bilgi` = beyaz bilgi levhası (lacivert kenar).
- *
- * Bu bir kart değildir: sayfada yalnızca tabelanın kendisi olan yerlerde
- * kullanılır, içerik kutusu olarak değil.
+ * Fotoğraf işareti: nokta + çizgi + etiket (broşürdeki açıklama çizgisi).
+ * Konum, fotoğraf kutusunun yüzdesi olarak verilir; kutunun en-boy oranı
+ * her kırılma noktasında sabit olduğu için işaret aynı nesnenin üstünde
+ * kalır. `--mx/--my` telefon, `--x/--y` geniş ekran konumudur.
  */
-export function Levha({
-  ton = "ana",
-  className = "",
-  icClassName = "",
-  children,
+export function FotoIsareti({
+  etiket,
+  mx,
+  my,
+  x,
+  y,
+  gecikme,
+  sol = false,
 }: {
-  ton?: "ana" | "yon" | "bilgi";
-  className?: string;
-  icClassName?: string;
-  children: React.ReactNode;
+  etiket: string;
+  mx: string;
+  my: string;
+  x: string;
+  y: string;
+  gecikme: number;
+  /** Etiket noktanın SOLUNA açılır (sağda örtmemesi gereken bir şey varsa). */
+  sol?: boolean;
 }) {
-  const zemin = ton === "ana" ? "bg-yol-800" : ton === "yon" ? "bg-levha-500" : "bg-white";
-  const kenar = ton === "bilgi" ? "border-yol-800" : "border-white";
   return (
-    <div className={`rounded-[14px] p-1.5 ${zemin} ${className}`}>
-      <div className={`h-full rounded-[9px] border-[3px] ${kenar} ${icClassName}`}>{children}</div>
+    <div
+      aria-hidden
+      data-sol={sol || undefined}
+      className={`site-isaret absolute left-[var(--mx)] top-[var(--my)] flex -translate-y-1/2 items-center md:left-[var(--x)] md:top-[var(--y)] ${
+        sol ? "-translate-x-full flex-row-reverse" : ""
+      }`}
+      style={
+        {
+          "--mx": mx,
+          "--my": my,
+          "--x": x,
+          "--y": y,
+          "--gecikme": `${gecikme}ms`,
+        } as React.CSSProperties
+      }
+    >
+      <i
+        className={`block h-3 w-3 shrink-0 rounded-full bg-white ring-[3px] ring-levha-500 ${sol ? "-mr-1.5" : "-ml-1.5"}`}
+      />
+      <b className="block h-0.5 w-5 bg-white md:w-7" />
+      <span className="site-bro-etiket whitespace-nowrap bg-yol-900 px-1.5 py-1 text-[10px] text-white md:px-2.5 md:text-xs">
+        {etiket}
+      </span>
     </div>
   );
 }
 
 /**
- * Varış satırı: piktogram, yer adı, dakika. Dakika sağda ve tablo
- * rakamlarıyla; satırlar alt alta gelince rakamlar aynı hizada okunur.
- * Uzun yer adı sarar, dakika hiçbir zaman sarmaz.
+ * İç sayfa kapağı: isteğe bağlı fotoğraf bandı + fotoğrafın kenarına binen
+ * başlık sekmesi + giriş paragrafı. Fotoğraf yoksa sekme binmez.
+ * Kırpım `konum` (object-position) ile seçilir; tek gerçek fotoğrafın
+ * farklı bölgeleri farklı sayfalarda kullanılır.
  */
-export function VarisSatiri({
-  ikon,
-  yer,
-  sure,
-}: {
-  ikon: React.ReactNode;
-  yer: string;
-  sure: string;
-}) {
-  return (
-    <li className="flex items-center gap-3 border-t-2 border-white/40 py-3 first:border-t-0 sm:gap-4 sm:py-3.5">
-      <span className="h-8 w-8 shrink-0 sm:h-9 sm:w-9">{ikon}</span>
-      <span className="min-w-0 flex-1 text-xl font-bold leading-tight sm:text-2xl">{yer}</span>
-      <span className="shrink-0 whitespace-nowrap text-2xl font-extrabold tabular-nums sm:text-3xl">
-        {sure}
-      </span>
-    </li>
-  );
-}
-
-/**
- * Hizmet levhası: mavi yön levhası biçiminde, tamamı bağlantı.
- * Piktogram başlığın SOLUNDA durur (servis levhası gibi), üstünde kutu
- * içinde değil.
- */
-export function HizmetLevhasi({
-  yol,
-  ikon,
+export function SayfaKapagi({
   baslik,
-  aciklama,
+  giris,
+  gorsel,
+  mapsUrl,
 }: {
-  yol: string;
-  ikon: React.ReactNode;
   baslik: string;
-  aciklama: string;
+  giris: string;
+  gorsel?: { konum: string; alt: string };
+  /** Verilirse kapakta YOL TARİFİ AL çizilir (ana eylem ilk ekranda). */
+  mapsUrl?: string | null;
 }) {
   return (
-    <Link
-      href={yol}
-      className="site-basilabilir group block rounded-[14px] bg-levha-500 p-1.5 hover:bg-levha-400"
-    >
-      <div className="flex h-full flex-col gap-5 rounded-[9px] border-[3px] border-white p-5 sm:p-7">
-        <div className="flex items-center gap-4">
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[6px] bg-white text-levha-500">
-            {ikon}
-          </span>
-          <h3 className="min-w-0 text-2xl font-extrabold leading-tight sm:text-3xl">{baslik}</h3>
+    <section>
+      {gorsel ? (
+        <div className="relative mx-auto aspect-[16/10] max-w-[1600px] overflow-hidden md:aspect-[3/1]">
+          <Image
+            src="/otopark-giris.webp"
+            alt={gorsel.alt}
+            fill
+            priority
+            sizes="(min-width: 1600px) 1600px, 100vw"
+            className="object-cover"
+            style={{ objectPosition: gorsel.konum }}
+          />
         </div>
-        <p className="max-w-[46ch] text-lg leading-relaxed">{aciklama}</p>
-        <p className="mt-auto flex items-center gap-2 text-lg font-extrabold">
-          Ayrıntılar
-          <OkIkonu className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-        </p>
+      ) : null}
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-8">
+        <div
+          className={
+            gorsel
+              ? "relative -mt-10 mr-8 bg-showroom-50 pr-4 pt-5 md:-ml-8 md:-mt-24 md:mr-0 md:w-fit md:max-w-full md:pl-8 md:pr-12 md:pt-8"
+              : "pt-12 md:pt-20"
+          }
+        >
+          <h1 className="site-model text-balance break-words text-yol-800">{baslik}</h1>
+        </div>
+        <p className="mt-6 max-w-[60ch] text-lg leading-relaxed text-celik-600 md:text-xl">{giris}</p>
+        {mapsUrl ? <YolTarifiButonu href={mapsUrl} className="mt-8 sm:w-fit" /> : null}
       </div>
-    </Link>
+    </section>
   );
 }
 
 /**
- * Vitrin bölümü.
- *
- * Numaralı etiket (01, 02…) bölümlere ritim verir ve sayfanın uzunluğunu
- * okunur kılar: ziyaretçi nerede olduğunu kaydırma çubuğundan değil,
- * sayfadan anlar. Etiket tek renkli büyük harf, geniş harf aralığıyla
- * yazılır; başlık ise sıkı harf aralığıyla (büyük yazıda harfler
- * birbirinden uzak görünür — apple-design §15).
+ * Bölüm: lacivert çizgiyle açılan, büyük harfli geniş başlıklı blok.
+ * Numara ve başlık üstü etiket YOK (impeccable: kicker ve süs numarası
+ * bilgi taşımıyorsa yasak).
  */
 export function Bolum({
-  numara,
-  etiket,
   baslik,
   children,
   className = "",
 }: {
-  numara?: string;
-  etiket?: string;
   baslik?: string;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <section className={`mx-auto w-full max-w-5xl px-6 sm:px-8 ${className}`}>
-      {etiket ? (
-        <p className="site-etiket flex items-center gap-3 text-sinyal-600">
-          {numara ? <span className="text-murekkep-700/40">{numara}</span> : null}
-          {etiket}
-        </p>
-      ) : null}
+    <section className={`mx-auto w-full max-w-6xl px-4 sm:px-8 ${className}`}>
       {baslik ? (
-        <h2 className="site-baslik mt-4 text-balance text-murekkep-900">{baslik}</h2>
+        <h2 className="site-bro-baslik border-t-2 border-yol-800 pt-6 text-yol-800">{baslik}</h2>
       ) : null}
       {children}
     </section>
@@ -395,107 +314,32 @@ export function Bolum({
 }
 
 /**
- * Hizmet bloğu.
- *
- * Kutu içinde kutu yerine İNCE ÇİZGİ ile ayrılır: kart kenarlıkları
- * sayfayı parçalar, hairline ise ritmi bozmadan ayırır. Üstte ikon,
- * altında başlık ve metin; `yol` verilirse bloğun tamamı bağlantıdır.
- *
- * Üzerine gelince ikon kutusu sinyal rengine döner ve blok 2px yükselir —
- * tıklanabilir olduğu, imleç değişmeden önce anlaşılır.
+ * Özellik satırı: ikon başlığın SOLUNDA (kutu içinde değil), altında metin.
+ * Üstte ince çizgi; yan yana dizilince broşürün özellik listesi gibi okunur.
  */
 export function HizmetKarti({
   ikon,
   baslik,
   aciklama,
-  yol,
-}: {
-  ikon: React.ReactNode;
-  baslik: string;
-  aciklama: string;
-  yol?: string;
-}) {
-  const icerik = (
-    <>
-      <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-murekkep-900 text-kagit-50 transition-colors duration-200 group-hover:bg-sinyal-500 group-hover:text-murekkep-950">
-        {ikon}
-      </div>
-      <h3 className="mt-6 text-xl font-bold tracking-tight text-murekkep-900">{baslik}</h3>
-      <p className="mt-3 leading-relaxed text-murekkep-700/80">{aciklama}</p>
-      {yol ? (
-        <p className="site-etiket mt-6 text-sinyal-600">
-          Detaylı bilgi <span aria-hidden>→</span>
-        </p>
-      ) : null}
-    </>
-  );
-
-  const sinif =
-    "group block border-t border-murekkep-900/12 pt-8 transition-transform duration-200 " +
-    (yol ? "hover:-translate-y-0.5" : "");
-
-  if (yol) {
-    return (
-      <Link href={yol} className={`${sinif} site-basilabilir`}>
-        {icerik}
-      </Link>
-    );
-  }
-  return <div className={sinif}>{icerik}</div>;
-}
-
-/**
- * Kısa güven bilgisi (koyu zeminde): ikon, başlık, tek satır açıklama.
- * Kutu yok; üstte ince bir çizgi var. Birden fazlası yan yana dizilince
- * bu çizgiler bir cetvel gibi okunur.
- */
-export function OzellikSatiri({
-  ikon,
-  baslik,
-  aciklama,
 }: {
   ikon: React.ReactNode;
   baslik: string;
   aciklama: string;
 }) {
   return (
-    <div className="border-t border-kagit-50/15 pt-5">
-      <div className="text-sinyal-400">{ikon}</div>
-      <p className="mt-4 font-bold tracking-tight text-kagit-50">{baslik}</p>
-      <p className="mt-1.5 text-sm leading-relaxed text-kagit-200/70">{aciklama}</p>
+    <div className="border-t border-yol-800/20 pt-6">
+      <div className="flex items-center gap-3 text-levha-500">
+        <span className="shrink-0">{ikon}</span>
+        <h3 className="text-xl font-extrabold leading-tight text-yol-800 [font-stretch:110%]">{baslik}</h3>
+      </div>
+      <p className="mt-3 text-lg leading-relaxed text-celik-600">{aciklama}</p>
     </div>
   );
 }
 
 /**
- * Ulaşım satırı: yakındaki bir nokta ve oraya olan mesafe.
- *
- * Mesafe SAĞDA ve tek renkli (monospace) durur: dört satır alt alta
- * gelince rakamlar aynı hizada okunur, göz tabloyu tarar gibi tarar.
- */
-export function UlasimSatiri({
-  ikon,
-  yer,
-  mesafe,
-}: {
-  ikon: React.ReactNode;
-  yer: string;
-  mesafe: string;
-}) {
-  return (
-    <li className="flex items-center gap-4 border-t border-kagit-50/15 py-4">
-      <span className="text-sinyal-400">{ikon}</span>
-      <span className="min-w-0 flex-1 font-semibold leading-tight text-kagit-50">{yer}</span>
-      <span className="site-etiket shrink-0 text-kagit-200/60">{mesafe}</span>
-    </li>
-  );
-}
-
-/**
- * Numaralı adım.
- *
- * Numara büyük ve soluk; başlık küçük ve koyu. Tersi de olurdu ama o
- * zaman numara başlıkla yarışır. Burada numara ritmi tutar, başlık konuşur.
+ * Numaralı adım. Numara GERÇEK bir sırayı taşır (önce getir, sonra işine
+ * bak, sonra teslim al); süs değildir.
  */
 export function Adim({
   numara,
@@ -507,35 +351,104 @@ export function Adim({
   aciklama: string;
 }) {
   return (
-    <li className="border-t border-murekkep-900/12 pt-6">
-      <span className="font-mono text-4xl font-bold tabular-nums text-murekkep-900/15">
-        {String(numara).padStart(2, "0")}
-      </span>
-      <p className="mt-3 text-xl font-bold tracking-tight text-murekkep-900">{baslik}</p>
-      <p className="mt-2 leading-relaxed text-murekkep-700/80">{aciklama}</p>
+    <li className="border-t-2 border-yol-800 pt-5">
+      <span className="site-veri text-4xl text-levha-500">{numara}</span>
+      <p className="mt-3 text-xl font-extrabold leading-tight text-yol-800 [font-stretch:110%]">{baslik}</p>
+      <p className="mt-2 text-lg leading-relaxed text-celik-600">{aciklama}</p>
     </li>
   );
 }
 
-/** Madde listesi satırı: sinyal renkli kısa çizgi + kısa fayda cümlesi. */
+/** Madde: mavi kısa çizgi + kısa cümle. */
 export function OnayliMadde({ children }: { children: React.ReactNode }) {
   return (
-    <li className="flex items-baseline gap-4 border-t border-murekkep-900/10 py-3.5">
-      <span aria-hidden className="h-px w-5 shrink-0 translate-y-[-0.3em] bg-sinyal-500" />
-      <span className="leading-relaxed text-murekkep-700/85">{children}</span>
+    <li className="flex items-baseline gap-4 border-t border-yol-800/15 py-3.5">
+      <span aria-hidden className="h-0.5 w-5 shrink-0 translate-y-[-0.3em] bg-levha-500" />
+      <span className="text-lg leading-relaxed text-yol-950">{children}</span>
     </li>
   );
 }
 
 /**
- * Sayfa sonu iletişim bloğu.
- *
- * Her hizmet sayfası aynı eylemlerle biter: WhatsApp, arama, yol tarifi.
- * Ziyaretçi sayfayı okuduktan sonra ne yapacağını aramak zorunda kalmaz.
- * Girilmemiş bilgi için buton ÇİZİLMEZ (mimari kural 19).
- *
- * Telefon numarası burada BÜYÜK yazılır: en çok istenen bilgi, en görünür
- * yerde. Butonların hepsi aynı yükseklikte (64px) — birincil işlem ölçüsü.
+ * Konum tablosu: ulaşım süreleri ve çevre noktaları, tek kaynaktan
+ * (konum-bilgisi.ts). Ana sayfadaki teknik veriler tablosuyla aynı dil.
+ */
+export function KonumTablosu() {
+  return (
+    <table className="w-full border-collapse">
+      <VeriGrubu ad="Ulaşım">
+        {ULASIM.map((u) => (
+          <VeriSatiri key={u.yer} ad={u.kisaAd} deger={u.sure} />
+        ))}
+      </VeriGrubu>
+      <VeriGrubu ad="Çevre">
+        {CEVRE.map((c) => (
+          <VeriSatiri key={c.yer} ad={c.yer} deger={c.konum} metin />
+        ))}
+      </VeriGrubu>
+    </table>
+  );
+}
+
+export function VeriGrubu({ ad, children }: { ad: string; children: React.ReactNode }) {
+  return (
+    <tbody>
+      <tr>
+        <th colSpan={2} scope="colgroup" className="site-bro-etiket pb-1 pt-6 text-left text-levha-500">
+          {ad}
+        </th>
+      </tr>
+      {children}
+    </tbody>
+  );
+}
+
+/** Teknik veri satırı. `metin`: değer sayı değil sözcük (daha küçük dizilir). */
+export function VeriSatiri({ ad, deger, metin = false }: { ad: string; deger: string; metin?: boolean }) {
+  return (
+    <tr className="border-b border-yol-800/15">
+      <th scope="row" className="py-3 pr-4 text-left text-lg font-normal text-celik-600">
+        {ad}
+      </th>
+      <td
+        className={`site-veri whitespace-nowrap py-3 text-right text-yol-800 ${
+          metin ? "text-lg" : "text-2xl md:text-[1.75rem]"
+        }`}
+      >
+        {deger}
+      </td>
+    </tr>
+  );
+}
+
+/** Mavi YOL TARİFİ AL butonu (renk anlamı: mavi = yol tarifi, her yerde). */
+export function YolTarifiButonu({
+  href,
+  testli = false,
+  className = "",
+}: {
+  href: string;
+  testli?: boolean;
+  className?: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      data-test={testli ? "yol-tarifi" : undefined}
+      className={`site-basilabilir flex h-16 items-center justify-center gap-3 whitespace-nowrap rounded-[6px] bg-levha-500 px-8 text-lg font-extrabold tracking-[0.06em] text-white [font-stretch:115%] hover:bg-levha-600 ${className}`}
+    >
+      YOL TARİFİ AL
+      <OkIkonu className="h-5 w-5" />
+    </a>
+  );
+}
+
+/**
+ * Sayfa sonu iletişim bloğu: yol tarifi (mavi), WhatsApp ve arama
+ * (lacivert çerçeveli). Girilmemiş bilgi için buton ÇİZİLMEZ (kural 20).
+ * Butonlar 64/56px — birincil ve ikincil ölçüler.
  */
 export function IletisimKutusu({
   mapsUrl,
@@ -555,51 +468,39 @@ export function IletisimKutusu({
   if (!mapsUrl && !wa && !tel) return null;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-murekkep-900 p-8 text-kagit-50 sm:p-12">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-sinyal-500/15 blur-3xl"
-      />
-      <div className="relative">
-        <h2 className="site-baslik text-balance">{baslik}</h2>
-        <p className="mt-4 max-w-md leading-relaxed text-kagit-200/75">{aciklama}</p>
-
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          {tel ? (
-            <a
-              href={tel}
-              data-test="ara"
-              className="site-basilabilir inline-flex h-16 items-center justify-center gap-3 rounded-xl bg-sinyal-400 px-7 text-lg font-extrabold tracking-tight text-murekkep-950"
-            >
-              <TelefonIkonu className="h-6 w-6" />
-              {telefon}
-            </a>
-          ) : null}
-          {wa ? (
-            <a
-              href={wa}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-test="whatsapp"
-              className="site-basilabilir inline-flex h-16 items-center justify-center gap-3 rounded-xl px-7 text-lg font-bold text-kagit-50 ring-1 ring-inset ring-kagit-50/25 transition-colors duration-200 hover:bg-kagit-50/10"
-            >
-              <WhatsappIkonu className="h-6 w-6" />
-              WhatsApp
-            </a>
-          ) : null}
-          {mapsUrl ? (
-            <a
-              href={mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-test="yol-tarifi"
-              className="site-basilabilir inline-flex h-16 items-center justify-center gap-3 rounded-xl px-7 text-lg font-bold text-kagit-50 ring-1 ring-inset ring-kagit-50/25 transition-colors duration-200 hover:bg-kagit-50/10"
-            >
-              <KonumIkonu className="h-6 w-6" />
-              Yol tarifi
-            </a>
-          ) : null}
-        </div>
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 border-t-2 border-yol-800 pt-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-12">
+      <div>
+        <h2 className="site-bro-baslik text-yol-800">{baslik}</h2>
+        <p className="mt-4 max-w-md text-lg leading-relaxed text-celik-600">{aciklama}</p>
+      </div>
+      <div className="flex max-w-xl flex-col gap-3">
+        {mapsUrl ? <YolTarifiButonu href={mapsUrl} testli /> : null}
+        {wa || tel ? (
+          <div className="flex flex-col gap-3 sm:flex-row">
+            {wa ? (
+              <a
+                href={wa}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-test="whatsapp"
+                className="site-basilabilir flex h-14 flex-1 items-center justify-center gap-2.5 rounded-[6px] border-2 border-yol-800 px-5 text-lg font-bold text-yol-800 hover:bg-yol-800/5"
+              >
+                <WhatsappIkonu className="h-6 w-6" />
+                WhatsApp
+              </a>
+            ) : null}
+            {tel ? (
+              <a
+                href={tel}
+                data-test="ara"
+                className="site-basilabilir flex h-14 min-w-0 flex-1 items-center justify-center gap-2.5 rounded-[6px] border-2 border-yol-800 px-5 text-lg font-bold tabular-nums text-yol-800 hover:bg-yol-800/5"
+              >
+                <TelefonIkonu className="h-6 w-6 shrink-0" />
+                <span className="min-w-0 truncate">{telefon}</span>
+              </a>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -32,7 +32,7 @@ A guarded, camera-watched, always-open lot a two-minute walk from the metrobüs 
 - Phone and WhatsApp: the same number, 0555 056 79 79.
 - Accepted vehicles include cars, SUV, minibüs, kamyonet (confirmed 11.10.2026) and caravans (caravans have their own daily pricing).
 - Monthly subscription: unlimited entry/exit, price is set per customer.
-- Car wash: priced by vehicle type, done by staff on site.
+- Car wash: priced by vehicle type, done by staff on site, open 7/24 (owner, 11.10.2026).
 - **No prices on the site** unless the owner enters a free-text price line in the panel; tariff engine never feeds the site.
 - **No reservation service** — never say a spot can be reserved (confirmed 11.10.2026).
 - Nothing is invented: unentered address/phone/hours/prices render no section and no placeholder; the panel lists them as missing.
@@ -53,7 +53,7 @@ A guarded, camera-watched, always-open lot a two-minute walk from the metrobüs 
 ## Evidence on Hand
 
 - One real, owner-supplied photo: `public/otopark-giris.webp` (entrance, red banners with phone number, white booth, green mesh fence, cars, daylight). More photos not available for now (11.10.2026).
-- Location facts (owner): metrobüs 2 min, metro 3 min, İstanbul Dünya Ticaret Merkezi 6 min, İstanbul Fuar Merkezi 7 min; near Nef, Selenium, Ataköy Towers, Nivo; behind Kültür Üniversitesi / Airport AVM. Whether minutes are walking or driving is not stated — don't specify.
+- Location facts (owner): metrobüs 2 min, metro 3 min, İstanbul Dünya Ticaret Merkezi 6 min, İstanbul Fuar Merkezi 7 min; right behind Nef ("hemen arkası"); behind Kültür Üniversitesi / Airport AVM; Selenium, Ataköy Towers, Nivo also nearby. The site's spec table shows Nef, Kültür Üniversitesi, Airport AVM (owner's pick, 11.10.2026). Whether minutes are walking or driving is not stated — don't specify. Single source: `src/app/(site)/konum-bilgisi.ts`.
 - Google Maps link: `https://maps.app.goo.gl/rLR4CvWx5VsCNLr5A`.
 - **Absent, never fabricate:** street address text, full legal trade name, Instagram, testimonials, customer counts, ratings, capacity numbers, prices, wash services beyond İç Dış Yıkama, extra services (pasta cila, vale…).
 

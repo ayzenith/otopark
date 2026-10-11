@@ -9,6 +9,7 @@ import {
   IletisimKutusu,
   OnayliMadde,
   SaatIkonu,
+  SayfaKapagi,
   YikamaIkonu,
 } from "../parcalar";
 
@@ -20,24 +21,22 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Oto Yıkama",
-  description: "Profesyonel iç dış oto yıkama — aracınızı park ederken yıkatın.",
+  description: "Profesyonel iç dış oto yıkama — aracınızı park ederken yıkatın. 7/24.",
 };
 
 /**
- * OTO YIKAMA SAYFASI
+ * OTO YIKAMA SAYFASI — TEKNİK VERİ (11.10.2026)
  *
- * ============================================================================
- * İÇERİĞİN KAYNAĞI: işletme sahibi, 06.10.2026 — "profesyonel oto yıkama
- * hizmetini de ekleyelim".
+ * İÇERİĞİN KAYNAĞI: işletme sahibi — "profesyonel oto yıkama" (06.10.2026),
+ * oto yıkama 7/24 (11.10.2026).
  *
  * ANLATILAN HİZMETLER sistemde TANIMLI olanlardır: İç Dış Yıkama (araç
- * tipine göre fiyatlanır) ve Motor Yıkama. Olmayan hizmet (pasta cila,
- * seramik kaplama, detaylı iç temizlik…) UYDURULMADI — işletme böyle bir
- * hizmet verdiğini söylemedi.
+ * tipine göre fiyatlanır) ve Motor Yıkama. Yıkama adımlarının ayrıntısı,
+ * kullanılan ürün, randevu ve ödeme anı işletmeden teyitli DEĞİL; yazılmaz.
  *
- * FİYAT YAZILMAZ (karar S19). Ayrıca Motor Yıkama'nın ücreti henüz
- * belirlenmedi; sitede fiyat geçmediği için bu bir sorun oluşturmuyor.
- * ============================================================================
+ * FİYAT YAZILMAZ (karar S19). Motor Yıkama'nın ücreti henüz belirlenmedi.
+ * Bu sayfada gerçek yıkama fotoğrafı yok; fotoğraf gelene kadar kapak
+ * fotoğrafsızdır (otopark fotoğrafı yıkama diye gösterilmez).
  */
 export default async function OtoYikamaSayfasi() {
   const { kunye, sayfalar } = await siteIcerigi();
@@ -47,58 +46,39 @@ export default async function OtoYikamaSayfasi() {
   const whatsapp = whatsappHref(kunye.whatsapp);
 
   return (
-    <>
-      {/* ---- Başlık ---- */}
-      <section className="relative overflow-hidden bg-murekkep-950 text-kagit-50">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-28 -top-36 h-[28rem] w-[28rem] rounded-full bg-mavi-500/12 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-40 right-0 h-80 w-80 rounded-full bg-sinyal-500/10 blur-3xl"
-        />
-        <div className="relative mx-auto w-full max-w-5xl px-6 pb-16 pt-14 sm:px-8 sm:pb-20 sm:pt-20">
-          <p className="site-gir site-etiket text-sinyal-400">Hizmetimiz</p>
-          <h1 className="site-gir site-gir-1 site-dev mt-6 text-balance">
-            Profesyonel oto yıkama
-          </h1>
-          <p className="site-gir site-gir-2 site-govde mt-7 max-w-2xl text-kagit-200/80">
-            Aracınızı park ettiğiniz süre boş geçmesin. Deneyimli ekibimiz, profesyonel ekipman ve
-            araca zarar vermeyen ürünlerle içten dışa özenle yıkar. Siz işinizi hallederken
-            aracınız hazır olur.
-          </p>
-        </div>
-      </section>
+    <div className="bg-showroom-50 text-yol-950">
+      <SayfaKapagi
+        mapsUrl={kunye.mapsUrl}
+        baslik="Profesyonel oto yıkama"
+        giris="Aracınızı park ettiğiniz süre boş geçmesin. Deneyimli ekibimiz profesyonel ekipmanla içten dışa özenle yıkar; siz işinizi hallederken aracınız hazır olur. 7/24 açığız."
+      />
 
-      {/* ---- Nasıl işliyor ---- */}
-            <Bolum numara="01" etiket="Nasıl işliyor" baslik="Üç adımda tertemiz" className="site-belir pt-20 sm:pt-28">
-        <ol className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8">
+      <Bolum baslik="Üç adımda tertemiz" className="site-belir pt-20 md:pt-28">
+        <ol className="mt-8 grid gap-8 md:grid-cols-3 md:gap-10">
           <Adim
             numara={1}
             baslik="Aracınızı getirin"
-            aciklama="Otoparka girerken yıkama istediğinizi söylemeniz yeterli. Randevu gerekmez; 7/24 açığız."
+            aciklama="Otoparka girerken yıkama istediğinizi söylemeniz yeterli. 7/24 açığız."
           />
           <Adim
             numara={2}
             baslik="İşinize bakın"
-            aciklama="Aracınız yıkanırken siz işinizi halledin. Metrobüs ve metro yürüme mesafesinde."
+            aciklama="Aracınız yıkanırken siz işinizi halledin. Metrobüs ve metro birkaç dakika uzakta."
           />
           <Adim
             numara={3}
             baslik="Tertemiz teslim alın"
-            aciklama="Döndüğünüzde aracınız yıkanmış ve kurulanmış olarak sizi bekler. Ödeme teslimde."
+            aciklama="Döndüğünüzde aracınız yıkanmış olarak sizi bekler."
           />
         </ol>
       </Bolum>
-      
-      {/* ---- Hizmetler ---- */}
-            <Bolum numara="02" etiket="Yıkama hizmetleri" baslik="Ne yapıyoruz" className="site-belir pt-20 sm:pt-28">
-        <div className="mt-12 grid gap-10 sm:grid-cols-2 sm:gap-12">
+
+      <Bolum baslik="Ne yapıyoruz" className="site-belir pt-20 md:pt-28">
+        <div className="mt-8 grid gap-8 md:grid-cols-2 md:gap-12">
           <HizmetKarti
             ikon={<YikamaIkonu className="h-8 w-8" />}
             baslik="İç dış yıkama"
-            aciklama="Dış yüzey köpükle yıkanır ve kurulanır; iç kısım süpürülür, torpido ve cam içleri silinir. Otomobil, SUV ve motosiklet için ayrı fiyatlandırılır."
+            aciklama="Aracınızın içi ve dışı profesyonel ekipmanla yıkanır. Otomobil, SUV ve motosiklet için ayrı fiyatlandırılır."
           />
           <HizmetKarti
             ikon={<YikamaIkonu className="h-8 w-8" />}
@@ -107,17 +87,16 @@ export default async function OtoYikamaSayfasi() {
           />
         </div>
 
-        <ul className="mt-12 grid gap-x-12 sm:grid-cols-2">
-          <OnayliMadde>Araç tipine uygun ürün ve basınç; boyaya zarar verilmez</OnayliMadde>
+        <ul className="mt-10 grid gap-x-12 md:grid-cols-2">
           <OnayliMadde>Yıkama sırasında aracınız yine otopark güvenliğinde</OnayliMadde>
           <OnayliMadde>Yıkama fişi ayrı kesilir; ne ödediğiniz kayıt altındadır</OnayliMadde>
-          <OnayliMadde>Park ve yıkama ücretleri birbirine karıştırılmaz</OnayliMadde>
+          <OnayliMadde>Park ve yıkama ücretleri ayrı hesaplanır</OnayliMadde>
+          <OnayliMadde>Ücret araç tipine göre belirlenir</OnayliMadde>
         </ul>
       </Bolum>
-      
-      {/* ---- Neden burada yıkatmalı ---- */}
-            <Bolum numara="03" etiket="Neden burada" baslik="Zaman kazandırır" className="site-belir pt-20 sm:pt-28">
-        <div className="mt-12 grid gap-10 sm:grid-cols-2 sm:gap-12">
+
+      <Bolum baslik="Zaman kazandırır" className="site-belir pt-20 md:pt-28">
+        <div className="mt-8 grid gap-8 md:grid-cols-2 md:gap-12">
           <HizmetKarti
             ikon={<SaatIkonu className="h-8 w-8" />}
             baslik="Ayrı bir yere gitmeyin"
@@ -130,30 +109,25 @@ export default async function OtoYikamaSayfasi() {
           />
         </div>
       </Bolum>
-      
-      {/* ---- Panelden girilen metin ---- */}
+
       {sayfa ? (
-                <Bolum className="site-belir pt-20 sm:pt-28">
-          <div className="max-w-2xl border-t border-murekkep-900/12 pt-10">
-            <h2 className="site-baslik text-murekkep-900">{sayfa.baslik}</h2>
-            <div className="mt-6 text-murekkep-700/85">
-              <SiteMetni govde={sayfa.govde} />
-            </div>
+        <Bolum baslik={sayfa.baslik} className="site-belir pt-20 md:pt-28">
+          <div className="mt-6 max-w-[65ch] text-lg">
+            <SiteMetni govde={sayfa.govde} />
           </div>
         </Bolum>
-              ) : null}
+      ) : null}
 
-      {/* ---- İletişim ---- */}
-            <Bolum className="site-belir pt-20 sm:pt-28">
+      <Bolum className="site-belir pt-20 md:pt-28">
         <IletisimKutusu
           mapsUrl={kunye.mapsUrl}
           whatsappHref={whatsapp}
           telHref={ara}
           telefon={kunye.telefon}
-          baslik="Yıkama fiyatı ve detaylar için"
-          aciklama="Aracınızın tipine göre fiyat ve süre bilgisi almak için arayın ya da WhatsApp'tan yazın."
+          baslik="Yıkama fiyatı için"
+          aciklama="Aracınızın tipine göre fiyat bilgisi almak için arayın ya da WhatsApp'tan yazın."
         />
       </Bolum>
-          </>
+    </div>
   );
 }

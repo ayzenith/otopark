@@ -138,56 +138,44 @@ a,
      · `transition: all` KULLANILMAZ; hangi özellik animasyon olacaksa yazılır
    ========================================================================== */
 @theme {
-  /* Mürekkep ve kâğıt: sitenin iki ana yüzeyi */
-  --color-murekkep-950: #070b14;
-  --color-murekkep-900: #0b1120;
-  --color-murekkep-800: #121a2b;
-  --color-murekkep-700: #1b2538;
-  --color-kagit-50: #fbfaf8;
-  --color-kagit-100: #f4f2ee;
-  --color-kagit-200: #e7e3dc;
-
-  /* Sinyal rengi: otopark/yol işaretlerinin sarısı. Tek ve keskin. */
-  --color-sinyal-300: #fcd34d;
-  --color-sinyal-400: #fbbf24;
-  --color-sinyal-500: #f59e0b;
-  --color-sinyal-600: #d97706;
-
-  /* OTOYOL TABELASI (11.10.2026): logodaki iki renk tabela panelidir.
-     yol-800 = logonun laciverti, levha-500 = logonun mavisi. Zemin, gece
-     asfaltı gibi daha koyu lacivert. Sarı bu dilde YOK. */
+  /* TEKNİK VERİ (11.10.2026): sitenin renkleri LOGODAN gelir (işletme
+     kararı). yol-800 = logonun laciverti, levha-500 = logonun mavisi.
+     Zemin "showroom beyazı": maviye çekilmiş serin beyaz. Sarı bu dilde YOK. */
+  --color-showroom-50: #eef1f6;
+  --color-showroom-100: #e2e7f0;
   --color-yol-950: #000f29;
   --color-yol-900: #001a47;
   --color-yol-800: #002c72;
   --color-levha-600: #0149bf;
   --color-levha-500: #0159e6;
-  --color-levha-400: #2f74ee;
-  --color-celik-400: #8b97ad;
+  --color-celik-600: #4f5a70;
   --color-celik-200: #c3cde0;
 
-  --font-tabela: "Overpass", ui-sans-serif, system-ui, sans-serif;
+  --font-arsiv: "Archivo", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Overpass: Highway Gothic soyundan, OFL lisanslı (public/yazitipi/OFL.txt).
-   Değişken font; tek dosya 100–900 kalınlığı taşır. Türkçe harfler
-   latin-ext dosyasındadır. Proje içinden sunulur: dış font sunucusuna
-   bağımlılık yok. */
+/* Archivo: genişlik eksenli değişken grotesk, OFL lisanslı
+   (public/yazitipi/OFL-archivo.txt). Tek aile, üç genişlik: otomobil
+   markalarının kurumsal yazı sistemleri gibi. Türkçe harfler latin-ext
+   dosyasında. Proje içinden sunulur; dış font sunucusuna bağımlılık yok. */
 @font-face {
-  font-family: "Overpass";
+  font-family: "Archivo";
   font-style: normal;
   font-weight: 100 900;
+  font-stretch: 62% 125%;
   font-display: swap;
-  src: url("/yazitipi/overpass-latin-ext.woff2") format("woff2");
+  src: url("/yazitipi/archivo-latin-ext.woff2") format("woff2");
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
     U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4,
     U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 @font-face {
-  font-family: "Overpass";
+  font-family: "Archivo";
   font-style: normal;
   font-weight: 100 900;
+  font-stretch: 62% 125%;
   font-display: swap;
-  src: url("/yazitipi/overpass-latin.woff2") format("woff2");
+  src: url("/yazitipi/archivo-latin.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
     U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
@@ -197,39 +185,6 @@ a,
   --ease-cikis: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-giris-cikis: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-cekmece: cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-/* --- Tipografi: ölçüye göre harf aralığı ve satır yüksekliği ---
-   Büyük yazı büyüdükçe harfler birbirinden uzak görünür; sıkılır.
-   Küçük yazıda tam tersi gerekir. Tek bir letter-spacing her boyutta
-   yanlıştır (apple-design §15). */
-.site-dev {
-  font-size: clamp(2.5rem, 9vw, 5.5rem);
-  line-height: 0.98;
-  letter-spacing: -0.035em;
-  font-weight: 800;
-}
-
-.site-baslik {
-  font-size: clamp(1.75rem, 4.5vw, 2.75rem);
-  line-height: 1.08;
-  letter-spacing: -0.022em;
-  font-weight: 800;
-}
-
-.site-govde {
-  font-size: clamp(1.0625rem, 1.6vw, 1.25rem);
-  line-height: 1.65;
-  letter-spacing: -0.003em;
-}
-
-/* Küçük büyük harfli etiket: bölümleri numaralandırır, ritim verir. */
-.site-etiket {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  font-weight: 600;
 }
 
 /* --- Basılabilir öğeler: dokunuşa anında cevap --- */
@@ -254,15 +209,6 @@ a,
     transform: translateY(0);
   }
 }
-
-.site-gir {
-  animation: site-yukari 520ms var(--ease-cikis) both;
-}
-.site-gir-1 { animation-delay: 60ms; }
-.site-gir-2 { animation-delay: 120ms; }
-.site-gir-3 { animation-delay: 180ms; }
-.site-gir-4 { animation-delay: 240ms; }
-.site-gir-5 { animation-delay: 300ms; }
 
 /* Sabit eylem çubuğu: önce içerik görünsün, sonra eylem sunulsun. */
 @keyframes site-alttan {
@@ -308,82 +254,107 @@ a,
 }
 
 /* ==========================================================================
-   OTOYOL TABELASI DİLİ (11.10.2026, impeccable — .impeccable/surfaces/)
-   Site, otoparka götüren otoyol tabelasıdır: lacivert ve mavi levhalar,
-   beyaz yansıtıcı yazı, dakikalı varış noktaları. Tabela harfleri karışık
-   büyük-küçük harftir (KGM levhaları gibi); kalın ve sıkı değil, açık.
+   TEKNİK VERİ DİLİ (11.10.2026, impeccable — .impeccable/surfaces/)
+   Site, Londra Camping'in tanıtım broşürüdür: tam genişlik gerçek
+   fotoğraf, model adı gibi dizilmiş işletme adı, teknik veriler tablosu.
+   Tek aile (Archivo) üç genişlikte: geniş (ad, başlık), orta (veri),
+   normal (gövde). Ayrım kutuyla değil, lacivert çizgiyle.
    ========================================================================== */
-.site-tabela {
-  font-family: var(--font-tabela);
+.site-bro {
+  font-family: var(--font-arsiv);
   font-feature-settings: "kern" 1;
 }
-.site-tabela ::selection {
+.site-bro ::selection {
   background: var(--color-levha-500);
   color: #fff;
 }
-.site-tabela :focus-visible {
+.site-bro :focus-visible {
   outline: 3px solid var(--color-levha-500);
   outline-offset: 3px;
 }
-.site-tabela .site-gece :focus-visible {
-  outline-color: #fff;
-}
-:root:has(.site-gece) {
-  scrollbar-color: var(--color-levha-500) var(--color-yol-950);
+:root:has(.site-bro) {
+  scrollbar-color: var(--color-yol-800) var(--color-showroom-50);
 }
 
-/* Ana levhadaki işletme adı. Tabela yazısı satır aralığı sıkıdır ama
-   harfler açıktır: Overpass zaten geniş açıklıklı, eksi harf aralığı
-   okunurluğu bozar. */
-.site-tabela-ad {
-  font-size: clamp(2.25rem, 7.4vw, 4.5rem);
-  line-height: 0.98;
+/* Model adı: en geniş kesim, en kalın, büyük harf (lang="tr": İ doğru). */
+.site-model {
+  font-stretch: 125%;
+  font-weight: 900;
+  text-transform: uppercase;
+  /* En küçük boyut ekran genişliğine bağlı: 320px'te bile "PROFESYONEL"
+     gibi uzun bir kelime satıra sığar, ortasından bölünmez. */
+  font-size: clamp(1.75rem, 8.4vw, 4.75rem);
+  line-height: 0.92;
   letter-spacing: -0.012em;
-  font-weight: 800;
 }
-.site-tabela-baslik {
-  font-size: clamp(1.75rem, 4.2vw, 2.75rem);
-  line-height: 1.05;
-  letter-spacing: -0.01em;
-  font-weight: 800;
+/* Bölüm başlığı: geniş, kalın, büyük harf; modelden bir kademe aşağı. */
+.site-bro-baslik {
+  font-stretch: 118%;
+  font-weight: 850;
+  text-transform: uppercase;
+  font-size: clamp(1.625rem, 3.6vw, 2.5rem);
+  line-height: 1;
+  letter-spacing: -0.005em;
   text-wrap: balance;
 }
-
-/* İMZA HAREKETİ: levhalar yerine oturur.
-   Yola yaklaşırken üst geçitteki levhaların netleşmesi gibi: kısa bir
-   düşüş + bulanıklıktan netliğe. 280ms, ease-out, sırayla. Zaman tabanlı
-   (gözlemci yok); hareket azaltılınca hiç oynamaz. */
-@keyframes site-levha-yerles {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-    filter: blur(4px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
+/* Küçük büyük harfli veri etiketi (tablo başlıkları, sekme alt satırı). */
+.site-bro-etiket {
+  font-stretch: 110%;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
-.site-yerles {
-  animation: site-levha-yerles 280ms var(--ease-cikis) both;
-}
-.site-yerles-2 { animation-delay: 70ms; }
-.site-yerles-3 { animation-delay: 140ms; }
-
-/* Ok bir kez yönünü gösterir: levhalar oturduktan sonra. */
-@keyframes site-ok-goster {
-  0%, 100% { transform: translate(0, 0); }
-  45% { transform: translate(5px, -5px); }
-}
-.site-ok {
-  animation: site-ok-goster 280ms var(--ease-cikis) 360ms both;
+/* Teknik veri değeri: orta genişlik, tablo rakamları. */
+.site-veri {
+  font-stretch: 112%;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Telefondaki eylem çubuğu, üst geçit (ilk ekran) kaydırılıp geçilince
-   yükselir: ilk ekranda aynı eylemler zaten var, iki kez gösterilmez.
-   Kaydırma eksenli animasyonu desteklemeyen tarayıcıda eski davranış
-   (700ms sonra alttan gelir) sürer; çubuk her durumda erişilebilir. */
+/* İMZA HAREKETİ: fotoğraf üzerindeki işaretler çizilir.
+   Broşürdeki açıklama çizgileri gibi: önce nokta belirir, sonra çizgi
+   noktadan dışarı uzar, en son etiket gelir. Her işaret 240ms, sırayla.
+   Zaman tabanlı; betik gerekmez; hareket azaltılınca hiç oynamaz ve
+   işaretler baştan görünür. */
+@keyframes site-isaret-nokta {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes site-isaret-cizgi {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes site-isaret-etiket {
+  from { opacity: 0; transform: translateX(var(--kayma, -6px)); }
+  to { opacity: 1; transform: none; }
+}
+.site-isaret i {
+  animation: site-isaret-nokta 180ms var(--ease-cikis) both;
+  animation-delay: var(--gecikme, 0ms);
+}
+.site-isaret b {
+  transform-origin: left center;
+}
+.site-isaret[data-sol] b {
+  transform-origin: right center;
+}
+.site-isaret b {
+  animation: site-isaret-cizgi 200ms var(--ease-cikis) both;
+  animation-delay: calc(var(--gecikme, 0ms) + 120ms);
+}
+.site-isaret[data-sol] {
+  --kayma: 6px;
+}
+.site-isaret span {
+  animation: site-isaret-etiket 220ms var(--ease-cikis) both;
+  animation-delay: calc(var(--gecikme, 0ms) + 260ms);
+}
+
+/* Telefondaki eylem çubuğu, ilk ekran kaydırılıp geçilince yükselir:
+   ilk ekranda aynı eylemler zaten var, iki kez gösterilmez. Kaydırma
+   eksenli animasyonu desteklemeyen tarayıcıda eski davranış (700ms sonra
+   alttan gelir) sürer; çubuk her durumda erişilebilir. */
 @supports (animation-timeline: scroll()) {
   @media (prefers-reduced-motion: no-preference) {
     .site-alt-cubuk {
@@ -397,10 +368,13 @@ a,
 
 /* --- Hareketi azalt: kullanıcı istemiyorsa hiçbir şey oynamaz --- */
 @media (prefers-reduced-motion: reduce) {
-  .site-gir,
   .site-alt-cubuk,
-  .site-yerles,
-  .site-ok {
+  .site-isaret i,
+  .site-isaret b,
+  .site-isaret[data-sol] {
+  --kayma: 6px;
+}
+.site-isaret span {
     animation: none;
   }
   .site-basilabilir {

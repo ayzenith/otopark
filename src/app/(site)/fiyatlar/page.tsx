@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { siteIcerigi } from "@/server/site/queries";
 import { telHref } from "@/lib/telefon";
+import { SayfaKapagi, TelefonIkonu } from "../parcalar";
 
 /**
  * Site içeriği PANELDEN gelir ve anında yayına girmelidir; ayrıca üretim
@@ -10,68 +11,61 @@ import { telHref } from "@/lib/telefon";
  */
 export const dynamic = "force-dynamic";
 
-
 export const metadata: Metadata = { title: "Fiyatlar" };
 
 /**
- * SİTEDEKİ FİYAT LİSTESİ
+ * SİTEDEKİ FİYAT LİSTESİ — TEKNİK VERİ (11.10.2026)
  *
  * Burada gösterilen satırlar, patronun panelden "sitede göster" diyerek
  * yazdığı SERBEST METİNLERDİR. Otopark tarifesi ve yıkama fiyat tablosu
  * BURAYA OTOMATİK AKMAZ (mimari kural 11'in site karşılığı; karar S19).
  *
  * Hiç satır yoksa uydurulmuş bir fiyat ya da "0 ₺" GÖSTERİLMEZ — ziyaretçi
- * telefona yönlendirilir (mimari kural 10'un site karşılığı).
+ * telefona yönlendirilir. Satır yokken sayfa menüde de görünmez (layout).
+ *
+ * Doğru bilgi: park ücreti kalış süresine göre değişir (araç tipine göre
+ * DEĞİL; yalnızca karavanın ayrı tarifesi var), yıkama ücreti araç tipine
+ * göre.
  */
 export default async function FiyatlarSayfasi() {
   const { fiyatlar, kunye } = await siteIcerigi();
   const ara = telHref(kunye.telefon);
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 py-16 sm:px-8 sm:py-24">
-      <p className="site-gir site-etiket text-sinyal-600">Fiyatlar</p>
-      <h1 className="site-gir site-gir-1 site-baslik mt-4 text-murekkep-900">
-        {fiyatlar.length > 0 ? "Güncel fiyatlarımız" : "Fiyat bilgisi"}
-      </h1>
+    <div className="bg-showroom-50 text-yol-950">
+      <SayfaKapagi
+        baslik={fiyatlar.length > 0 ? "Güncel fiyatlarımız" : "Fiyat bilgisi"}
+        giris={
+          fiyatlar.length > 0
+            ? "Fiyatlar bilgi amaçlıdır; güncel durum için lütfen arayınız."
+            : "Park ücreti kalış sürenize, yıkama ücreti aracınızın tipine göre değişir. En doğru bilgiyi telefonda, tek konuşmada alırsınız."
+        }
+      />
 
-      {fiyatlar.length > 0 ? (
-        <>
-          <ul className="site-gir site-gir-2 mt-12">
+      <section className="mx-auto w-full max-w-6xl px-4 pt-10 sm:px-8 md:pt-14">
+        {fiyatlar.length > 0 ? (
+          <ul className="max-w-3xl border-t-2 border-yol-800">
             {fiyatlar.map((f) => (
-              <li key={f.id} className="border-t border-murekkep-900/12 py-5">
+              <li key={f.id} className="border-b border-yol-800/15 py-5">
                 <div className="flex items-baseline justify-between gap-6">
-                  <span className="font-semibold text-murekkep-900">{f.etiket}</span>
-                  <span className="text-xl font-extrabold tracking-tight text-murekkep-900">
-                    {f.fiyatMetni}
-                  </span>
+                  <span className="min-w-0 text-lg font-semibold [overflow-wrap:anywhere]">{f.etiket}</span>
+                  <span className="site-veri shrink-0 text-xl text-yol-800">{f.fiyatMetni}</span>
                 </div>
-                {f.not ? (
-                  <p className="mt-1.5 text-sm text-murekkep-700/60">{f.not}</p>
-                ) : null}
+                {f.not ? <p className="mt-1.5 text-base text-celik-600">{f.not}</p> : null}
               </li>
             ))}
           </ul>
-          <p className="mt-8 border-t border-murekkep-900/12 pt-6 text-sm text-murekkep-700/60">
-            Fiyatlar bilgi amaçlıdır; güncel durum için lütfen arayınız.
-          </p>
-        </>
-      ) : (
-        <div className="site-gir site-gir-2 mt-10">
-          <p className="site-govde max-w-lg text-murekkep-700/85">
-            Park ve yıkama ücretleri araç tipine ve kalış sürenize göre değişir. En doğru bilgiyi
-            telefonda, tek konuşmada alırsınız.
-          </p>
-          {ara ? (
-            <a
-              href={ara}
-              data-test="ara"
-              className="site-basilabilir mt-8 inline-flex h-16 items-center justify-center gap-3 rounded-xl bg-murekkep-950 px-8 text-lg font-extrabold tracking-tight text-kagit-50"
-            >
-              {kunye.telefon}
-            </a>
-          ) : null}
-        </div>
-      )}
+        ) : ara ? (
+          <a
+            href={ara}
+            data-test="ara"
+            className="site-basilabilir inline-flex h-16 items-center justify-center gap-3 rounded-[6px] border-2 border-yol-800 px-8 text-lg font-extrabold tabular-nums text-yol-800 hover:bg-yol-800/5"
+          >
+            <TelefonIkonu className="h-6 w-6" />
+            {kunye.telefon}
+          </a>
+        ) : null}
+      </section>
     </div>
   );
 }

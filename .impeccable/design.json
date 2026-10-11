@@ -1,0 +1,21 @@
+{
+  "scope": "src/app/(site)",
+  "source": "DESIGN.md",
+  "motion": {
+    "easing": "cubic-bezier(0.23, 1, 0.32, 1)",
+    "press": { "transform": "scale(0.97)", "durationMs": 160 },
+    "callout": { "dotMs": 180, "lineMs": 200, "labelMs": 220, "staggerMs": 150 },
+    "actionBar": { "timeline": "scroll(root)", "range": "30vh 60vh" },
+    "reducedMotion": "all off"
+  },
+  "focus": { "outline": "3px solid #0159e6", "offset": "3px" },
+  "selection": { "background": "#0159e6", "color": "#ffffff" },
+  "fonts": [
+    { "family": "Archivo", "files": ["public/yazitipi/archivo-latin.woff2", "public/yazitipi/archivo-latin-ext.woff2"], "license": "OFL-1.1", "axes": { "wght": "100 900", "wdth": "62% 125%" } }
+  ],
+  "rasters": [
+    { "path": "public/otopark-giris.webp", "provenance": "İşletme sahibinin sağladığı gerçek giriş fotoğrafı; sahibi ChatGPT ile renk/kontrast düzenlemesi yaptı (11.10.2026). Üretilmiş görsel değil." },
+    { "path": "public/logo.png", "provenance": "İşletme sahibinin logosu (11.10.2026)." },
+    { "path": "public/logo-beyaz.png", "provenance": "İşletme sahibinin logosunun beyaz mono sürümü (11.10.2026)." }
+  ]
+}
