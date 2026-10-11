@@ -250,7 +250,7 @@ export default async function SiteAnaSayfa() {
                 <p className="mt-5 max-w-xl text-kagit-200/70">{kunye.adres}</p>
               ) : null}
 
-              {/* Ulaşım bilgileri — işletme sahibi, 06.10.2026. */}
+              {/* Ulaşım bilgileri — işletme sahibi, 06-11.10.2026. */}
               <ul className="mt-10">
                 <UlasimSatiri
                   ikon={<YuruyusIkonu className="h-6 w-6" />}
@@ -264,13 +264,23 @@ export default async function SiteAnaSayfa() {
                 />
                 <UlasimSatiri
                   ikon={<BinaIkonu className="h-6 w-6" />}
-                  yer="Nef Selenium Ataköy Towers"
-                  mesafe="Hemen arkası"
+                  yer="İstanbul Dünya Ticaret Merkezi"
+                  mesafe="6 dakika"
+                />
+                <UlasimSatiri
+                  ikon={<BinaIkonu className="h-6 w-6" />}
+                  yer="İstanbul Fuar Merkezi"
+                  mesafe="7 dakika"
+                />
+                <UlasimSatiri
+                  ikon={<BinaIkonu className="h-6 w-6" />}
+                  yer="Nef · Selenium · Ataköy Towers · Nivo"
+                  mesafe="Hemen yakını"
                 />
                 <UlasimSatiri
                   ikon={<BinaIkonu className="h-6 w-6" />}
                   yer="Kültür Üniversitesi · Airport AVM"
-                  mesafe="Hemen arkası"
+                  mesafe="Hemen yakını"
                 />
               </ul>
 
