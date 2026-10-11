@@ -42,6 +42,9 @@ enum BillingMode {
   SUBSCRIPTION
   FREE
   MANUAL_OVERRIDE
+  /// Kurum anlaşması: çıkışta personel seçer, anlaşmanın SABİT fiyatı
+  /// kalış süresinden bağımsız alınır (karar 11.10.2026).
+  AGREEMENT
 }
 
 enum SubscriptionStatus {
@@ -354,6 +357,13 @@ model VehicleClass {
   /// otomobil fiyatindan ucretlendirilmez.
   excludeFromStandardTariff Boolean @default(false)
 
+  /// OTO YIKAMADA SEÇİLEBİLİR Mİ?
+  ///
+  /// Karar (11.10.2026): karavan yıkama yapılmıyor; yıkama ekranında karavan
+  /// seçilemez ve sunucu karavana yıkama kaydı açmayı reddeder. Otoparkı
+  /// etkilemez.
+  washEnabled Boolean @default(true)
+
   vehicles          Vehicle[]
   tariffRules       TariffRule[]
   washPriceVersions WashServicePriceVersion[]
@@ -515,6 +525,13 @@ model ParkingSession {
   /// bu arac giris anindaki tarifeyle ucretlendirilir. (Karar: 02.10.2026)
   tariffSnapshot  Json?
 
+  /// KURUM ANLAŞMASI (billingMode = AGREEMENT). Çıkışta uygulanan anlaşmanın
+  /// fiyat sürümü ve TAM KOPYASI (ad, fiyat): patron anlaşmanın adını ya da
+  /// fiyatını sonradan değiştirse bile bu kaydın tutarı değişmez.
+  agreementId             String?
+  agreementPriceVersionId String?
+  agreementSnapshot       Json?
+
   durationMinutes  Int?
   calculatedAmount Decimal? @db.Decimal(12, 2)
   discountAmount   Decimal? @db.Decimal(12, 2)
@@ -531,15 +548,17 @@ model ParkingSession {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  vehicle       Vehicle        @relation(fields: [vehicleId], references: [id])
-  entryUser     User           @relation("ParkingEntryUser", fields: [entryUserId], references: [id])
-  exitUser      User?          @relation("ParkingExitUser", fields: [exitUserId], references: [id])
-  entryShift    Shift          @relation("ParkingEntryShift", fields: [entryShiftId], references: [id])
-  exitShift     Shift?         @relation("ParkingExitShift", fields: [exitShiftId], references: [id])
-  subscription  Subscription?  @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
-  tariffVersion TariffVersion? @relation(fields: [tariffVersionId], references: [id], onDelete: SetNull)
-  tariffRule    TariffRule?    @relation(fields: [tariffRuleId], references: [id], onDelete: SetNull)
-  payments      Payment[]
+  vehicle               Vehicle                       @relation(fields: [vehicleId], references: [id])
+  entryUser             User                          @relation("ParkingEntryUser", fields: [entryUserId], references: [id])
+  exitUser              User?                         @relation("ParkingExitUser", fields: [exitUserId], references: [id])
+  entryShift            Shift                         @relation("ParkingEntryShift", fields: [entryShiftId], references: [id])
+  exitShift             Shift?                        @relation("ParkingExitShift", fields: [exitShiftId], references: [id])
+  subscription          Subscription?                 @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  tariffVersion         TariffVersion?                @relation(fields: [tariffVersionId], references: [id], onDelete: SetNull)
+  tariffRule            TariffRule?                   @relation(fields: [tariffRuleId], references: [id], onDelete: SetNull)
+  agreement             ParkingAgreement?             @relation(fields: [agreementId], references: [id])
+  agreementPriceVersion ParkingAgreementPriceVersion? @relation(fields: [agreementPriceVersionId], references: [id])
+  payments              Payment[]
 
   // NOT: "ayni plakadan ikinci AKTIF giris" engeli kismi tekil indeks ile
   // migration icinde eklenir:
@@ -551,6 +570,43 @@ model ParkingSession {
   @@index([entryShiftId])
   @@index([exitShiftId])
   @@index([vehicleId])
+}
+
+/// KURUM ANLAŞMASI (11.10.2026)
+///
+/// Otoparkın kurumlarla sabit fiyat anlaşması: müşteri çıkışta kartını
+/// gösterir, personel anlaşmayı seçer, anlaşmanın fiyatı SÜREDEN BAĞIMSIZ
+/// alınır. Ad ve fiyatı patron düzenler. Anlaşma SİLİNMEZ, pasife alınır
+/// (geçmiş park kayıtları ona bağlı).
+model ParkingAgreement {
+  id          String   @id @default(cuid())
+  name        String
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String?
+
+  priceVersions ParkingAgreementPriceVersion[]
+  sessions      ParkingSession[]
+}
+
+/// Anlaşma fiyatı SÜRÜMLÜDÜR (mimari kural 3): fiyat değişince eski satır
+/// güncellenmez, effectiveTo ile kapatılır ve yeni satır açılır.
+model ParkingAgreementPriceVersion {
+  id            String    @id @default(cuid())
+  agreementId   String
+  price         Decimal   @db.Decimal(12, 2)
+  effectiveFrom DateTime  @default(now())
+  effectiveTo   DateTime?
+  changeNote    String?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+
+  agreement ParkingAgreement @relation(fields: [agreementId], references: [id])
+  sessions  ParkingSession[]
+
+  @@index([agreementId, effectiveFrom])
 }
 
 model ParkingCapacitySetting {

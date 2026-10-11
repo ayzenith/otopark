@@ -270,7 +270,7 @@ export async function aracSiniflari() {
   return prisma.vehicleClass.findMany({
     where: { isActive: true },
     orderBy: { sortOrder: "asc" },
-    select: { id: true, code: true, name: true, excludeFromStandardTariff: true },
+    select: { id: true, code: true, name: true, excludeFromStandardTariff: true, washEnabled: true },
   });
 }
 

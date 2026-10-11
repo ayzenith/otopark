@@ -33,6 +33,7 @@ import { hesaplaUcret, odenecekTutar } from "@/server/pricing/calculate";
 import { okuSnapshot } from "@/server/pricing/resolve";
 import { vardiyaZorunlu, IslemHatasi } from "@/server/shift";
 import { tahsilatKodu } from "./codes";
+import { gecerliAnlasmaFiyati } from "./agreement";
 import type { DokumSatiri } from "@/server/pricing/types";
 import type { SessionUser } from "@/server/auth/session";
 
@@ -266,6 +267,13 @@ export interface CikisIstegi {
   /** Tutari elle degistirme (kurus) - parking.override_price izni gerekir (yalnizca OWNER). */
   elleTutarKurus?: number;
   elleTutarSebebi?: string;
+  /**
+   * Kurum anlaşması (parking.agreement izni). Verilirse ücret, anlaşmanın
+   * çıkış anındaki SABİT fiyatıdır (süreden bağımsız). Tutar istemciden
+   * gelmez; sunucu anlaşmanın geçerli fiyat sürümünü okur. İndirim ve elle
+   * tutarla BİRLİKTE kullanılamaz.
+   */
+  anlasmaId?: string;
   idempotencyKey: string;
 }
 
@@ -285,6 +293,23 @@ export interface CikisSonucu {
   ucretsizMi: boolean;
   tarifeTanimsiz: boolean;
   dokum: DokumSatiri[];
+  /** Uygulanan kurum anlaşmasının adı (kopyadan); yoksa null. */
+  anlasmaAdi: string | null;
+}
+
+/** Park kaydındaki anlaşma kopyası (agreementSnapshot). */
+interface AnlasmaKopyasi {
+  ad: string;
+  fiyatKurus: number;
+  fiyatSurumId: string;
+}
+
+function anlasmaKopyasiOku(deger: Prisma.JsonValue | null): AnlasmaKopyasi | null {
+  if (!deger || typeof deger !== "object" || Array.isArray(deger)) return null;
+  const o = deger as Record<string, unknown>;
+  return typeof o.ad === "string" && typeof o.fiyatKurus === "number" && typeof o.fiyatSurumId === "string"
+    ? { ad: o.ad, fiyatKurus: o.fiyatKurus, fiyatSurumId: o.fiyatSurumId }
+    : null;
 }
 
 /**
@@ -319,6 +344,7 @@ export async function aracCikisi(actor: SessionUser, istek: CikisIstegi): Promis
       ucretsizMi: toKurus(p.payableAmount) === 0,
       tarifeTanimsiz: false,
       dokum: [{ aciklama: "Bu işlem daha önce tamamlanmıştı", tutar: toKurus(p.collectedAmount) }],
+      anlasmaAdi: anlasmaKopyasiOku(p.agreementSnapshot)?.ad ?? null,
     };
   }
 
@@ -336,6 +362,19 @@ export async function aracCikisi(actor: SessionUser, istek: CikisIstegi): Promis
   }
   if (istek.elleTutarKurus !== undefined && !istek.elleTutarSebebi?.trim()) {
     throw new IslemHatasi("SEBEP_ZORUNLU", "Tutarı elle değiştirmek için gerekçe zorunludur.");
+  }
+  if (istek.anlasmaId) {
+    if (!actor.permissions.has("parking.agreement")) {
+      throw new IslemHatasi("YETKISIZ_ANLASMA", "Kurum anlaşması uygulama yetkiniz yok.");
+    }
+    // Anlaşma zaten sabit fiyattır; üstüne indirim ya da elle tutar ikinci
+    // bir fiyat kararı demektir ve hangisinin geçerli olduğu belirsizleşir.
+    if ((istek.indirimKurus && istek.indirimKurus > 0) || istek.elleTutarKurus !== undefined) {
+      throw new IslemHatasi(
+        "ANLASMA_BIRLIKTE_OLMAZ",
+        "Kurum anlaşması indirim ya da elle tutarla birlikte uygulanamaz.",
+      );
+    }
   }
 
   return prisma.$transaction(async (tx) => {
@@ -375,10 +414,38 @@ export async function aracCikisi(actor: SessionUser, istek: CikisIstegi): Promis
     const hesaplanan = hesap.tutar;
 
     // Indirim ve elle tutar
-    const indirim = indirimIzni ? clampNonNegative(istek.indirimKurus ?? 0) : 0;
+    const indirim = indirimIzni && !istek.anlasmaId ? clampNonNegative(istek.indirimKurus ?? 0) : 0;
     let odenecek = odenecekTutar(hesaplanan, indirim);
     if (istek.elleTutarKurus !== undefined && elleTutarIzni) {
       odenecek = clampNonNegative(istek.elleTutarKurus);
+    }
+
+    // Kurum anlaşması: SABİT fiyat, süreden bağımsız (karar 11.10.2026).
+    let anlasma: AnlasmaKopyasi | null = null;
+    let anlasmaId: string | null = null;
+    if (istek.anlasmaId) {
+      if (kayit.billingMode === "SUBSCRIPTION" || kayit.billingMode === "FREE") {
+        throw new IslemHatasi(
+          "ANLASMA_UYGULANAMAZ",
+          "Bu aracın çıkışı zaten ücretsiz (abonman ya da ücretsiz park); anlaşma uygulanmaz.",
+        );
+      }
+      const kurum = await tx.parkingAgreement.findUnique({ where: { id: istek.anlasmaId } });
+      if (!kurum) throw new IslemHatasi("ANLASMA_YOK", "Kurum anlaşması bulunamadı.");
+      if (!kurum.isActive) {
+        throw new IslemHatasi("ANLASMA_PASIF", `"${kurum.name}" anlaşması pasif; uygulanamaz.`);
+      }
+      const surum = await gecerliAnlasmaFiyati(kurum.id, cikisAt, tx);
+      if (!surum) {
+        // Mimari kural 10: fiyat tanımsızsa 0 ₺ DEĞİL; işlem durur.
+        throw new IslemHatasi(
+          "ANLASMA_FIYATSIZ",
+          `"${kurum.name}" anlaşmasının fiyatı girilmemiş. Patron panelden fiyat girmeli.`,
+        );
+      }
+      anlasma = { ad: kurum.name, fiyatKurus: toKurus(surum.price), fiyatSurumId: surum.id };
+      anlasmaId = kurum.id;
+      odenecek = anlasma.fiyatKurus;
     }
 
     // --- 3. PARK KAYDINI GUNCELLE ---
@@ -401,8 +468,14 @@ export async function aracCikisi(actor: SessionUser, istek: CikisIstegi): Promis
         discountById: indirim > 0 ? actor.id : null,
         payableAmount: kurusToDecimalString(odenecek),
         collectedAmount: kurusToDecimalString(odenecek),
-        billingMode:
-          istek.elleTutarKurus !== undefined ? "MANUAL_OVERRIDE" : kayit.billingMode,
+        billingMode: anlasma
+          ? "AGREEMENT"
+          : istek.elleTutarKurus !== undefined
+            ? "MANUAL_OVERRIDE"
+            : kayit.billingMode,
+        agreementId: anlasmaId,
+        agreementPriceVersionId: anlasma?.fiyatSurumId ?? null,
+        agreementSnapshot: anlasma ? { ...anlasma } : undefined,
         entryNote: notParcalari.length > 0 ? notParcalari.join(" · ") : null,
       },
     });
@@ -451,10 +524,26 @@ export async function aracCikisi(actor: SessionUser, istek: CikisIstegi): Promis
           billingMode: guncel.billingMode,
           tarifeTanimsiz: hesap.tarifeTanimsiz,
           uygulananKurallar: hesap.uygulananKurallar,
+          anlasma: anlasma?.ad ?? null,
         },
       },
       tx,
     );
+
+    if (anlasma) {
+      await writeAudit(
+        {
+          action: AUDIT_ACTIONS.PARKING_AGREEMENT,
+          entityType: "ParkingSession",
+          entityId: kayit.id,
+          userId: actor.id,
+          actorLabel: actor.username,
+          before: { hesaplananKurus: hesaplanan, tarifeTanimsiz: hesap.tarifeTanimsiz },
+          after: { anlasma: anlasma.ad, fiyatKurus: anlasma.fiyatKurus, fiyatSurumId: anlasma.fiyatSurumId },
+        },
+        tx,
+      );
+    }
 
     if (indirim > 0) {
       await writeAudit(
@@ -521,7 +610,10 @@ export async function aracCikisi(actor: SessionUser, istek: CikisIstegi): Promis
       abonmanKapsaminda: kayit.billingMode === "SUBSCRIPTION",
       ucretsizMi: odenecek === 0,
       tarifeTanimsiz: hesap.tarifeTanimsiz,
-      dokum: hesap.dokum,
+      dokum: anlasma
+        ? [{ aciklama: `Kurum anlaşması: ${anlasma.ad} (sabit ücret)`, tutar: anlasma.fiyatKurus }]
+        : hesap.dokum,
+      anlasmaAdi: anlasma?.ad ?? null,
     };
   });
 }

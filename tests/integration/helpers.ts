@@ -25,7 +25,10 @@ export async function temizle(): Promise<void> {
     // test tablosu sessizce temizlik disinda kalmasin.
     "StaffAdvance",
     "CashMovement", "InventoryMovement", "WashJobItem", "WashJob",
-    "ParkingSession", "SubscriptionVehicle", "SubscriptionPeriod", "Subscription",
+    "ParkingSession",
+    // Kurum anlaşmaları (11.10.2026): testler kendi anlaşmalarını kurar.
+    "ParkingAgreementPriceVersion", "ParkingAgreement",
+    "SubscriptionVehicle", "SubscriptionPeriod", "Subscription",
     "CashDrawerSession", "Shift", "Expense", "OtherIncome",
     "EmployeeProfile", "UserPermission", "Vehicle", "Customer",
     "TariffChangeLog", "TariffRule", "TariffVersion", "TariffPlan",

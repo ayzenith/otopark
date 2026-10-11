@@ -17,6 +17,8 @@ export const PERMISSIONS = {
   PARKING_VOID: "parking.void",
   PARKING_DISCOUNT: "parking.discount",
   PARKING_OVERRIDE_PRICE: "parking.override_price",
+  /// Çıkışta kurum anlaşması seçebilir (sabit fiyat; fiyatı patron belirler).
+  PARKING_AGREEMENT: "parking.agreement",
 
   // Abonman
   SUBSCRIPTION_VIEW: "subscription.view",
@@ -96,6 +98,9 @@ const STAFF_PERMISSIONS: Permission[] = [
   P.PARKING_EXIT,
   P.PARKING_SEARCH,
   P.PARKING_HISTORY_VIEW,
+  // Karar 11.10.2026: anlaşmayı çıkışta personel uygular (müşteri kartını
+  // gösterir). Patron isterse kişi bazında geri alır.
+  P.PARKING_AGREEMENT,
   P.SUBSCRIPTION_VIEW,
   P.CUSTOMER_VIEW,
   P.WASH_CREATE,
@@ -190,6 +195,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   [P.PARKING_VOID]: "Hatalı park işlemini iptal edebilir",
   [P.PARKING_DISCOUNT]: "Park ücretine indirim uygulayabilir",
   [P.PARKING_OVERRIDE_PRICE]: "Park tutarını elle değiştirebilir",
+  [P.PARKING_AGREEMENT]: "Çıkışta kurum anlaşması uygulayabilir",
   [P.SUBSCRIPTION_VIEW]: "Abonmanları görebilir",
   [P.SUBSCRIPTION_CREATE]: "Yeni abonman oluşturabilir",
   [P.SUBSCRIPTION_EDIT]: "Abonman bilgilerini düzenleyebilir",

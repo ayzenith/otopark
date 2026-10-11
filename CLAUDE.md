@@ -163,7 +163,7 @@ Tahmini süre: 30–45 dakika. Tam adımlar `ops/VERCEL-SUPABASE.md`'de.
 1. **S18 — kalan künye alanları:** yukarıdaki "hâlâ verilmeyen" listesi
 2. **S20 — Teslim ve erişim:** depo/sunucu/yedek kimde olacak?
 3. **S12 — KVKK saklama süresi** · **XLSX/PDF için bağımlılık onayı**
-4. **Motor yıkama ve karavan yıkama ücreti** — hizmetler hâlâ fiyatsız
+4. ~~Motor yıkama ve karavan yıkama ücreti~~ — 11.10.2026'da ikisi de PASİF yapıldı (aşağıya bak)
 5. Site yayına çıkarken `robots: index false` KALDIRILACAK
    (`src/app/(site)/layout.tsx`); SEO (sitemap, Open Graph, LocalBusiness)
    mutlak URL gerektirdiği için Aşama 8'e bırakıldı. Alan adı artık belli
@@ -206,7 +206,9 @@ günlük üst limit 700 ₺, `extraDayBlockPrice` 700 ₺.
 
 Karavan kuralı silinirse ücret hesaplanmaz ve personele açık uyarı çıkar —
 sessizce otomobil fiyatı uygulanmaz (testli).
-**Karavan YIKAMA ücreti hâlâ belirlenmedi.**
+**Karavan YIKAMADA SEÇİLEMEZ** (11.10.2026, `VehicleClass.washEnabled = false`;
+sunucu `YIKAMA_SINIF_KAPALI` ile reddeder, panel ve fiyat tablosu göstermez).
+Panelden açma düğmesi YOK — açılacaksa geliştirici gerekir.
 
 ### Otopark kapasitesi (S3, 04.10.2026)
 **SINIR YOK.** `totalCapacity = 0` bırakıldı ("tanımlı değil"): doluluk
@@ -217,8 +219,28 @@ devreye girer. **Aktif etme.**
 ### Oto yıkama
 **Araç tipine göre fiyatlandırma YALNIZCA yıkamada var.** Başlangıç:
 Otomobil 600 ₺, SUV 700 ₺, Motosiklet 400 ₺ (İç Dış Yıkama).
-**Motor Yıkama ücreti belirlenmedi** — hizmet fiyatsız duruyor.
+**Motor Yıkama PASİF** (11.10.2026, işletme kararı): `MOTOR_YIKAMA` hizmeti
+`isActive=false`, sitede kartı kaldırıldı. Patron yıkama fiyatları ekranındaki
+"Geri aç" ile açabilir. (Not: `fiyatlar:kur` taze kurulumda onu aktif yazar;
+migration yalnızca bir kez pasife çeker.)
 **Abonmanın yıkamada indirimi YOK.**
+
+### Kurum anlaşmaları (11.10.2026)
+Otoparkın kurumlarla **sabit fiyat** anlaşması var: **Üniversite öğrencisi,
+AYJET, Diğer — her biri 200 ₺, SÜRE FARK ETMEZ** (kullanıcı kararı). Müşteri
+çıkışta kartını gösterir, personel çıkış panelinde anlaşmayı seçer, ücret
+anlaşmanın fiyatıdır.
+- Model: `ParkingAgreement` + sürümlü `ParkingAgreementPriceVersion`
+  (CHECK `price > 0`, tek açık sürüm kısmi unique). Çıkışta
+  `billingMode = AGREEMENT`, `agreementSnapshot` (ad, fiyat, sürüm) kayda yazılır.
+- Sunucu: `src/server/parking/agreement.ts`; çıkış `exit.ts` içinde `anlasmaId`.
+  Tutar istemciden ALINMAZ. İndirim/elle tutarla BİRLİKTE uygulanamaz;
+  abonmanlı/ücretsiz kayıtta uygulanamaz; pasif veya fiyatsız anlaşma reddedilir.
+- İzin: `parking.agreement` (STAFF taban kümesinde). Ad/fiyat/pasife alma:
+  patron, `tariff.edit` — ekran Yönetim → **Kurum anlaşmaları**
+  (`/yonetim/ayarlar/anlasmalar`). Anlaşma silinmez, pasife alınır.
+- Testler: `tests/integration/kurum-anlasmasi.test.ts` (14),
+  E2E `park-akisi.spec.ts` "KURUM ANLAŞMASI" (fixture `E2E Kurum` 150 ₺).
 
 ### Abonman
 - **7/24 geçerli, sınırsız giriş-çıkış** (S11)
@@ -255,8 +277,8 @@ Otomobil 600 ₺, SUV 700 ₺, Motosiklet 400 ₺ (İç Dış Yıkama).
   belirlenmedi, varsayma. Aşama 8'de tekrar sor.
 
 ### Hâlâ belirlenmeyen (VARSAYMA, sor)
-Motor yıkama ücreti · diğer yıkama hizmetleri (iç temizlik, pasta cila…) ·
-karavan **yıkama** ücreti · S12, S14–S20.
+Diğer yıkama hizmetleri (iç temizlik, pasta cila…) ·
+S12, S14–S20.
 
 İşletme 04.10.2026'da bu kalemler için **"şu an uydurma, panelden sonradan
 girilebilir bırak"** dedi. Fiyatsız hizmet 0 ₺'ye çevrilmez; personel
@@ -404,7 +426,7 @@ düzeltildi, mimari kural 19'a bak). Bulguların kalıcı koruması:
 
 ```
 src/lib/           money.ts (kuruş) · datetime.ts (Europe/Istanbul) ·
-                   plate.ts (normalize/doğrula/biçimle) · permissions.ts (53 izin) ·
+                   plate.ts (normalize/doğrula/biçimle) · permissions.ts (54 izin) ·
                    telefon.ts (tel:/wa.me, İLK numarayı alır) ·
                    site-metin.ts (panel metnini bloklara ayırır, SAF)
 src/server/auth/   password (Argon2id) · session (özel DB oturum katmanı,

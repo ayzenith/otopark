@@ -113,6 +113,19 @@ export async function yikamaOlustur(
   const plakaGosterim = formatPlate(plateNormalized);
   const simdi = new Date();
 
+  // Karavan yıkama yapılmıyor (karar 11.10.2026): yıkamaya kapalı sınıf
+  // SEÇİLEMEZ. Araç kaydına dokunmadan ÖNCE denetlenir; reddedilen istek
+  // geride yarım kayıt bırakmaz.
+  if (istek.aracSinifiId) {
+    const secilenSinif = await prisma.vehicleClass.findUnique({ where: { id: istek.aracSinifiId } });
+    if (secilenSinif && !secilenSinif.washEnabled) {
+      throw new IslemHatasi(
+        "YIKAMA_SINIF_KAPALI",
+        `${secilenSinif.name} için yıkama hizmeti verilmiyor.`,
+      );
+    }
+  }
+
   // --- 2. ARAC ---
   let arac = await prisma.vehicle.findUnique({
     where: { plateNormalized },
@@ -158,6 +171,13 @@ export async function yikamaOlustur(
       after: { vehicleClassId: arac.vehicleClassId },
       note: "Yıkama fiyatı araç sınıfına bağlıdır.",
     });
+  }
+
+  if (!arac.vehicleClass.washEnabled) {
+    throw new IslemHatasi(
+      "YIKAMA_SINIF_KAPALI",
+      `Bu araç ${arac.vehicleClass.name} olarak kayıtlı; ${arac.vehicleClass.name} için yıkama hizmeti verilmiyor.`,
+    );
   }
 
   // --- 3. FIYATLARI SUNUCUDA COZUMLE ---

@@ -63,6 +63,8 @@ const CikisSemasi = z.object({
   indirimSebebi: z.string().trim().max(300).optional(),
   elleTutarKurus: z.number().int().min(0).max(100_000_000).optional(),
   elleTutarSebebi: z.string().trim().max(300).optional(),
+  // Kurum anlaşması: yalnızca KİMLİK gelir; fiyatı sunucu kendi kaydından okur.
+  anlasmaId: z.string().min(1).max(100).optional(),
   idempotencyKey: z.string().min(8).max(100),
 });
 

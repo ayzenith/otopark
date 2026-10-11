@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
+  E2E_ANLASMA,
   E2E_BEKLENEN_UCRET_METNI,
   E2E_KULLANICI,
   E2E_PAROLA,
@@ -160,6 +161,35 @@ test.describe("personel işlem akışı", () => {
     const onay = page.getByTestId("cikis-onay");
     await expect(onay).toBeVisible({ timeout: 15_000 });
     await expect(onay).toContainText("ÇIKIŞ TAMAMLANDI");
+  });
+
+  test("KURUM ANLAŞMASI: süre ne olursa olsun sabit ücret alınır", async ({ page }, testInfo) => {
+    // Az önce giren aracın ücreti 0'dır; anlaşma seçilince anlaşmanın sabit
+    // ücreti alınır (işletme kararı: "süre fark etmez").
+    const plaka = plakaUret(testInfo.project.name);
+    await page.getByTestId("plaka-girisi").fill(plaka);
+    await page.getByTestId("arac-girisi").click();
+    await expect(page.getByTestId("giris-onay")).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("button", { name: /YENİ İŞLEM/i }).click();
+
+    await page.getByTestId("plaka-girisi").fill(plaka);
+    await page.getByTestId("cikis-sorgula").click();
+    await expect(page.getByTestId("cikis-paneli")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("anlasma-secimi")).toBeVisible();
+
+    const secenek = page.locator(
+      `[data-test="anlasma-secenegi"][data-anlasma-adi="${E2E_ANLASMA.ad}"]`,
+    );
+    await secenek.click();
+    await expect(secenek).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByTestId("odenecek-tutar")).toContainText(E2E_ANLASMA.metin);
+
+    await page.getByTestId("nakit").click();
+    const onay = page.getByTestId("cikis-onay");
+    await expect(onay).toBeVisible({ timeout: 15_000 });
+    await expect(onay).toContainText("TAHSİL EDİLDİ");
+    await expect(page.getByTestId("onay-tutar")).toContainText(E2E_ANLASMA.metin);
+    await expect(onay).toContainText(`Kurum anlaşması: ${E2E_ANLASMA.ad}`);
   });
 
   test("plaka küçük harfle yazılsa da normalize edilir", async ({ page }, testInfo) => {

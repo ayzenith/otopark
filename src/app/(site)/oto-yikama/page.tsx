@@ -30,11 +30,12 @@ export const metadata: Metadata = {
  * İÇERİĞİN KAYNAĞI: işletme sahibi — "profesyonel oto yıkama" (06.10.2026),
  * oto yıkama 7/24 (11.10.2026).
  *
- * ANLATILAN HİZMETLER sistemde TANIMLI olanlardır: İç Dış Yıkama (araç
- * tipine göre fiyatlanır) ve Motor Yıkama. Yıkama adımlarının ayrıntısı,
+ * ANLATILAN HİZMET sistemde AKTİF olandır: İç Dış Yıkama (araç tipine göre
+ * fiyatlanır). Motor yıkama ve karavan yıkama 11.10.2026'da PASİFE alındı;
+ * sitede anlatılmaz. Yıkama adımlarının ayrıntısı,
  * kullanılan ürün, randevu ve ödeme anı işletmeden teyitli DEĞİL; yazılmaz.
  *
- * FİYAT YAZILMAZ (karar S19). Motor Yıkama'nın ücreti henüz belirlenmedi.
+ * FİYAT YAZILMAZ (karar S19).
  * Bu sayfada gerçek yıkama fotoğrafı yok; fotoğraf gelene kadar kapak
  * fotoğrafsızdır (otopark fotoğrafı yıkama diye gösterilmez).
  */
@@ -74,16 +75,11 @@ export default async function OtoYikamaSayfasi() {
       </Bolum>
 
       <Bolum baslik="Ne yapıyoruz" className="site-belir pt-20 md:pt-28">
-        <div className="mt-8 grid gap-8 md:grid-cols-2 md:gap-12">
+        <div className="mt-8 max-w-2xl">
           <HizmetKarti
             ikon={<YikamaIkonu className="h-8 w-8" />}
             baslik="İç dış yıkama"
             aciklama="Aracınızın içi ve dışı profesyonel ekipmanla yıkanır. Otomobil, SUV ve motosiklet için ayrı fiyatlandırılır."
-          />
-          <HizmetKarti
-            ikon={<YikamaIkonu className="h-8 w-8" />}
-            baslik="Motor yıkama"
-            aciklama="Motor bölümünün temizliği ayrı bir hizmettir. Aracınıza uygun olup olmadığını ekibimizle konuşarak kararlaştırın."
           />
         </div>
 

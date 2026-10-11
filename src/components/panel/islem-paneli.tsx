@@ -92,11 +92,19 @@ interface CikisOnayVerisi {
   tahsilatKodu: string | null;
   abonmanKapsaminda: boolean;
   tarifeTanimsiz: boolean;
+  anlasmaAdi: string | null;
 }
 
 export interface AracSinifi {
   id: string;
   ad: string;
+}
+
+/** Çıkışta seçilebilir kurum anlaşması (aktif + fiyatlı; sunucudan gelir). */
+export interface KurumAnlasmasi {
+  id: string;
+  ad: string;
+  fiyatKurus: number;
 }
 
 /** Her islem icin benzersiz anahtar: cift kayit engeli. */
@@ -108,10 +116,13 @@ export function IslemPaneli({
   vardiyaAcik,
   aracSiniflari,
   cikisYetkisi,
+  anlasmalar = [],
 }: {
   vardiyaAcik: boolean;
   aracSiniflari: AracSinifi[];
   cikisYetkisi: boolean;
+  /** Boşsa (izin yok ya da tanımlı anlaşma yok) çıkışta seçenek çizilmez. */
+  anlasmalar?: KurumAnlasmasi[];
 }) {
   const router = useRouter();
   const [plaka, setPlaka] = useState("");
@@ -268,14 +279,16 @@ export function IslemPaneli({
   }
 
   // ---- 5-6-7. ADIM: ODEME YONTEMI SEC -> TAHSIL ET -> ONAY ----
-  async function tahsilEt(yontem: "CASH" | "CARD") {
+  async function tahsilEt(yontem: "CASH" | "CARD", anlasmaId: string | null = null) {
     if (durum.ad !== "cikisPaneli" || mesgul) return;
     const veri = durum.veri;
     setDurum({ ad: "yukleniyor" });
 
+    // Tutar GÖNDERİLMEZ: anlaşmanın fiyatını sunucu kendi kaydından okur.
     const sonuc = await cikisYapAction({
       parkingSessionId: veri.parkingSessionId,
       odemeYontemi: yontem,
+      ...(anlasmaId ? { anlasmaId } : {}),
       idempotencyKey: yeniAnahtar(),
     });
 
@@ -296,6 +309,7 @@ export function IslemPaneli({
         tahsilatKodu: d.tahsilatKodu,
         abonmanKapsaminda: d.abonmanKapsaminda,
         tarifeTanimsiz: d.tarifeTanimsiz,
+        anlasmaAdi: d.anlasmaAdi,
       },
     });
   }
@@ -329,6 +343,7 @@ export function IslemPaneli({
       <CikisPaneli
         veri={durum.veri}
         mesgul={mesgul}
+        anlasmalar={anlasmalar}
         tahsilEt={tahsilEt}
         vazgec={() => setDurum({ ad: "bos" })}
       />
@@ -476,18 +491,27 @@ export function IslemPaneli({
 function CikisPaneli({
   veri,
   mesgul,
+  anlasmalar,
   tahsilEt,
   vazgec,
 }: {
   veri: CikisVerisi;
   mesgul: boolean;
-  tahsilEt: (y: "CASH" | "CARD") => void;
+  anlasmalar: KurumAnlasmasi[];
+  tahsilEt: (y: "CASH" | "CARD", anlasmaId: string | null) => void;
   vazgec: () => void;
 }) {
   // ABONMAN KURALI: aktif abonman kapsamindaki araca UCRET HESAPLAMA AKISI
   // ACILMAZ. Dokum, tutar kutusu ve nakit/kart butonlari hic cizilmez;
   // yerine abonman karti ve tek bir "cikisi tamamla" butonu gosterilir.
   const abonmanli = veri.abonmanKapsaminda;
+
+  // KURUM ANLAŞMASI: müşteri kartını gösterince personel seçer. Ekranda
+  // gösterilen tutar yalnızca BİLGİ içindir; tahsil edilen tutarı sunucu
+  // anlaşmanın kendi kaydından okur.
+  const [anlasmaId, setAnlasmaId] = useState<string | null>(null);
+  const secili = anlasmalar.find((a) => a.id === anlasmaId) ?? null;
+  const tutar = secili ? secili.fiyatKurus : veri.tutar;
 
   return (
     <div className="space-y-3" data-test="cikis-paneli">
@@ -521,7 +545,7 @@ function CikisPaneli({
           </div>
         ) : null}
 
-        {veri.tarifeTanimsiz ? (
+        {veri.tarifeTanimsiz && !secili ? (
           <Alert tur="uyari" baslik="TARİFE TANIMLI DEĞİL" className="mt-3">
             Ücret hesaplanamadı. Patron panelinden tarife girilmeli. Bu işlem 0 ₺ olarak
             kaydedilecek ve kayda not düşülecek.
@@ -541,7 +565,7 @@ function CikisPaneli({
 
         {/* Hesap dökümü: personel müşteriye açıklayabilsin diye şeffaf.
             Abonmanlı araçta hiç çizilmez. */}
-        {veri.dokum.length > 0 && !abonmanli ? (
+        {veri.dokum.length > 0 && !abonmanli && !secili ? (
           <div className="mt-3 rounded-xl bg-slate-50 px-3 py-2">
             <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">
               Hesap
@@ -570,22 +594,79 @@ function CikisPaneli({
         ) : (
           <div className="mt-4 rounded-xl bg-lacivert-600 px-4 py-4 text-center text-white">
             <div className="text-[11px] font-bold uppercase tracking-wide text-mavi-200">
-              {veri.tutar === 0 ? "Tahsil edilecek tutar yok" : "Tahsil edilecek"}
+              {secili
+                ? `Kurum anlaşması: ${secili.ad}`
+                : tutar === 0
+                  ? "Tahsil edilecek tutar yok"
+                  : "Tahsil edilecek"}
             </div>
             <div className="mt-1" data-test="odenecek-tutar">
-              <Tutar kurus={veri.tutar} boyut="buyuk" />
+              <Tutar kurus={tutar} boyut="buyuk" />
             </div>
+            {secili ? (
+              <div className="mt-1 text-sm font-semibold text-mavi-100">
+                Sabit ücret · süre fark etmez
+              </div>
+            ) : null}
           </div>
         )}
       </div>
 
+      {/* KURUM ANLAŞMASI: abonmanlı araçta hiç çizilmez (çıkış zaten ücretsiz). */}
+      {!abonmanli && anlasmalar.length > 0 ? (
+        <div className="rounded-2xl border-2 border-lacivert-200 bg-white p-3" data-test="anlasma-secimi">
+          <div className="px-1 pb-2 text-sm font-bold text-lacivert-800">
+            Kurum anlaşması <span className="font-normal text-slate-500">— müşteri kartını gösterdiyse</span>
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {anlasmalar.map((a) => {
+              const aktif = a.id === anlasmaId;
+              return (
+                <button
+                  key={a.id}
+                  type="button"
+                  aria-pressed={aktif}
+                  disabled={mesgul}
+                  onClick={() => setAnlasmaId(aktif ? null : a.id)}
+                  data-test="anlasma-secenegi"
+                  data-anlasma-adi={a.ad}
+                  className={`flex min-h-14 items-center justify-between gap-3 rounded-xl border-2 px-4 text-left transition-colors ${
+                    aktif
+                      ? "border-lacivert-700 bg-lacivert-700 text-white"
+                      : "border-lacivert-200 bg-white text-lacivert-800 hover:bg-lacivert-50"
+                  }`}
+                >
+                  <span className="min-w-0 break-words font-bold">
+                    {aktif ? "✓ " : ""}
+                    {a.ad}
+                  </span>
+                  <span className="rakam shrink-0 font-semibold">
+                    <Tutar kurus={a.fiyatKurus} boyut="kucuk" />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {secili ? (
+            <button
+              type="button"
+              onClick={() => setAnlasmaId(null)}
+              disabled={mesgul}
+              className="mt-2 min-h-12 w-full rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50"
+            >
+              Anlaşmayı kaldır, normal tarifeyle al
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
       {/* 5. ADIM: nakit veya kart - yalnızca tahsil edilecek tutar varsa */}
-      {veri.tutar > 0 && !abonmanli ? (
+      {tutar > 0 && !abonmanli ? (
         <div className="grid grid-cols-2 gap-3">
           <Button
             variant="basari"
             size="islem"
-            onClick={() => tahsilEt("CASH")}
+            onClick={() => tahsilEt("CASH", anlasmaId)}
             disabled={mesgul}
             data-test="nakit"
           >
@@ -594,7 +675,7 @@ function CikisPaneli({
           <Button
             variant="ikincil"
             size="islem"
-            onClick={() => tahsilEt("CARD")}
+            onClick={() => tahsilEt("CARD", anlasmaId)}
             disabled={mesgul}
             data-test="kart"
           >
@@ -606,7 +687,7 @@ function CikisPaneli({
           variant="basari"
           size="islem"
           tamGenislik
-          onClick={() => tahsilEt("CASH")}
+          onClick={() => tahsilEt("CASH", null)}
           disabled={mesgul}
           data-test="cikisi-tamamla"
         >
@@ -618,7 +699,7 @@ function CikisPaneli({
         Vazgeç
       </Button>
 
-      {veri.tutar > 0 && !abonmanli ? (
+      {tutar > 0 && !abonmanli ? (
         <p className="pb-2 text-center text-xs text-slate-400">
           Kart ödemeleri elle kaydedilir; sistemde POS bağlantısı yoktur.
         </p>
@@ -824,6 +905,7 @@ function CikisOnayEkrani({ veri, kapat }: { veri: CikisOnayVerisi; kapat: () => 
           <Tutar kurus={veri.odenenTutar} boyut="buyuk" />
           <div className="mt-1 text-sm font-bold text-green-900">
             {veri.odemeYontemi === "CASH" ? "Nakit" : "Kart"}
+            {veri.anlasmaAdi ? ` · Kurum anlaşması: ${veri.anlasmaAdi}` : ""}
           </div>
         </div>
       ) : (
@@ -841,7 +923,7 @@ function CikisOnayEkrani({ veri, kapat }: { veri: CikisOnayVerisi; kapat: () => 
         {veri.tahsilatKodu ? ` · Tahsilat: ${veri.tahsilatKodu}` : ""}
       </div>
 
-      {veri.tarifeTanimsiz ? (
+      {veri.tarifeTanimsiz && !veri.anlasmaAdi ? (
         <Alert tur="uyari" baslik="Tarife tanımlı olmadığı için ücret hesaplanamadı" className="mt-4 text-left" />
       ) : null}
 

@@ -125,6 +125,13 @@ export const E2E_GIDER_KATEGORISI = { kod: "E2E_TEST_GIDERI", ad: "E2E Test Gide
  */
 export const E2E_PERSONEL_ONEKI = "e2e_p";
 
+/**
+ * Kurum anlaşması (çıkışta sabit ücret). Gerçek anlaşmalara (AYJET vb.)
+ * dokunulmaz; testler yalnızca bu kaydı kullanır. Fiyatı her hazırlıkta
+ * 150 ₺'ye geri döner.
+ */
+export const E2E_ANLASMA = { id: "e2e_kurum", ad: "E2E Kurum", fiyatKurus: 150_00, metin: "150,00" };
+
 export const E2E_MALZEMELERI: Record<string, string> = {
   "telefon-kucuk": "E2E Test Şampuanı K",
   "telefon-orta": "E2E Test Şampuanı O",
@@ -419,6 +426,33 @@ export default async function globalSetup() {
         sortOrder: 900,
       },
     });
+
+    // E2E kurum anlaşması: aktif, tek açık fiyat sürümü 150 ₺.
+    await prisma.parkingAgreement.upsert({
+      where: { id: E2E_ANLASMA.id },
+      update: { name: E2E_ANLASMA.ad, isActive: true },
+      create: { id: E2E_ANLASMA.id, name: E2E_ANLASMA.ad, isActive: true, sortOrder: 900 },
+    });
+    const acikSurum = await prisma.parkingAgreementPriceVersion.findFirst({
+      where: { agreementId: E2E_ANLASMA.id, effectiveTo: null },
+    });
+    if (!acikSurum || Math.round(Number(acikSurum.price) * 100) !== E2E_ANLASMA.fiyatKurus) {
+      const simdi = new Date();
+      if (acikSurum) {
+        await prisma.parkingAgreementPriceVersion.update({
+          where: { id: acikSurum.id },
+          data: { effectiveTo: simdi },
+        });
+      }
+      await prisma.parkingAgreementPriceVersion.create({
+        data: {
+          agreementId: E2E_ANLASMA.id,
+          price: (E2E_ANLASMA.fiyatKurus / 100).toFixed(2),
+          effectiveFrom: new Date(simdi.getTime() - 60_000),
+          changeNote: "E2E hazırlığı",
+        },
+      });
+    }
 
     // Acik vardiyalari kapat ki testler temiz baslayabilsin.
     await prisma.shift.updateMany({

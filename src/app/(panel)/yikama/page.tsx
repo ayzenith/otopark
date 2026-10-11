@@ -29,11 +29,14 @@ export default async function YikamaSayfasi() {
   if (!user) redirect("/giris");
 
   const vardiya = await acikVardiya(user.id);
-  const [siniflar, kuyruk, ozet] = await Promise.all([
+  const [tumSiniflar, kuyruk, ozet] = await Promise.all([
     aracSiniflari(),
     yikamaKuyrugu(),
     yikamaOzeti(),
   ]);
+  // Yıkamaya kapalı sınıf (karavan, 11.10.2026) seçenek olarak çıkmaz;
+  // sunucu da ayrıca reddeder.
+  const siniflar = tumSiniflar.filter((s) => s.washEnabled);
 
   // Her arac sinifi icin fiyat listesi.
   const hizmetHaritasi: Record<string, YikamaHizmetSecenegi[]> = {};

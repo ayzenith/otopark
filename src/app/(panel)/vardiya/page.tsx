@@ -9,6 +9,7 @@ import { Tutar } from "@/components/panel/para";
 import { prisma } from "@/server/db";
 import { acikVardiya } from "@/server/shift";
 import { kapasiteDurumu } from "@/server/parking/entry";
+import { cikistaSecilebilirAnlasmalar } from "@/server/parking/agreement";
 import { anaEkranSayaclari, sonIslemler } from "@/server/parking/queries";
 import { pencereBul, vardiyaPencereleri } from "@/server/settings/shift-windows";
 import { formatDuration, formatTime } from "@/lib/datetime";
@@ -28,8 +29,9 @@ export default async function VardiyaSayfasi() {
 
   const tahsilatGorebilir = user.permissions.has(PERMISSIONS.CASH_REPORT_SELF);
   const cikisYetkisi = user.permissions.has(PERMISSIONS.PARKING_EXIT);
+  const anlasmaYetkisi = cikisYetkisi && user.permissions.has(PERMISSIONS.PARKING_AGREEMENT);
 
-  const [vardiya, sayaclar, kapasite, islemler, siniflar, pencereler] = await Promise.all([
+  const [vardiya, sayaclar, kapasite, islemler, siniflar, pencereler, anlasmalar] = await Promise.all([
     acikVardiya(user.id),
     anaEkranSayaclari(user.id, tahsilatGorebilir),
     kapasiteDurumu(),
@@ -42,6 +44,8 @@ export default async function VardiyaSayfasi() {
     // Vardiya penceresi YALNIZCA BİLGİ: vardiya açmayı engellemez
     // (karar 05.10.2026 — tek vardiya zorunluluğu yok).
     vardiyaPencereleri(),
+    // Kurum anlaşmaları: yalnızca izni olana ve aktif + fiyatlı olanlar.
+    anlasmaYetkisi ? cikistaSecilebilirAnlasmalar() : Promise.resolve([]),
   ]);
 
   const suAndakiPencere = pencereBul(pencereler);
@@ -75,6 +79,7 @@ export default async function VardiyaSayfasi() {
         vardiyaAcik={vardiya !== null}
         cikisYetkisi={cikisYetkisi}
         aracSiniflari={siniflar.map((s) => ({ id: s.id, ad: s.name }))}
+        anlasmalar={anlasmalar.map((a) => ({ id: a.id, ad: a.ad, fiyatKurus: a.fiyatKurus! }))}
       />
 
       {/* ---- SAYAÇLAR ---- */}

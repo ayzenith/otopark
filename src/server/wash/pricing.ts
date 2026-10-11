@@ -143,8 +143,9 @@ export async function yikamaFiyatTablosu(anında: Date = new Date(), db: DbClien
     db.washServiceCatalog.findMany({
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     }),
+    // Yıkamaya kapalı sınıf (karavan, 11.10.2026) fiyat tablosunda kolon olmaz.
     db.vehicleClass.findMany({
-      where: { isActive: true },
+      where: { isActive: true, washEnabled: true },
       orderBy: { sortOrder: "asc" },
     }),
   ]);
