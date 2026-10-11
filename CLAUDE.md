@@ -374,6 +374,10 @@ bu yüzden depoya konuldu.
 `review-animations` · `find-animation-opportunities` · `animation-vocabulary` ·
 `apple-design` · `break-ui` · `prototype` · `pick-ui-library`
 
+**`impeccable`** (11.10.2026, pbakaus/impeccable, Apache 2.0): `/impeccable
+<komut> <hedef>` — critique, audit, polish, bolder, quieter, typeset, layout…
+Kaynak ve notlar `.claude/skills/KAYNAK.md` sonunda.
+
 ⚠️ **`review-animations` yalnızca kullanıcının elinden çağrılabilir**
 (`disable-model-invocation`). Model `Skill` aracıyla açamaz; gerekirse
 kullanıcıdan `/review-animations` yazmasını iste.
