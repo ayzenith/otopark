@@ -377,6 +377,8 @@ bu yüzden depoya konuldu.
 **`impeccable`** (11.10.2026, pbakaus/impeccable, Apache 2.0): `/impeccable
 <komut> <hedef>` — critique, audit, polish, bolder, quieter, typeset, layout…
 Kaynak ve notlar `.claude/skills/KAYNAK.md` sonunda.
+**`ui-ux-pro-max`** (11.10.2026, MIT): stil/renk/font/UX kural veritabanı,
+`python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<sorgu>" --domain <alan>`.
 
 ⚠️ **`review-animations` yalnızca kullanıcının elinden çağrılabilir**
 (`disable-model-invocation`). Model `Skill` aracıyla açamaz; gerekirse

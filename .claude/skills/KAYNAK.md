@@ -50,3 +50,13 @@ Lisans dosyası ve bu not KORUNMALIDIR (MIT şartı).
   sürümlerinden indirir (depoya değil, önbelleğe). İndirme engellenirse
   beceri PRODUCT.md / DESIGN.md'yi doğrudan okuyarak devam eder.
 - Eklentinin `hooks` klasörü ALINMADI; yalnızca beceri.
+
+## ui-ux-pro-max (11.10.2026)
+
+- Kaynak: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill (commit `67803ea`)
+- Alınan: yalnızca `.claude/skills/ui-ux-pro-max` (aynı depodaki banner,
+  slides, brand vb. bu projeyle ilgisiz, ALINMADI). `scripts/tests` çıkarıldı.
+- Lisans: MIT — `ui-ux-pro-max/LICENSE`
+- Değişiklik: SKILL.md'deki `${CLAUDE_PLUGIN_ROOT}/` öneki kaldırıldı;
+  eklenti olarak değil depodan yüklendiği için yol proje köküne göre
+  (`.claude/skills/ui-ux-pro-max/scripts/search.py`). Python 3, ağ YOK.
