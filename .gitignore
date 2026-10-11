@@ -46,3 +46,9 @@ otopark-dokumanlar.bundle
 
 # panel ekran goruntuleri (gecici, incelemek icin uretilir)
 .ekranlar/
+
+# Impeccable: yerel inceleme görüntüleri ve zar kaydı depoya girmez
+.impeccable/review/
+.impeccable/questions/
+.impeccable/build/
+.impeccable/config.local.json

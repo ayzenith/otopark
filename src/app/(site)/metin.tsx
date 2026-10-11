@@ -11,15 +11,18 @@ import { metniBloklaraAyir } from "@/lib/site-metin";
  * tek kişi patron. HTML'e izin verilmez; React metni kaçırdığı için
  * yapıştırılan bir <script> ekranda yazı olarak görünür, ÇALIŞMAZ.
  */
-export function SiteMetni({ govde }: { govde: string }) {
+export function SiteMetni({ govde, ton = "kagit" }: { govde: string; ton?: "kagit" | "gece" }) {
   const bloklar = metniBloklaraAyir(govde);
+  // Gece zemininde (koyu lacivert) lacivert yazı okunmaz.
+  const renk = ton === "gece" ? "text-celik-200" : "text-lacivert-700";
+  const baslikRengi = ton === "gece" ? "text-white" : "text-lacivert-700";
 
   return (
     <div className="space-y-4">
       {bloklar.map((blok, i) => {
         if (blok.tur === "baslik") {
           return (
-            <h2 key={i} className="text-xl font-bold text-lacivert-700">
+            <h2 key={i} className={`text-xl font-bold ${baslikRengi}`}>
               {blok.metin}
             </h2>
           );
@@ -27,7 +30,7 @@ export function SiteMetni({ govde }: { govde: string }) {
 
         if (blok.tur === "liste") {
           return (
-            <ul key={i} className="list-disc space-y-1 pl-5 text-lacivert-700">
+            <ul key={i} className={`list-disc space-y-1 pl-5 ${renk}`}>
               {blok.maddeler.map((m, j) => (
                 <li key={j}>{m}</li>
               ))}
@@ -36,7 +39,7 @@ export function SiteMetni({ govde }: { govde: string }) {
         }
 
         return (
-          <p key={i} className="leading-relaxed text-lacivert-700">
+          <p key={i} className={`leading-relaxed ${renk}`}>
             {blok.metin}
           </p>
         );

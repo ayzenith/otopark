@@ -194,6 +194,168 @@ export function BinaIkonu({ className }: IkonOzellikleri) {
   );
 }
 
+/* ==========================================================================
+   OTOYOL TABELASI PARÇALARI (11.10.2026)
+   ========================================================================== */
+
+/**
+ * Tabela oku: kalın gövde + dolu üçgen uç, logodaki okun yönüyle (sağ üst).
+ * Unicode "↗" değil, çizilmiş: her yazı tipinde aynı kalınlıkta durur.
+ */
+export function OkIkonu({ className }: IkonOzellikleri) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
+      <path d="M9 39 29 19" stroke="currentColor" strokeWidth="6.5" strokeLinecap="square" />
+      <path d="M19 9h20v20L19 9Z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function MetroPiktogrami({ className }: IkonOzellikleri) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
+      <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="3" />
+      <path
+        d="M14.5 33V15.5L24 27l9.5-11.5V33"
+        stroke="currentColor"
+        strokeWidth="3.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function MetrobusPiktogrami({ className }: IkonOzellikleri) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
+      <rect x="10" y="5" width="28" height="33" rx="5" stroke="currentColor" strokeWidth="3" />
+      <path d="M10 22h28" stroke="currentColor" strokeWidth="3" />
+      <path d="M16 11h16" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="17" cy="30" r="2.4" fill="currentColor" />
+      <circle cx="31" cy="30" r="2.4" fill="currentColor" />
+      <path d="M15 38v5M33 38v5" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Fuar / ticaret merkezi: geniş çatılı salon. */
+export function FuarPiktogrami({ className }: IkonOzellikleri) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden className={className}>
+      <path d="M5 20 24 8l19 12" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+      <path d="M9 18v22h30V18" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
+      <path d="M19 40V29h10v11" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
+      <path d="M4 40h40" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function UlasimPiktogrami({
+  tur,
+  className,
+}: {
+  tur: "metrobus" | "metro" | "fuar";
+  className?: string;
+}) {
+  if (tur === "metro") return <MetroPiktogrami className={className} />;
+  if (tur === "metrobus") return <MetrobusPiktogrami className={className} />;
+  return <FuarPiktogrami className={className} />;
+}
+
+/**
+ * LEVHA
+ *
+ * Gerçek otoyol levhası gibi: renkli zemin, içte 3px beyaz kenar, yuvarlak
+ * köşe. `ana` = logonun laciverti (yer adı levhası), `yon` = logonun mavisi
+ * (varış/yön levhası), `bilgi` = beyaz bilgi levhası (lacivert kenar).
+ *
+ * Bu bir kart değildir: sayfada yalnızca tabelanın kendisi olan yerlerde
+ * kullanılır, içerik kutusu olarak değil.
+ */
+export function Levha({
+  ton = "ana",
+  className = "",
+  icClassName = "",
+  children,
+}: {
+  ton?: "ana" | "yon" | "bilgi";
+  className?: string;
+  icClassName?: string;
+  children: React.ReactNode;
+}) {
+  const zemin = ton === "ana" ? "bg-yol-800" : ton === "yon" ? "bg-levha-500" : "bg-white";
+  const kenar = ton === "bilgi" ? "border-yol-800" : "border-white";
+  return (
+    <div className={`rounded-[14px] p-1.5 ${zemin} ${className}`}>
+      <div className={`h-full rounded-[9px] border-[3px] ${kenar} ${icClassName}`}>{children}</div>
+    </div>
+  );
+}
+
+/**
+ * Varış satırı: piktogram, yer adı, dakika. Dakika sağda ve tablo
+ * rakamlarıyla; satırlar alt alta gelince rakamlar aynı hizada okunur.
+ * Uzun yer adı sarar, dakika hiçbir zaman sarmaz.
+ */
+export function VarisSatiri({
+  ikon,
+  yer,
+  sure,
+}: {
+  ikon: React.ReactNode;
+  yer: string;
+  sure: string;
+}) {
+  return (
+    <li className="flex items-center gap-3 border-t-2 border-white/40 py-3 first:border-t-0 sm:gap-4 sm:py-3.5">
+      <span className="h-8 w-8 shrink-0 sm:h-9 sm:w-9">{ikon}</span>
+      <span className="min-w-0 flex-1 text-xl font-bold leading-tight sm:text-2xl">{yer}</span>
+      <span className="shrink-0 whitespace-nowrap text-2xl font-extrabold tabular-nums sm:text-3xl">
+        {sure}
+      </span>
+    </li>
+  );
+}
+
+/**
+ * Hizmet levhası: mavi yön levhası biçiminde, tamamı bağlantı.
+ * Piktogram başlığın SOLUNDA durur (servis levhası gibi), üstünde kutu
+ * içinde değil.
+ */
+export function HizmetLevhasi({
+  yol,
+  ikon,
+  baslik,
+  aciklama,
+}: {
+  yol: string;
+  ikon: React.ReactNode;
+  baslik: string;
+  aciklama: string;
+}) {
+  return (
+    <Link
+      href={yol}
+      className="site-basilabilir group block rounded-[14px] bg-levha-500 p-1.5 hover:bg-levha-400"
+    >
+      <div className="flex h-full flex-col gap-5 rounded-[9px] border-[3px] border-white p-5 sm:p-7">
+        <div className="flex items-center gap-4">
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[6px] bg-white text-levha-500">
+            {ikon}
+          </span>
+          <h3 className="min-w-0 text-2xl font-extrabold leading-tight sm:text-3xl">{baslik}</h3>
+        </div>
+        <p className="max-w-[46ch] text-lg leading-relaxed">{aciklama}</p>
+        <p className="mt-auto flex items-center gap-2 text-lg font-extrabold">
+          Ayrıntılar
+          <OkIkonu className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        </p>
+      </div>
+    </Link>
+  );
+}
+
 /**
  * Vitrin bölümü.
  *

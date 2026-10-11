@@ -152,6 +152,44 @@ a,
   --color-sinyal-400: #fbbf24;
   --color-sinyal-500: #f59e0b;
   --color-sinyal-600: #d97706;
+
+  /* OTOYOL TABELASI (11.10.2026): logodaki iki renk tabela panelidir.
+     yol-800 = logonun laciverti, levha-500 = logonun mavisi. Zemin, gece
+     asfaltı gibi daha koyu lacivert. Sarı bu dilde YOK. */
+  --color-yol-950: #000f29;
+  --color-yol-900: #001a47;
+  --color-yol-800: #002c72;
+  --color-levha-600: #0149bf;
+  --color-levha-500: #0159e6;
+  --color-levha-400: #2f74ee;
+  --color-celik-400: #8b97ad;
+  --color-celik-200: #c3cde0;
+
+  --font-tabela: "Overpass", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Overpass: Highway Gothic soyundan, OFL lisanslı (public/yazitipi/OFL.txt).
+   Değişken font; tek dosya 100–900 kalınlığı taşır. Türkçe harfler
+   latin-ext dosyasındadır. Proje içinden sunulur: dış font sunucusuna
+   bağımlılık yok. */
+@font-face {
+  font-family: "Overpass";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/yazitipi/overpass-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4,
+    U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Overpass";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/yazitipi/overpass-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 :root {
@@ -269,10 +307,100 @@ a,
   background-size: 100% 1px;
 }
 
+/* ==========================================================================
+   OTOYOL TABELASI DİLİ (11.10.2026, impeccable — .impeccable/surfaces/)
+   Site, otoparka götüren otoyol tabelasıdır: lacivert ve mavi levhalar,
+   beyaz yansıtıcı yazı, dakikalı varış noktaları. Tabela harfleri karışık
+   büyük-küçük harftir (KGM levhaları gibi); kalın ve sıkı değil, açık.
+   ========================================================================== */
+.site-tabela {
+  font-family: var(--font-tabela);
+  font-feature-settings: "kern" 1;
+}
+.site-tabela ::selection {
+  background: var(--color-levha-500);
+  color: #fff;
+}
+.site-tabela :focus-visible {
+  outline: 3px solid var(--color-levha-500);
+  outline-offset: 3px;
+}
+.site-tabela .site-gece :focus-visible {
+  outline-color: #fff;
+}
+:root:has(.site-gece) {
+  scrollbar-color: var(--color-levha-500) var(--color-yol-950);
+}
+
+/* Ana levhadaki işletme adı. Tabela yazısı satır aralığı sıkıdır ama
+   harfler açıktır: Overpass zaten geniş açıklıklı, eksi harf aralığı
+   okunurluğu bozar. */
+.site-tabela-ad {
+  font-size: clamp(2.25rem, 7.4vw, 4.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.012em;
+  font-weight: 800;
+}
+.site-tabela-baslik {
+  font-size: clamp(1.75rem, 4.2vw, 2.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  font-weight: 800;
+  text-wrap: balance;
+}
+
+/* İMZA HAREKETİ: levhalar yerine oturur.
+   Yola yaklaşırken üst geçitteki levhaların netleşmesi gibi: kısa bir
+   düşüş + bulanıklıktan netliğe. 280ms, ease-out, sırayla. Zaman tabanlı
+   (gözlemci yok); hareket azaltılınca hiç oynamaz. */
+@keyframes site-levha-yerles {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+.site-yerles {
+  animation: site-levha-yerles 280ms var(--ease-cikis) both;
+}
+.site-yerles-2 { animation-delay: 70ms; }
+.site-yerles-3 { animation-delay: 140ms; }
+
+/* Ok bir kez yönünü gösterir: levhalar oturduktan sonra. */
+@keyframes site-ok-goster {
+  0%, 100% { transform: translate(0, 0); }
+  45% { transform: translate(5px, -5px); }
+}
+.site-ok {
+  animation: site-ok-goster 280ms var(--ease-cikis) 360ms both;
+}
+
+/* Telefondaki eylem çubuğu, üst geçit (ilk ekran) kaydırılıp geçilince
+   yükselir: ilk ekranda aynı eylemler zaten var, iki kez gösterilmez.
+   Kaydırma eksenli animasyonu desteklemeyen tarayıcıda eski davranış
+   (700ms sonra alttan gelir) sürer; çubuk her durumda erişilebilir. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .site-alt-cubuk {
+      animation: site-alttan linear both;
+      animation-delay: 0s;
+      animation-timeline: scroll(root);
+      animation-range: 30vh 60vh;
+    }
+  }
+}
+
 /* --- Hareketi azalt: kullanıcı istemiyorsa hiçbir şey oynamaz --- */
 @media (prefers-reduced-motion: reduce) {
   .site-gir,
-  .site-alt-cubuk {
+  .site-alt-cubuk,
+  .site-yerles,
+  .site-ok {
     animation: none;
   }
   .site-basilabilir {

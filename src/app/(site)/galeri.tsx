@@ -13,7 +13,15 @@ import { useState } from "react";
  * görüyor; ziyaretçiye kırık ikon göstermektense o kareyi atlamak doğrudur.
  * (break-ui ile bulundu, 08.10.2026.)
  */
-export function GaleriGorseli({ url, alt }: { url: string; alt: string }) {
+export function GaleriGorseli({
+  url,
+  alt,
+  className = "h-48 w-full rounded-xl bg-kagit-200 object-cover",
+}: {
+  url: string;
+  alt: string;
+  className?: string;
+}) {
   const [kirik, setKirik] = useState(false);
   if (kirik) return null;
 
@@ -27,7 +35,7 @@ export function GaleriGorseli({ url, alt }: { url: string; alt: string }) {
       alt={alt}
       loading="lazy"
       onError={() => setKirik(true)}
-      className="h-48 w-full rounded-xl bg-kagit-200 object-cover"
+      className={className}
     />
   );
 }
