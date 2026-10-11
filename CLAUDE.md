@@ -138,15 +138,20 @@ Kullanıcıdan VPS paketinin ekran görüntüsünü isteyip "olur / olmaz" demes
 istendi. Bu uyarı 05.10 ve 11.10'da iki kez yapıldı — paket alınmadan önce
 BİR KEZ DAHA doğrula.
 
-### Kurulum için gerekenler (kullanıcı verecek)
+### ✅ YAYINLAMA STRATEJİSİ KARARA BAĞLANDI (11.10.2026)
 
-1. ~~Alan adı~~ ✅ `londracampingtandircioglu.com` (karar verildi 11.10.2026;
-   satın alma teyidi bekleniyor) · 2. **VPS'in IP adresi** · 3. **SSH
-   kullanıcı adı ve erişimi**
+**Vercel (uygulama) + Supabase (veritabanı) — ikisi de ücretsiz.**
+VPS/VDS alınmayacak; Docker/Caddy yerine bu kullanılacak.
 
-Gelince: `ops/docker-compose.yml` + Caddy ile kurulum, otomatik HTTPS,
-gece yedekleri, alan adı yönlendirmesi. Tahmini 1–2 saat.
-`ops/RUNBOOK.md` ve `ops/YEREL-DENEME.md` hazır.
+Tam rehber: `ops/VERCEL-SUPABASE.md`
+
+Kullanıcı yapacaklar:
+1. ~~Alan adı~~ ✅ `londracampingtandircioglu.com`
+2. **Supabase'de proje aç** → DATABASE_URL + DIRECT_URL al
+3. **Vercel'de proje aç** → GitHub deposunu bağla → env değişkenlerini gir
+4. Turhost DNS'e Vercel A kaydını ekle
+
+Tahmini süre: 30–45 dakika. Tam adımlar `ops/VERCEL-SUPABASE.md`'de.
 
 ## ⚠️ AŞAMA 8 ÖNCESİ SORULACAKLAR
 

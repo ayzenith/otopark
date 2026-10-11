@@ -8,12 +8,17 @@
 //  - Gecmis islemler, fiyat sonradan degisse bile degismez (snapshot).
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // Vercel (Amazon Linux 2023) + yerel geliştirme için ikili hedefler.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // Supabase pooler URL (serverless bağlantı havuzu — uygulama bunu kullanır)
+  url       = env("DATABASE_URL")
+  // Supabase doğrudan URL (migration için — Vercel deploy hook'u bunu kullanır)
+  directUrl = env("DIRECT_URL")
 }
 
 // ---------------------------------------------------------------------------
