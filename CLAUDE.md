@@ -42,13 +42,21 @@ yok), KVKK otomasyonu (ertelendi), çoklu POS (karar gereği yok), grafiklerin
 zenginleştirilmesi, personel maliyetlerinin otomatik gider üretmesi.
 
 **Son commitler:** `7285843` ("Site: en kötü veriyle kırılan dört gerçek
-hata düzeltildi") → `d69ba69` (hafıza tazelendi) → alan adı kararı
-(`git log -1` ile doğrula). Çalışma alanı temiz, push edilmiş.
+hata düzeltildi") → `d69ba69` (hafıza tazelendi) → alan adı kararı →
+logo entegrasyonu (`git log -1` ile doğrula). Çalışma alanı temiz, push edilmiş.
 `main` dalı hâlâ 0 commit.
 
 Aşama 7 commit zinciri: `94497f2` (iskelet) → `4914513` (7/24 + yol tarifi) →
 `aa412eb` (üst menü + Otopark/Oto Yıkama sayfaları) → `9b38ec1` (tasarım
 becerileri) → `724c3ef` (tasarım dili) → `7285843` (en kötü veri düzeltmeleri).
+
+**Logo (11.10.2026):** İşletme sahibi tarafından sağlanan gerçek logo entegre
+edildi. Telif hakları işletmede.
+- `public/logo.png` — renkli, şeffaf arka plan (1278×1076)
+- `public/logo-beyaz.png` — beyaz mono, şeffaf arka plan (koyu yüzey için)
+- Site header: koyu arka planda `logo-beyaz.png`; footer: açık arka planda `logo.png`
+- PWA ikonları (`ikon-192.png`, `ikon-512.png`, `ikon-maskeli-512.png`) logodan üretildi
+- `favicon.ico` — 16/32/48px kare kırpılmış
 
 ## Site için 05.10.2026'da VERİLEN bilgiler (uydurma değil, sahibinden)
 

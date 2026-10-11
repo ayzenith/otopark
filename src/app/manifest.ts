@@ -14,8 +14,8 @@ import { prisma } from "@/server/db";
  * tahsil edilmesi gibi muhasebe hatalarına kapı açar. İnternet yoksa personel
  * açık bir hata görür, sessizce "kaydedildi" demez.
  *
- * İkon GEÇİCİDİR: işletmenin logosu henüz verilmedi (docs/07 S18). Logo
- * gelince public/ikon-*.png dosyaları değiştirilecek, kod değişmeyecek.
+ * İkon: işletmenin gerçek logosu (11.10.2026). public/ikon-*.png dosyaları
+ * logodan üretildi; kod değişmeden güncellenebilir.
  */
 export const dynamic = "force-dynamic";
 

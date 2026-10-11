@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { siteIcerigi } from "@/server/site/queries";
 import { telHref, whatsappHref } from "@/lib/telefon";
@@ -59,11 +60,23 @@ export default async function SiteDuzeni({ children }: { children: React.ReactNo
     <div className="flex min-h-dvh flex-col bg-kagit-50">
       <header className="bg-murekkep-950 text-kagit-50">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-4 sm:px-8 sm:py-5">
+          {/* Başlık koyu (mürekkep) arka plan — beyaz mono logo kullanılır. */}
           <Link
             href="/"
-            className="site-basilabilir line-clamp-2 text-base font-extrabold uppercase tracking-[0.12em] sm:text-lg"
+            className="site-basilabilir flex items-center gap-3"
+            aria-label={kunye.isletmeAdi}
           >
-            {kunye.isletmeAdi}
+            <Image
+              src="/logo-beyaz.png"
+              alt={kunye.isletmeAdi}
+              height={40}
+              width={48}
+              className="h-9 w-auto shrink-0 sm:h-10"
+              priority
+            />
+            <span className="line-clamp-2 text-base font-extrabold uppercase tracking-[0.12em] sm:text-lg">
+              {kunye.isletmeAdi}
+            </span>
           </Link>
 
           <nav aria-label="Site" className="hidden items-center gap-6 sm:flex">
@@ -138,7 +151,16 @@ export default async function SiteDuzeni({ children }: { children: React.ReactNo
             <div>
               {/* Girilmemiş künye alanı YAZILMAZ: yanlış adres/telefon
                   göstermektense hiç göstermemek doğrudur (kural 19). */}
-              <p className="text-xl font-extrabold uppercase tracking-[0.12em] text-murekkep-900">
+              <Link href="/" className="site-basilabilir inline-flex items-center gap-3">
+                <Image
+                  src="/logo.png"
+                  alt={kunye.isletmeAdi}
+                  height={36}
+                  width={43}
+                  className="h-8 w-auto"
+                />
+              </Link>
+              <p className="mt-3 text-xl font-extrabold uppercase tracking-[0.12em] text-murekkep-900">
                 {kunye.isletmeAdi}
               </p>
               {kunye.calismaSaatleri ? (

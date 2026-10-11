@@ -24,6 +24,7 @@ const IZINLI_ICE_AKTARMALAR = [
   "react",
   "next",
   "next/link",
+  "next/image",
   "next/navigation",
   "@/server/site/queries",
   "@/lib/site-metin",
