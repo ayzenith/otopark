@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { siteIcerigi, SITE_SAYFA_ANAHTARLARI } from "@/server/site/queries";
 import { telHref, whatsappHref } from "@/lib/telefon";
@@ -148,6 +149,18 @@ export default async function SiteAnaSayfa() {
           </div>
         </div>
       </section>
+
+      {/* ======================= FOTOĞRAF ======================= */}
+      <div className="site-belir relative h-64 w-full overflow-hidden sm:h-96 lg:h-[28rem]">
+        <Image
+          src="/otopark-giris.webp"
+          alt="Londra Camping Otopark girişi"
+          fill
+          className="object-cover object-center"
+          priority={false}
+          sizes="100vw"
+        />
+      </div>
 
       {/* ======================= HİZMETLER ======================= */}
               <Bolum
