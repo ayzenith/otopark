@@ -18,7 +18,7 @@ hatada açık uyarı, başarıda net onay. Masaüstü de kusursuz çalışmalı.
 **Dal:** `claude/londra-camping-parking-system-3zwfd8` — `main` dalına ASLA
 dokunma (hâlâ 0 commit). Her aşama sonunda commit + push.
 
-## Durum (05.10.2026)
+## Durum (11.10.2026)
 
 | Aşama | Kapsam | Durum |
 |---|---|---|
@@ -29,7 +29,7 @@ dokunma (hâlâ 0 commit). Her aşama sonunda commit + push.
 | 4 | Oto yıkama | ✅ |
 | 5 | Kasa, gelir-gider, malzeme stoğu, CSV dışa aktarma | ✅ |
 | 6 | Personel yönetimi, avans/maaş, patron paneli, uyarı merkezi, denetim ekranı | ✅ |
-| 7 | Kurumsal web sitesi (iskelet + panelden içerik yönetimi) | ✅ |
+| 7 | Kurumsal web sitesi: iskelet, içerik, tasarım dili, en kötü veri denemesi | ✅ |
 | **8** | **SIRADAKİ:** devreye alma, gerçek cihaz testleri | ⏳ |
 
 **1167 test geçiyor**, başarısız yok: 320 birim + 463 entegrasyon + 384 E2E
@@ -41,8 +41,12 @@ Taşınmayan işler (docs/06 sonunda tam liste): XLSX/PDF dışa aktarma
 yok), KVKK otomasyonu (ertelendi), çoklu POS (karar gereği yok), grafiklerin
 zenginleştirilmesi, personel maliyetlerinin otomatik gider üretmesi.
 
-**Son commit:** Aşama 7 (kurumsal site iskeleti) tamamlandı ve push edildi.
-`main` dalı hâlâ 0 commit, dokunulmadı.
+**Son commit:** `7285843` — "Site: en kötü veriyle kırılan dört gerçek hata
+düzeltildi". Çalışma alanı temiz, push edilmiş. `main` dalı hâlâ 0 commit.
+
+Aşama 7 commit zinciri: `94497f2` (iskelet) → `4914513` (7/24 + yol tarifi) →
+`aa412eb` (üst menü + Otopark/Oto Yıkama sayfaları) → `9b38ec1` (tasarım
+becerileri) → `724c3ef` (tasarım dili) → `7285843` (en kötü veri düzeltmeleri).
 
 ## Site için 05.10.2026'da VERİLEN bilgiler (uydurma değil, sahibinden)
 
@@ -51,30 +55,90 @@ dolu alanı ezmez). Kaynak: işletme sahibi, 05.10.2026.
 
 | Alan | Değer |
 |---|---|
-| WhatsApp | `0555 056 79 79` → `wa.me/905550567979` |
+| Telefon ve WhatsApp | `0555 056 79 79` — **aynı numara** (teyit 06.10.2026) |
 | Google Maps | `https://maps.app.goo.gl/rLR4CvWx5VsCNLr5A` |
 | Çalışma saatleri | **7/24 AÇIK** — sahibi "bu bilgi kesin olsun, çok önemli" dedi |
 | Hizmetler | Otopark + oto yıkama (ana sayfada madde listesi) |
 | Sitede fiyat | **YAZILMAYACAK** (S19 kapandı). Fiyat satırı girilmediği sürece bölüm çizilmez |
 | Ana eylem (CTA) | Ana sayfada ve iletişimde büyük **YOL TARİFİ AL** butonu; telefonda Maps uygulamasını açar |
 
+06-07.10.2026'da ayrıca verilenler (hepsi sitede, uydurma yok):
+
+- **7/24 Güvenlik** — "Aracınız profesyonel güvenlik ekibimiz tarafından 7/24
+  korunur" (sahibinin kendi cümlesi)
+- **7/24 Kamera Sistemi** — "Otoparkımız kesintisiz kamera sistemi ile sürekli
+  izlenmektedir"
+- **Uygun Fiyatlı Park**
+- **Konum:** metrobüse 2 dk, metroya 3 dk, Nef Selenium Ataköy Towers hemen
+  arkası, Kültür Üniversitesi / Airport AVM arkası
+- **Profesyonel oto yıkama** vurgusu istendi ("dilerseniz yıkanmış teslim alın"
+  ifadesi zayıf bulundu, değiştirildi)
+
 **HÂLÂ VERİLMEYEN — VARSAYMA:**
-- **Açık adres metni** (yalnızca harita bağlantısı var)
-- **Arama için telefon.** Verilen numara WhatsApp olarak bildirildi; aynı
-  numaradan arama alınıp alınmadığı TEYİT EDİLMEDİ. `phone` boş; sitede arama
-  butonu çıkmıyor. Teyit gelince panelden girilir
-- Instagram · logo · fotoğraflar · işletmenin tam ticari unvanı
+- **Açık adres metni** (yalnızca harita bağlantısı var; kısa bağlantı bu
+  konteynerden açılamıyor, adres oradan da okunamadı)
+- **Otopark kapalı mı açık mı** — müşterinin ilk sorduğu şey, sorulacak
+- Instagram · **logo** · **fotoğraflar** · işletmenin tam ticari unvanı
+- Pasta cila / detaylı iç temizlik / vale gibi ek hizmetler var mı
+
+## ⚠️ ALAN ADI VE SUNUCU — 11.10.2026 durumu
+
+**Kullanıcı Turhost'tan alan adı alıyor.** Düşündüğü ad:
+`londracampingtandircioglu.com` (.com 2,90 $ ilk yıl, **yenileme 21,99 $**;
+.com.tr 14,99 $). Henüz alınmadı.
+
+Adın 29 karakter olduğu, telefonda söylemesi ve yazması zor olacağı söylendi;
+`londracampingotopark.com` / `atakoyotopark.com` gibi kısa alternatifler
+önerildi. Karar kullanıcıda.
+
+### 🚨 PAYLAŞIMLI HOSTING ALINMAYACAK — tekrar uyar
+
+Kullanıcı 11.10.2026'da Turhost'un şu paketlerini gösterdi ve "hangisini
+alalım" diye sordu:
+
+| Paket | Aylık |
+|---|---|
+| Giriş Hosting | 38,87 ₺ |
+| WordPress Giriş Plus | 48,71 ₺ |
+| Hazır Web Sitesi | 83,15 ₺ |
+| Limitsiz Pro Hosting | 147,11 ₺ |
+
+**DÖRDÜ DE BU SİSTEMİ ÇALIŞTIRAMAZ.** Hepsi paylaşımlı hosting / site
+kurucu; PHP + MySQL içindir. Bizde Next.js (Node.js) + PostgreSQL var ve
+sürekli açık bir sunucu süreci gerekiyor. cPanel/Plesk/"yönetilen hosting"
+yazan her paket aynı sebeple elenir.
+
+**Gereken: VPS / VDS** (Turhost'ta "Sunucu" bölümünde, ayrı sayfada).
+
+| | Asgari | Rahat |
+|---|---|---|
+| RAM | 2 GB | **4 GB** |
+| İşlemci | 1 çekirdek | 2 çekirdek |
+| Disk | 20 GB SSD | 40 GB NVMe |
+| İşletim sistemi | **Ubuntu 22.04 / 24.04** | aynı |
+| Erişim | **root + SSH şart** | aynı |
+
+Kullanıcıdan VPS paketinin ekran görüntüsünü isteyip "olur / olmaz" demesi
+istendi. Bu uyarı 05.10 ve 11.10'da iki kez yapıldı — paket alınmadan önce
+BİR KEZ DAHA doğrula.
+
+### Kurulum için gerekenler (kullanıcı verecek)
+
+1. Alan adı · 2. VPS'in IP adresi · 3. SSH kullanıcı adı ve erişimi
+
+Gelince: `ops/docker-compose.yml` + Caddy ile kurulum, otomatik HTTPS,
+gece yedekleri, alan adı yönlendirmesi. Tahmini 1–2 saat.
+`ops/RUNBOOK.md` ve `ops/YEREL-DENEME.md` hazır.
 
 ## ⚠️ AŞAMA 8 ÖNCESİ SORULACAKLAR
 
-1. **S17 — Barındırma (05.10.2026):** sahibi "Turhost'tan alan adı + hosting
-   alacağım, ayzenith.com gibi" dedi. **UYARI: Turhost'un PAYLAŞIMLI HOSTING
-   paketleri bu sistemi ÇALIŞTIRAMAZ** — Next.js (Node.js) + PostgreSQL
-   gerekiyor, paylaşımlı paketler PHP/MySQL'dir. **VPS/sunucu paketi**
-   alınmalı. Bu kullanıcıya bildirildi; alan adı henüz alınmadı
-2. **S18 — kalan künye alanları:** yukarıdaki "hâlâ verilmeyen" listesi
-3. **S20 — Teslim ve erişim:** depo/sunucu/yedek kimde olacak?
-4. **S12 — KVKK saklama süresi** · **XLSX/PDF için bağımlılık onayı**
+1. **S18 — kalan künye alanları:** yukarıdaki "hâlâ verilmeyen" listesi
+2. **S20 — Teslim ve erişim:** depo/sunucu/yedek kimde olacak?
+3. **S12 — KVKK saklama süresi** · **XLSX/PDF için bağımlılık onayı**
+4. **Motor yıkama ve karavan yıkama ücreti** — hizmetler hâlâ fiyatsız
+5. Site yayına çıkarken `robots: index false` KALDIRILACAK
+   (`src/app/(site)/layout.tsx`); SEO (sitemap, Open Graph, LocalBusiness)
+   gerçek alan adı gerektirdiği için Aşama 8'e bırakıldı
 
 ## İşletme sahibinin verdiği KESİN kararlar
 
@@ -234,11 +298,71 @@ ekranında "fiyat girilmemiş" uyarısı çıkar (mimari kural 10).
     bilgi" olarak listelenir. Sitedeki fiyat SERBEST METİNDİR ve tarife
     motorundan otomatik akmaz — kural 11'in site karşılığı.
 
+## Kurumsal sitenin tasarım dili (07-08.10.2026)
+
+Kullanıcı ilk sürümü "hayatımda gördüğüm en basit, yapay zeka olduğu belli
+tema" diye reddetti. Tasarım baştan kuruldu. **İçerik aynı kaldı; sayfa
+düzeni, tipografi, boşluk ve hareket değişti.**
+
+### Kurallar
+
+- **İki yüzey:** mürekkep (koyu, `--color-murekkep-*`) ve kâğıt (sıcak beyaz,
+  `--color-kagit-*`). Ara ton yok.
+- **Tek vurgu rengi:** yol işaretlerinin sarısı (`--color-sinyal-*`). Panelin
+  lacivert+yeşil+mavi üçlüsü siteye TAŞINMAZ.
+- **Ayrım kutuyla değil İNCE ÇİZGİYLE.** Kart kenarlığı sayfayı parçalıyor.
+- **Bölümler numaralı** (01, 02…), etiketler monospace + geniş harf aralığı
+  (`.site-etiket`).
+- **Tipografi ölçüye göre:** `.site-dev` (negatif harf aralığı, 0.98 satır),
+  `.site-baslik`, `.site-govde`. Tek bir letter-spacing her boyutta yanlıştır.
+- Tüm site stilleri `.site-` öneklidir ve `(site)` grubundadır.
+  **PANELE DOKUNMA** — panel bir iş aracı, site bir vitrin.
+
+### Hareket kuralları (bunlara uy)
+
+- Easing: `--ease-cikis: cubic-bezier(0.23, 1, 0.32, 1)`. Tarayıcının hazır
+  eğrileri fazla yumuşak.
+- **Giren öğede ASLA `ease-in`** — arayüzü ağır hissettirir.
+- Arayüz animasyonları **300ms altında**. Basılabilir öğe `:active` →
+  `scale(0.97)`, 160ms (`.site-basilabilir`).
+- **`scale(0)`'dan büyüme yok**, `transition: all` yok.
+- **Kaydırınca belirme CSS iledir** (`animation-timeline: view()`,
+  `.site-belir`). IntersectionObserver'a DÖNME: betik çalışmazsa içerik
+  görünmez olur (mimari kural 19).
+- `prefers-reduced-motion` her hareketi kapatır.
+
+### Site sayfaları
+
+`/` ana sayfa · `/otopark` · `/oto-yikama` · `/fiyatlar` · `/iletisim`
+Üst menüde beşi de var; telefonda açılır menü yerine saran etiket satırı
+("Ana sayfa" telefonda listede YOK, başlıktaki işletme adı oraya götürür).
+
+## Tasarım becerileri (`.claude/skills/`)
+
+Emil Kowalski'nin açık kaynak becerileri depoya kopyalandı (MIT, kaynak ve
+lisans `.claude/skills/KAYNAK.md` ve `LICENSE-emilkowalski`). **Her oturum
+otomatik yüklenir** — eklenti olarak kurulanlar bulut konteynerine inmiyor,
+bu yüzden depoya konuldu.
+
+`emil-design-eng` (UI cilası felsefesi) · `animate` · `improve-animations` ·
+`review-animations` · `find-animation-opportunities` · `animation-vocabulary` ·
+`apple-design` · `break-ui` · `prototype` · `pick-ui-library`
+
+⚠️ **`review-animations` yalnızca kullanıcının elinden çağrılabilir**
+(`disable-model-invocation`). Model `Skill` aracıyla açamaz; gerekirse
+kullanıcıdan `/review-animations` yazmasını iste.
+
+`break-ui` 08.10.2026'da çalıştırıldı ve **dört gerçek hata** buldu (hepsi
+düzeltildi, mimari kural 19'a bak). Bulguların kalıcı koruması:
+`tests/e2e/site-akisi.spec.ts` → "en kötü veri" bölümü.
+
 ## Kod haritası
 
 ```
 src/lib/           money.ts (kuruş) · datetime.ts (Europe/Istanbul) ·
-                   plate.ts (normalize/doğrula/biçimle) · permissions.ts (53 izin)
+                   plate.ts (normalize/doğrula/biçimle) · permissions.ts (53 izin) ·
+                   telefon.ts (tel:/wa.me, İLK numarayı alır) ·
+                   site-metin.ts (panel metnini bloklara ayırır, SAF)
 src/server/auth/   password (Argon2id) · session (özel DB oturum katmanı,
                    Auth.js sapması docs/01 §1.3.1) · login · authz
 src/server/pricing/ types.ts (Zod snapshot, sürüm 2) · calculate.ts (SAF
@@ -267,7 +391,9 @@ src/components/panel/ islem-paneli.tsx (7 adımlık park akışı) ·
                    yikama-paneli.tsx · abonman-karti.tsx · kasa-paneli.tsx ·
                    rapor-araclari.tsx (dönem filtresi, SVG trend, denetim)
 src/app/(site)/    kurumsal site: ana sayfa · otopark · oto-yikama · fiyatlar ·
-                   iletisim (oturum YOK) · parcalar.tsx (ikon/bolum parcalari)
+                   iletisim (oturum YOK) · parcalar.tsx (ikonlar, bölüm, kart,
+                   adım, iletişim kutusu) · metin.tsx · galeri.tsx (kırık
+                   görseli gizler)
 src/app/manifest.ts  ana ekrana ekleme (PWA); ikon GEÇİCİ
 src/app/(panel)/   vardiya · araclar · yikama · abonmanlar · musteriler ·
                    abonmanli-araclar · tarife · kasa · stok · yonetim/**
@@ -276,6 +402,7 @@ src/app/(panel)/   vardiya · araclar · yikama · abonmanlar · musteriler ·
                     yonetim/personel[/id] · yonetim/denetim · yonetim/site ·
                     yonetim/raporlar/personel)
 scripts/baslangic-fiyatlari.ts   fiyatları DB'ye yazar (idempotent)
+scripts/isletme-bilgileri.ts     künye + ana sayfa metni (idempotent, ezmez)
 ```
 
 ## Komutlar
@@ -289,6 +416,11 @@ npm run isletme:kur       # işletme künyesi başlangıç değerleri (idempoten
 npm run fiyatlar:kur      # başlangıç fiyatları (mevcut fiyatları ezmez)
 npm run db:seed           # araç sınıfları, kategoriler, patron hesabı
 ```
+
+Siteyi gözle görmek için (bu konteynerde): `otopark_deneme` veritabanı +
+`npm run build` + `PORT=3001 npm run start`, sonra Playwright ile ekran
+görüntüsü. Konteyner her oturumda sıfırlandığı için veritabanını yeniden
+kurman gerekir (yukarıdaki kurulum bölümü).
 
 ## Konteyner kurulumu (yeni oturumda PostgreSQL yoksa)
 
@@ -363,6 +495,17 @@ Sürüklenme kontrolü: `npx prisma migrate diff ... --exit-code` → 0 olmalı.
 - Türkçe `.sort()` beklediğin sırayı vermez (İ > M). `Set` ile karşılaştır.
 - Test fixture plakaları `34Z` ile başlar, müşteriler `E2E ` ile —
   global-setup bunları temizler. Gerçek veriyi asla silme.
+- **Site künyesi E2E'de SABİTTİR:** `global-setup` `whatsappPhone`,
+  `mapsUrl`, `workingHoursText` yazar ve `phone`'u BOŞ bırakır (arama
+  butonunun yalnızca telefon girilince çizildiğini doğrulamak için).
+  Künyeyi değiştiren test onu GERİ ALMALI — "en kötü veri" testi böyle yapar.
+- **E2E ve dev aynı veritabanını (`otopark`) kullanır**, `otopark_test` değil.
+  `playwright.config.ts` sunucuyu 3100 portunda açar.
+- **Sunucu eski derlemeyle açık kalırsa** tarayıcı "Application error:
+  a client-side exception" verir: HTML eski, parça dosyaları yeni.
+  `pkill -f next-server`, sonra yeniden derle. (08.10'da bir saat kaybettirdi.)
+- `pkill` eşleşme bulamazsa 1 döner; komut zincirinin BAŞINDA kullanma,
+  arka plan görevi anında düşer (exit 144).
 
 ## Çalışma şekli (kullanıcının açık talebi)
 

@@ -399,3 +399,31 @@ Gereken: **VPS / sunucu paketi** (Turhost'ta da var) ya da başka bir VPS
 sağlayıcı. Alan adı Turhost'tan alınıp sunucuya yönlendirilebilir.
 
 Bu uyarı kullanıcıya iletildi; alan adı henüz alınmadı.
+
+
+---
+
+## 11.10.2026 — alan adı ve sunucu
+
+**S17 kısmen netleşti.** Kullanıcı Turhost'tan alan adı alıyor; düşündüğü ad
+`londracampingtandircioglu.com`. Henüz satın alınmadı.
+
+Kullanıcı Turhost'un **paylaşımlı hosting** paketlerini (Giriş Hosting,
+WordPress Giriş Plus, Hazır Web Sitesi, Limitsiz Pro Hosting) gösterip
+"hangisini alalım" diye sordu. **Dördü de bu sistemi çalıştıramaz** — hepsi
+PHP + MySQL tabanlı paylaşımlı paket; Next.js (Node.js) + PostgreSQL ve
+kalıcı bir sunucu süreci gerekiyor.
+
+Kullanıcıya **VPS/VDS** alması gerektiği, asgari 2 GB RAM (rahat 4 GB),
+Ubuntu 22.04/24.04 ve root+SSH erişimi şartı iletildi. Paket seçilince
+ekran görüntüsünü göndermesi istendi.
+
+Ayrıca alan adının 29 karakter olduğu, telefonda söylemesi ve yazması zor
+olacağı söylendi; `londracampingotopark.com` / `atakoyotopark.com` gibi kısa
+alternatifler önerildi. **Karar kullanıcıda.**
+
+### Aşama 7 kapandı
+
+Site tamamlandı: beş sayfa, panelden içerik yönetimi, yeni tasarım dili
+(mürekkep/kâğıt/sinyal), CSS tabanlı hareket, en kötü veri denemesi ve
+düzeltmeleri. 1167 test geçiyor. Kalan tek engel sunucu ve alan adı.
