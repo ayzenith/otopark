@@ -37,3 +37,16 @@ cp -r /tmp/emil/skills/<beceri-adi> .claude/skills/
 ```
 
 Lisans dosyası ve bu not KORUNMALIDIR (MIT şartı).
+
+## impeccable (11.10.2026)
+
+- Kaynak: https://github.com/pbakaus/impeccable (commit `c63b8dd`)
+- Alınan: `plugin/skills/impeccable` (Claude Code için derlenmiş sürüm)
+- Lisans: Apache 2.0 — `impeccable/LICENSE` ve `impeccable/NOTICE.md`
+- Kullanım: `/impeccable <komut> <hedef>` (ör. `/impeccable critique`,
+  `/impeccable polish`, `/impeccable audit`). Yeni projede önce
+  `/impeccable init`.
+- `scripts/impeccable` başlatıcısı ilk çalışmada motor ikilisini GitHub
+  sürümlerinden indirir (depoya değil, önbelleğe). İndirme engellenirse
+  beceri PRODUCT.md / DESIGN.md'yi doğrudan okuyarak devam eder.
+- Eklentinin `hooks` klasörü ALINMADI; yalnızca beceri.
