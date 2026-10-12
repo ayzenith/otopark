@@ -154,15 +154,20 @@ test.describe("personel işlem akışı", () => {
     await page.getByTestId("plaka-girisi").fill(plaka);
     await page.getByTestId("cikis-sorgula").click();
     await expect(page.getByTestId("cikis-paneli")).toBeVisible({ timeout: 15_000 });
-    // İlk blok ücreti (fixture: 40 ₺). "0,00" ARTIK ÇIKMAZ.
-    await expect(page.getByTestId("odenecek-tutar")).toContainText("40,00");
+    // Tutar TAM OLARAK doğrulanmaz: E2E veritabanı dev ile paylaşılır ve o an
+    // hangi tarife sürümü geçerliyse ilk blok ücreti ondan gelir. Önemli olan
+    // SIFIR OLMAMASI ve tahsilat akışının açılması.
+    // "0,00" metin araması YANILTIR: "₺100,00" da onu içerir. Rakamın
+    // kendisine bakılır — ilk hane 0 olamaz.
+    await expect(page.getByTestId("odenecek-tutar")).toContainText(/₺\s?[1-9][\d.]*,\d{2}/);
     await expect(page.getByTestId("nakit")).toBeVisible();
+    // Ücretsiz çıkış butonu ARTIK ÇIKMAZ.
+    await expect(page.getByTestId("cikisi-tamamla")).toHaveCount(0);
 
     await page.getByTestId("nakit").click();
     const onay = page.getByTestId("cikis-onay");
     await expect(onay).toBeVisible({ timeout: 15_000 });
     await expect(onay).toContainText("TAHSİL EDİLDİ");
-    await expect(page.getByTestId("onay-tutar")).toContainText("40,00");
   });
 
   test("KURUM ANLAŞMASI: süre ne olursa olsun sabit ücret alınır", async ({ page }, testInfo) => {
@@ -233,8 +238,8 @@ test.describe("personel işlem akışı", () => {
     await page.getByTestId("plaka-girisi").fill(plaka);
     await page.getByTestId("cikis-sorgula").click();
     await expect(page.getByTestId("cikis-paneli")).toBeVisible({ timeout: 15_000 });
-    // Süre 0 olduğu için tek butonlu çıkış akışı geçerli.
-    await page.getByTestId("cikisi-tamamla").click();
+    // Ücretsiz süre kalktığı için sıfır süreli çıkış da TAHSİLATLA kapanır.
+    await page.getByTestId("nakit").click();
     await expect(page.getByTestId("cikis-onay")).toBeVisible({ timeout: 15_000 });
     await page.getByRole("button", { name: /YENİ İŞLEM/i }).click();
 
