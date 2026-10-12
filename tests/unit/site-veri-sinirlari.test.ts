@@ -29,6 +29,9 @@ const IZINLI_ICE_AKTARMALAR = [
   "@/server/site/queries",
   "@/lib/site-metin",
   "@/lib/telefon",
+  // Mutlak adres (sitemap/canonical/Open Graph) ortam değişkeninden okunur;
+  // alan adı koda sabitlenmez. SAF modül, veritabanına dokunmaz.
+  "@/lib/site-url",
   // Kaydirinca belirme bileseninin tek bagimliligi React.
   "react",
 ];

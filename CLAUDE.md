@@ -178,12 +178,18 @@ Tahmini süre: 30–45 dakika. Tam adımlar `ops/VERCEL-SUPABASE.md`'de.
 2. **S20 — Teslim ve erişim:** depo/sunucu/yedek kimde olacak?
 3. **S12 — KVKK saklama süresi** · **XLSX/PDF için bağımlılık onayı**
 4. ~~Motor yıkama ve karavan yıkama ücreti~~ — 11.10.2026'da ikisi de PASİF yapıldı (aşağıya bak)
-5. Site yayına çıkarken `robots: index false` KALDIRILACAK
-   (`src/app/(site)/layout.tsx`); SEO (sitemap, Open Graph, LocalBusiness)
-   mutlak URL gerektirdiği için Aşama 8'e bırakıldı. Alan adı artık belli
-   (`londracampingtandircioglu.com`), ama **LocalBusiness yapısal verisi
-   için hâlâ eksik:** açık adres metni ve işletmenin tam ticari unvanı.
-   Bu ikisi gelmeden yapısal veri yazılmaz — uydurma yok (mimari kural 20)
+5. ~~`robots: index false`~~ ✅ 12.10.2026: SEO açıldı. `src/lib/site-url.ts`
+   (tek kaynak, `NEXT_PUBLIC_SITE_URL` okur) + `src/app/sitemap.ts` +
+   `src/app/robots.ts` + layout'ta canonical/Open Graph.
+   **Değişken girilmezse site arama motorlarına KAPALI kalır** (noindex +
+   `Disallow: /`) — yanlış adresle indekslenmek daha kötü. `robots.ts`
+   `force-dynamic` OLMALI, yoksa kapalı hâli derlemeye gömülür (yaşandı).
+   Vercel'de `NEXT_PUBLIC_SITE_URL=https://londracampingtandircioglu.com`
+   girilecek. Panel yolları robots'ta Disallow.
+   **LocalBusiness yapısal verisi HÂLÂ YAZILMADI:** açık adres metni ve tam
+   ticari unvan gelmedi — uydurma yok (mimari kural 20).
+   `tests/unit/site-veri-sinirlari.test.ts` izinli modül listesine
+   `@/lib/site-url` eklendi.
 
 ## İşletme sahibinin verdiği KESİN kararlar
 

@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { siteIcerigi } from "@/server/site/queries";
 import { telHref, whatsappHref } from "@/lib/telefon";
 import { OkIkonu, TelefonIkonu, WhatsappIkonu } from "./parcalar";
+import { siteKokAdresi } from "@/lib/site-url";
 
 /**
  * Site içeriği PANELDEN gelir ve anında yayına girmelidir; ayrıca üretim
@@ -28,13 +29,32 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { kunye } = await siteIcerigi();
+  const kok = siteKokAdresi();
+  const aciklama = `${kunye.isletmeAdi} — otopark ve oto yıkama.`;
+
   return {
     title: { default: kunye.isletmeAdi, template: `%s · ${kunye.isletmeAdi}` },
-    description: `${kunye.isletmeAdi} — otopark ve oto yıkama.`,
-    // Site, işletme bilgileri girilene kadar arama motorlarına açılmaz:
-    // yarım bir sayfanın indekslenmesi sonradan düzeltmesi zor bir izlenim
-    // bırakır. Bilgiler girildikten sonra bu satır kaldırılacak (Aşama 8).
-    robots: { index: false, follow: false },
+    description: aciklama,
+    // Alan adı tanımlı DEĞİLSE site arama motorlarına kapalı kalır: geçici
+    // bir adresle indekslenmek sonradan düzeltmesi zor bir iz bırakır
+    // (12.10.2026). Tanımlıysa açılır; kanonik adres ve paylaşım kartı da
+    // o adresten üretilir.
+    robots: kok ? { index: true, follow: true } : { index: false, follow: false },
+    ...(kok
+      ? {
+          metadataBase: new URL(kok),
+          alternates: { canonical: "/" },
+          openGraph: {
+            type: "website",
+            siteName: kunye.isletmeAdi,
+            title: kunye.isletmeAdi,
+            description: aciklama,
+            url: kok,
+            locale: "tr_TR",
+            images: [{ url: "/logo.png", width: 1278, height: 1076, alt: kunye.isletmeAdi }],
+          },
+        }
+      : {}),
   };
 }
 
