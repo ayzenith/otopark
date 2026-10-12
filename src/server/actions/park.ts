@@ -15,7 +15,12 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { PERMISSIONS } from "@/lib/permissions";
-import { requirePermission, runAction, type ActionResult } from "@/server/auth/authz";
+import {
+  requireAnyPermission,
+  requirePermission,
+  runAction,
+  type ActionResult,
+} from "@/server/auth/authz";
 import { aracGirisi, kapasiteDurumu, type GirisSonucu } from "@/server/parking/entry";
 import { aracCikisi, cikisOnizleme, type CikisOnizleme, type CikisSonucu } from "@/server/parking/exit";
 import { parkIptal, type IptalSonucu } from "@/server/parking/void";
@@ -88,7 +93,12 @@ const IptalSemasi = z.object({
 });
 
 export async function iptalAction(girdi: unknown): Promise<ActionResult<IptalSonucu>> {
-  const actor = await requirePermission(PERMISSIONS.PARKING_VOID);
+  // İkisinden biri yeterlidir; TAHSİLATLI kaydın iptalini servis katmanı
+  // ayrıca `parking.void` ister (void.ts).
+  const actor = await requireAnyPermission([
+    PERMISSIONS.PARKING_VOID,
+    PERMISSIONS.PARKING_VOID_UNPAID,
+  ]);
   const veri = IptalSemasi.parse(girdi);
 
   const sonuc = await runAction(() => parkIptal(actor, veri));

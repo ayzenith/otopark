@@ -21,9 +21,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, Button, PlakaInput, Rozet } from "@/components/ui";
+import { Alert, Button, Input, PlakaInput, Rozet } from "@/components/ui";
 import { Tutar } from "./para";
-import { cikisSorgulaAction, cikisYapAction, girisYapAction } from "@/server/actions/park";
+import {
+  cikisSorgulaAction,
+  cikisYapAction,
+  girisYapAction,
+  iptalAction,
+} from "@/server/actions/park";
 import { abonmanSorgulaAction } from "@/server/actions/abonman";
 import { AbonmanKarti, type AbonmanKartVerisi } from "./abonman-karti";
 import { formatDateTime, formatDuration, formatTime } from "@/lib/datetime";
@@ -35,7 +40,8 @@ type Durum =
   | { ad: "cikisPaneli"; veri: CikisVerisi }
   | { ad: "abonmanPaneli"; veri: AbonmanPaneliVerisi }
   | { ad: "girisOnay"; veri: GirisOnayVerisi }
-  | { ad: "cikisOnay"; veri: CikisOnayVerisi };
+  | { ad: "cikisOnay"; veri: CikisOnayVerisi }
+  | { ad: "iptalOnay"; veri: { kod: string; plakaGosterim: string } };
 
 type Eylem =
   | { tur: "bicimiZorla" }
@@ -116,11 +122,14 @@ export function IslemPaneli({
   vardiyaAcik,
   aracSiniflari,
   cikisYetkisi,
+  iptalYetkisi = false,
   anlasmalar = [],
 }: {
   vardiyaAcik: boolean;
   aracSiniflari: AracSinifi[];
   cikisYetkisi: boolean;
+  /** Hatalı girişi iptal etme izni (parking.void). Yoksa buton çizilmez. */
+  iptalYetkisi?: boolean;
   /** Boşsa (izin yok ya da tanımlı anlaşma yok) çıkışta seçenek çizilmez. */
   anlasmalar?: KurumAnlasmasi[];
 }) {
@@ -314,12 +323,40 @@ export function IslemPaneli({
     });
   }
 
+  // ---- HATALI GIRISI IPTAL ET ----
+  //
+  // Yanlis plakayla alinan giris UCRETSIZ CIKISLA kapatilmaz (12.10.2026'dan
+  // beri ucretsiz sure yok, oyle bir cikis 100 TL tahsilat uretir). Dogru yol
+  // iptaldir: gerekce zorunlu, denetim kaydina yazilir, kayit silinmez.
+  async function iptalEt(gerekce: string) {
+    if (durum.ad !== "cikisPaneli" || mesgul) return;
+    const veri = durum.veri;
+    setDurum({ ad: "yukleniyor" });
+
+    const sonuc = await iptalAction({
+      parkingSessionId: veri.parkingSessionId,
+      sebep: gerekce,
+      idempotencyKey: yeniAnahtar(),
+    });
+
+    if (!sonuc.ok) {
+      setDurum({ ad: "hata", mesaj: sonuc.error, kod: sonuc.code });
+      return;
+    }
+
+    setDurum({ ad: "iptalOnay", veri: { kod: veri.kod, plakaGosterim: veri.plakaGosterim } });
+    router.refresh();
+  }
+
   // ---- ONAY EKRANLARI (tam ekran, renk kodlu) ----
   if (durum.ad === "girisOnay") {
     return <GirisOnayEkrani veri={durum.veri} kapat={sifirla} />;
   }
   if (durum.ad === "cikisOnay") {
     return <CikisOnayEkrani veri={durum.veri} kapat={sifirla} />;
+  }
+  if (durum.ad === "iptalOnay") {
+    return <IptalOnayEkrani veri={durum.veri} kapat={sifirla} />;
   }
 
   // ---- ABONMAN SORGU PANELI ----
@@ -345,6 +382,7 @@ export function IslemPaneli({
         mesgul={mesgul}
         anlasmalar={anlasmalar}
         tahsilEt={tahsilEt}
+        iptalEt={iptalYetkisi ? iptalEt : null}
         vazgec={() => setDurum({ ad: "bos" })}
       />
     );
@@ -493,12 +531,15 @@ function CikisPaneli({
   mesgul,
   anlasmalar,
   tahsilEt,
+  iptalEt,
   vazgec,
 }: {
   veri: CikisVerisi;
   mesgul: boolean;
   anlasmalar: KurumAnlasmasi[];
   tahsilEt: (y: "CASH" | "CARD", anlasmaId: string | null) => void;
+  /** null = izin yok; buton hiç çizilmez. */
+  iptalEt: ((gerekce: string) => void) | null;
   vazgec: () => void;
 }) {
   // ABONMAN KURALI: aktif abonman kapsamindaki araca UCRET HESAPLAMA AKISI
@@ -694,6 +735,8 @@ function CikisPaneli({
           {mesgul ? "…" : "✓ ÇIKIŞI TAMAMLA"}
         </Button>
       )}
+
+      {iptalEt ? <IptalBolumu mesgul={mesgul} iptalEt={iptalEt} /> : null}
 
       <Button variant="sade" size="ikincil" tamGenislik onClick={vazgec} disabled={mesgul}>
         Vazgeç
@@ -927,6 +970,106 @@ function CikisOnayEkrani({ veri, kapat }: { veri: CikisOnayVerisi; kapat: () => 
         <Alert tur="uyari" baslik="Tarife tanımlı olmadığı için ücret hesaplanamadı" className="mt-4 text-left" />
       ) : null}
 
+      <Button variant="birincil" size="islem" tamGenislik className="mt-5" onClick={kapat}>
+        YENİ İŞLEM
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * HATALI GIRISI IPTAL — iki asamali, gerekceli.
+ *
+ * Tek dokunusla iptal YOKTUR: islem geri alinamaz ve finansal kayit
+ * uretir/degistirir. Gerekce zorunludur, denetim kaydina yazilir.
+ */
+function IptalBolumu({
+  mesgul,
+  iptalEt,
+}: {
+  mesgul: boolean;
+  iptalEt: (gerekce: string) => void;
+}) {
+  const [acik, setAcik] = useState(false);
+  const [gerekce, setGerekce] = useState("");
+
+  if (!acik) {
+    return (
+      <Button
+        variant="sade"
+        size="ikincil"
+        tamGenislik
+        onClick={() => setAcik(true)}
+        disabled={mesgul}
+        data-test="iptal-ac"
+      >
+        Hatalı giriş — iptal et
+      </Button>
+    );
+  }
+
+  return (
+    <div className="space-y-3 rounded-2xl border-2 border-hata/40 bg-red-50 p-3">
+      <Alert tur="uyari" baslik="Bu araç hiç park etmediyse iptal edin">
+        Giriş kaydı iptal edilir, ücret alınmaz. Kayıt silinmez; gerekçe ve iptal eden
+        kişi sisteme yazılır. Araç gerçekten park ettiyse iptal etmeyin, tahsil edin.
+      </Alert>
+      <Input
+        etiket="İptal gerekçesi (zorunlu)"
+        value={gerekce}
+        onChange={(e) => setGerekce(e.target.value)}
+        placeholder="Örnek: plaka yanlış girildi"
+        maxLength={300}
+        data-test="iptal-gerekce"
+      />
+      <Button
+        variant="tehlike"
+        size="islem"
+        tamGenislik
+        disabled={mesgul || gerekce.trim().length < 3}
+        onClick={() => iptalEt(gerekce)}
+        data-test="iptal-onayla"
+      >
+        {mesgul ? "…" : "EVET, GİRİŞİ İPTAL ET"}
+      </Button>
+      <Button
+        variant="sade"
+        size="ikincil"
+        tamGenislik
+        onClick={() => {
+          setAcik(false);
+          setGerekce("");
+        }}
+        disabled={mesgul}
+      >
+        Vazgeç
+      </Button>
+    </div>
+  );
+}
+
+function IptalOnayEkrani({
+  veri,
+  kapat,
+}: {
+  veri: { kod: string; plakaGosterim: string };
+  kapat: () => void;
+}) {
+  return (
+    <div
+      className="rounded-2xl border-2 border-slate-300 bg-slate-50 p-5 text-center"
+      role="status"
+      data-test="iptal-onay"
+    >
+      <div className="text-5xl" aria-hidden>
+        ⃠
+      </div>
+      <div className="mt-2 text-2xl font-extrabold text-lacivert-800">GİRİŞ İPTAL EDİLDİ</div>
+      <div className="mt-4 font-mono text-2xl font-bold tracking-wider text-lacivert-800">
+        {veri.plakaGosterim}
+      </div>
+      <div className="mt-1 text-sm text-slate-600">Ücret alınmadı.</div>
+      <div className="mt-1 text-xs text-slate-500">Fiş no: {veri.kod}</div>
       <Button variant="birincil" size="islem" tamGenislik className="mt-5" onClick={kapat}>
         YENİ İŞLEM
       </Button>

@@ -15,6 +15,13 @@ export const PERMISSIONS = {
   PARKING_SEARCH: "parking.search",
   PARKING_HISTORY_VIEW: "parking.history.view",
   PARKING_VOID: "parking.void",
+  /**
+   * TAHSİLATSIZ hatalı girişi iptal. Personelin taban kümesindedir
+   * (12.10.2026 kullanıcı kararı): ücretsiz süre kalktığı için yanlış plaka
+   * artık "0 ₺ çıkış" ile kapatılamaz, personel kendi hatasını düzeltebilmeli.
+   * Para alınmış bir kaydın iptali için `parking.void` gerekir.
+   */
+  PARKING_VOID_UNPAID: "parking.void.unpaid",
   PARKING_DISCOUNT: "parking.discount",
   PARKING_OVERRIDE_PRICE: "parking.override_price",
   /// Çıkışta kurum anlaşması seçebilir (sabit fiyat; fiyatı patron belirler).
@@ -103,6 +110,8 @@ const STAFF_PERMISSIONS: Permission[] = [
   // Karar 11.10.2026: anlaşmayı çıkışta personel uygular (müşteri kartını
   // gösterir). Patron isterse kişi bazında geri alır.
   P.PARKING_AGREEMENT,
+  // Karar 12.10.2026: tahsilatsız hatalı girişi personel kendi iptal eder.
+  P.PARKING_VOID_UNPAID,
   P.SUBSCRIPTION_VIEW,
   P.CUSTOMER_VIEW,
   P.WASH_CREATE,
@@ -194,7 +203,8 @@ export const PERMISSION_LABELS: Record<string, string> = {
   [P.PARKING_EXIT]: "Araç çıkışı ve tahsilat yapabilir",
   [P.PARKING_SEARCH]: "Plaka araması yapabilir",
   [P.PARKING_HISTORY_VIEW]: "Araç geçmişini görebilir",
-  [P.PARKING_VOID]: "Hatalı park işlemini iptal edebilir",
+  [P.PARKING_VOID]: "Hatalı park işlemini iptal edebilir (tahsilatlı dahil)",
+  [P.PARKING_VOID_UNPAID]: "Tahsilat yapılmamış hatalı girişi iptal edebilir",
   [P.PARKING_DISCOUNT]: "Park ücretine indirim uygulayabilir",
   [P.PARKING_OVERRIDE_PRICE]: "Park tutarını elle değiştirebilir",
   [P.PARKING_AGREEMENT]: "Çıkışta kurum anlaşması uygulayabilir",

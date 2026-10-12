@@ -216,6 +216,15 @@ günlük üst limit 500 ₺, `extraDayBlockPrice` 600 ₺.
   0 dönüyordu ve "0 ₺ tahsil edildi" oluyordu.
   **Yanlış plakayla alınan giriş ücretsiz çıkışla DEĞİL, İPTAL ile düzeltilir**
   (gerekçe + denetim kaydı). Patron panelden ücretsiz süre girerse yine işler.
+- **İPTAL BUTONU 12.10.2026'da EKLENDİ.** Sunucu (`void.ts`, `iptalAction`)
+  Aşama 2'den beri vardı ama **arayüzde hiç buton yoktu** — kullanıcı "iptal
+  nerede" diye sorunca ortaya çıktı. Çıkış panelinde "Hatalı giriş — iptal et":
+  iki aşamalı, gerekçe zorunlu (`IptalBolumu`, `IptalOnayEkrani`).
+  **Yetki (kullanıcı kararı):** yeni izin `parking.void.unpaid` STAFF taban
+  kümesinde — personel TAHSİLATSIZ girişi kendi iptal eder. **Tahsilatlı
+  kaydın iptali `parking.void` ister** (patron); `void.ts` bunu sunucuda
+  `YETKISIZ_TAHSILATLI_IPTAL` ile reddeder, arayüz kontrolü yetmez (kural 9).
+  Testler: 3 entegrasyon (`park-giris-cikis.test.ts`) + 1 E2E.
 - **Otoparkta araç sınıfına göre fiyat farkı YOK** (tek genel kural)
 - Ek gün bloğu **orantılı bölünmez**: 24 sa = 500 ₺, 24 sa 1 dk = 1.100 ₺,
   48 sa = 1.100 ₺, 48 sa 1 dk = 1.700 ₺. Bu yorum kullanıcıya bildirildi,
@@ -490,7 +499,7 @@ düzeltildi, mimari kural 19'a bak). Bulguların kalıcı koruması:
 
 ```
 src/lib/           money.ts (kuruş) · datetime.ts (Europe/Istanbul) ·
-                   plate.ts (normalize/doğrula/biçimle) · permissions.ts (54 izin) ·
+                   plate.ts (normalize/doğrula/biçimle) · permissions.ts (55 izin) ·
                    telefon.ts (tel:/wa.me, İLK numarayı alır) ·
                    site-metin.ts (panel metnini bloklara ayırır, SAF)
 src/server/auth/   password (Argon2id) · session (özel DB oturum katmanı,

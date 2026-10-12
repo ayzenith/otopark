@@ -1159,6 +1159,57 @@ describe("işlem iptali (VOIDED)", () => {
     expect(await prisma.parkingSession.count({ where: { status: "ACTIVE" } })).toBe(0);
   });
 
+  // ---- YETKI SINIRI (12.10.2026 kullanici karari) ----
+  it("PERSONEL tahsilatsız hatalı girişi KENDİ iptal eder", async () => {
+    // Ucretsiz sure kalktigi icin yanlis plaka "0 TL cikis" ile kapatilamaz;
+    // personel kendi hatasini iptalle duzeltebilmeli.
+    const giris = await aracGirisi(personel, { plaka: "34IPT901", idempotencyKey: anahtar() });
+
+    await parkIptal(personel, {
+      parkingSessionId: giris.parkingSessionId,
+      sebep: "plaka yanlış girildi",
+      idempotencyKey: anahtar(),
+    });
+
+    const kayit = await prisma.parkingSession.findUniqueOrThrow({
+      where: { id: giris.parkingSessionId },
+    });
+    expect(kayit.status).toBe("VOIDED");
+    expect(kayit.voidReason).toBe("plaka yanlış girildi");
+    // Para hic el degistirmedi: tahsilat uretilmez.
+    expect(await prisma.payment.count({ where: { parkingSessionId: kayit.id } })).toBe(0);
+  });
+
+  it("PERSONEL tahsilatlı kaydı iptal EDEMEZ (iade kararı patronun)", async () => {
+    const id = await tamamlanmisIslem("34IPT902");
+
+    await expect(
+      parkIptal(personel, {
+        parkingSessionId: id,
+        sebep: "deneme",
+        iadeEdildi: false,
+        idempotencyKey: anahtar(),
+      }),
+    ).rejects.toMatchObject({ code: "YETKISIZ_TAHSILATLI_IPTAL" });
+
+    // Kayit ve tahsilat YERINDE kalir.
+    const kayit = await prisma.parkingSession.findUniqueOrThrow({ where: { id } });
+    expect(kayit.status).toBe("COMPLETED");
+    expect(await prisma.payment.count({ where: { parkingSessionId: id, status: "CONFIRMED" } })).toBe(1);
+  });
+
+  it("PATRON tahsilatlı kaydı iptal edebilir", async () => {
+    const id = await tamamlanmisIslem("34IPT903");
+    await parkIptal(patron, {
+      parkingSessionId: id,
+      sebep: "patron iptali",
+      iadeEdildi: false,
+      idempotencyKey: anahtar(),
+    });
+    const kayit = await prisma.parkingSession.findUniqueOrThrow({ where: { id } });
+    expect(kayit.status).toBe("VOIDED");
+  });
+
   it("iptal denetim kaydına yazılır", async () => {
     const id = await tamamlanmisIslem("34IPT888");
     await parkIptal(patron, {

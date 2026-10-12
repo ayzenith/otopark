@@ -30,6 +30,11 @@ export default async function VardiyaSayfasi() {
   const tahsilatGorebilir = user.permissions.has(PERMISSIONS.CASH_REPORT_SELF);
   const cikisYetkisi = user.permissions.has(PERMISSIONS.PARKING_EXIT);
   const anlasmaYetkisi = cikisYetkisi && user.permissions.has(PERMISSIONS.PARKING_AGREEMENT);
+  // Hatalı girişi iptal: ücretsiz süre kalktığı için yanlış plaka artık
+  // "0 ₺ çıkış" ile kapatılamaz; doğru yol iptaldir (12.10.2026).
+  const iptalYetkisi =
+    user.permissions.has(PERMISSIONS.PARKING_VOID) ||
+    user.permissions.has(PERMISSIONS.PARKING_VOID_UNPAID);
 
   const [vardiya, sayaclar, kapasite, islemler, siniflar, pencereler, anlasmalar] = await Promise.all([
     acikVardiya(user.id),
@@ -78,6 +83,7 @@ export default async function VardiyaSayfasi() {
       <IslemPaneli
         vardiyaAcik={vardiya !== null}
         cikisYetkisi={cikisYetkisi}
+        iptalYetkisi={iptalYetkisi}
         aracSiniflari={siniflar.map((s) => ({ id: s.id, ad: s.name }))}
         anlasmalar={anlasmalar.map((a) => ({ id: a.id, ad: a.ad, fiyatKurus: a.fiyatKurus! }))}
       />

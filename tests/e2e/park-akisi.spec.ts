@@ -199,6 +199,39 @@ test.describe("personel işlem akışı", () => {
     await expect(onay).toContainText(`Kurum anlaşması: ${E2E_ANLASMA.ad}`);
   });
 
+  test("HATALI GİRİŞ İPTAL EDİLİR: ücret alınmaz, gerekçe zorunlu", async ({ page }, testInfo) => {
+    // Ücretsiz süre kalktığı için yanlış plaka "0 ₺ çıkış" ile kapatılamaz;
+    // doğru yol İPTAL (12.10.2026). Gerekçe zorunludur.
+    const plaka = plakaUret(testInfo.project.name);
+    await page.getByTestId("plaka-girisi").fill(plaka);
+    await page.getByTestId("arac-girisi").click();
+    await expect(page.getByTestId("giris-onay")).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("button", { name: /YENİ İŞLEM/i }).click();
+
+    await page.getByTestId("plaka-girisi").fill(plaka);
+    await page.getByTestId("cikis-sorgula").click();
+    await expect(page.getByTestId("cikis-paneli")).toBeVisible({ timeout: 15_000 });
+
+    await page.getByTestId("iptal-ac").click();
+    // Gerekçe boşken onay butonu BASILAMAZ.
+    await expect(page.getByTestId("iptal-onayla")).toBeDisabled();
+
+    await page.getByTestId("iptal-gerekce").fill("plaka yanlış girildi");
+    await page.getByTestId("iptal-onayla").click();
+
+    const onay = page.getByTestId("iptal-onay");
+    await expect(onay).toBeVisible({ timeout: 15_000 });
+    await expect(onay).toContainText("GİRİŞ İPTAL EDİLDİ");
+    await expect(onay).toContainText("Ücret alınmadı");
+    await page.getByRole("button", { name: /YENİ İŞLEM/i }).click();
+
+    // İptal edilen kayıt bir daha çıkışa açılmaz.
+    await page.getByTestId("plaka-girisi").fill(plaka);
+    await page.getByTestId("cikis-sorgula").click();
+    const hata = page.locator('[data-uyari="hata"]').first();
+    await expect(hata).toBeVisible({ timeout: 15_000 });
+  });
+
   test("plaka küçük harfle yazılsa da normalize edilir", async ({ page }, testInfo) => {
     const plaka = plakaUret(testInfo.project.name);
     await page.getByTestId("plaka-girisi").fill(plaka.toLowerCase());

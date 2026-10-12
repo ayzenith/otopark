@@ -31,6 +31,7 @@ import { writeAudit, AUDIT_ACTIONS } from "@/server/audit";
 import { kurusToDecimalString, toKurus } from "@/lib/money";
 import { vardiyaZorunlu, IslemHatasi } from "@/server/shift";
 import { tahsilatKodu } from "./codes";
+import { PERMISSIONS } from "@/lib/permissions";
 import type { SessionUser } from "@/server/auth/session";
 
 export interface IptalIstegi {
@@ -85,6 +86,16 @@ export async function parkIptal(actor: SessionUser, istek: IptalIstegi): Promise
     });
 
     const tahsilatVar = kayit.payments.length > 0;
+
+    // YETKI SINIRI (12.10.2026 kullanici karari): personel YALNIZCA tahsilat
+    // yapilmamis bir girisi iptal edebilir. Para el degistirmis bir kaydin
+    // iptali iade kararidir ve patrona (parking.void) aittir.
+    if (tahsilatVar && !actor.permissions.has(PERMISSIONS.PARKING_VOID)) {
+      throw new IslemHatasi(
+        "YETKISIZ_TAHSILATLI_IPTAL",
+        "Bu kayıtta tahsilat var; iptal etmek için yöneticiye başvurun.",
+      );
+    }
 
     // Tahsilat varsa, paranin iade edilip edilmedigi BILDIRILMEK ZORUNDA.
     if (tahsilatVar && istek.iadeEdildi === undefined) {
