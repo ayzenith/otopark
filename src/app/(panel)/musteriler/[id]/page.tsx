@@ -8,7 +8,7 @@ import { musteriDetay } from "@/server/subscription/customer";
 import { DURUM_ETIKETLERI, ODEME_ETIKETLERI } from "@/server/subscription/queries";
 import { formatDate } from "@/lib/datetime";
 import { toKurus } from "@/lib/money";
-import { AracBaglaFormu, AracCozButonu } from "../formlar";
+import { AracBaglaFormu, AracCozButonu, MusteriBilgisiSilButonu } from "../formlar";
 
 export const metadata = { title: "Müşteri" };
 export const dynamic = "force-dynamic";
@@ -37,6 +37,8 @@ export default async function MusteriDetaySayfasi({
   if (!musteri) notFound();
 
   const duzenleyebilir = user.permissions.has(PERMISSIONS.CUSTOMER_EDIT);
+  // KVKK: bilgi silme ayrı izindir ve personelin taban kümesinde yoktur.
+  const bilgiSilebilir = user.permissions.has(PERMISSIONS.CUSTOMER_ANONYMIZE);
   const abonmanGorebilir = user.permissions.has(PERMISSIONS.SUBSCRIPTION_VIEW);
   const abonmanKurabilir =
     user.permissions.has(PERMISSIONS.SUBSCRIPTION_CREATE) &&
@@ -226,6 +228,22 @@ export default async function MusteriDetaySayfasi({
                 ))}
               </ul>
             )}
+          </CardBody>
+        </Card>
+      ) : null}
+
+      {/* ---- KVKK: BİLGİ SİLME (yalnızca yetkili; varsayılan patron) ---- */}
+      {bilgiSilebilir ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Kişisel veri</CardTitle>
+          </CardHeader>
+          <CardBody className="space-y-3">
+            <p className="text-sm text-slate-600">
+              Plakalar 6 ay sonra kendiliğinden maskelenir. Müşteri bilgileri ise yalnızca
+              buradan, elle silinir.
+            </p>
+            <MusteriBilgisiSilButonu musteriId={musteri.id} adSoyad={musteri.fullName} />
           </CardBody>
         </Card>
       ) : null}

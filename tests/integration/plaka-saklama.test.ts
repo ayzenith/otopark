@@ -33,11 +33,14 @@ import {
   plakayiMaskele,
 } from "@/server/privacy/retention";
 import { AUDIT_ACTIONS } from "@/server/audit";
+import { toKurus } from "@/lib/money";
+import { SILINMIS_MUSTERI_ADI, musteriBilgisiniSil } from "@/server/subscription/customer";
 import type { SessionUser } from "@/server/auth/session";
 
 const TL = 100;
 let sinifId: string;
 let personel: SessionUser;
+let patron: SessionUser;
 
 let sayac = 0;
 const anahtar = () => `saklama-${Date.now()}-${++sayac}`;
@@ -55,6 +58,8 @@ beforeEach(async () => {
   const p = await kullaniciOlustur({ username: "personel1", role: "STAFF" });
   await vardiyaOlustur(p.id);
   personel = oturum(p);
+  const o = await kullaniciOlustur({ username: "patron1", role: "OWNER" });
+  patron = oturum(o);
   await kapasiteAyarla(0);
   await tarifeOlustur({ ilkBlokDakika: 60, ilkBlokUcret: 100 * TL, saatlikUcret: 50 * TL });
 });
@@ -230,5 +235,93 @@ describe("araç kartı", () => {
     // Abonman fixture plakayı biçimlendirmeden yazar; önemli olan MASKELENMEMİŞ olması.
     expect(maskelenmisMi(arac.plateDisplay)).toBe(false);
     expect(arac.plateDisplay).toContain("SKL008");
+  });
+});
+
+describe("müşteri bilgisini ELLE silme (KVKK)", () => {
+  it("ad, telefon ve notlar silinir; abonman ve TUTAR kalır", async () => {
+    const gecmis = new Date();
+    gecmis.setMonth(gecmis.getMonth() - 3);
+    const bitti = new Date();
+    bitti.setMonth(bitti.getMonth() - 2);
+    const { musteri, abonman } = await abonmanOlustur({
+      musteriAdi: "Silinecek Müşteri",
+      plateNormalized: "34MST001",
+      vehicleClassId: sinifId,
+      baslangic: gecmis,
+      bitis: bitti,
+      ucretKurus: 1500 * TL,
+      durum: "EXPIRED",
+    });
+
+    await musteriBilgisiniSil(patron, musteri.id, "müşterinin silme talebi");
+
+    const sonra = await prisma.customer.findUniqueOrThrow({ where: { id: musteri.id } });
+    expect(sonra.fullName).toBe(SILINMIS_MUSTERI_ADI);
+    expect(sonra.phone).toBe("");
+    expect(sonra.phoneNormalized).toBeNull();
+    expect(sonra.notes).toBeNull();
+    expect(sonra.isActive).toBe(false);
+
+    // Abonman ve tutarı YERİNDE.
+    const kalan = await prisma.subscription.findUniqueOrThrow({ where: { id: abonman.id } });
+    expect(toKurus(kalan.agreedPrice)).toBe(1500 * TL);
+  });
+
+  it("DEVAM EDEN abonmanı olan müşteride çalışmaz", async () => {
+    const bugun = new Date();
+    const gelecek = new Date();
+    gelecek.setMonth(gelecek.getMonth() + 1);
+    const { musteri } = await abonmanOlustur({
+      musteriAdi: "Aktif Abonman Müşterisi",
+      plateNormalized: "34MST002",
+      vehicleClassId: sinifId,
+      baslangic: bugun,
+      bitis: gelecek,
+      ucretKurus: 1500 * TL,
+      durum: "ACTIVE",
+    });
+
+    await expect(
+      musteriBilgisiniSil(patron, musteri.id, "deneme"),
+    ).rejects.toMatchObject({ code: "ABONMAN_SURUYOR" });
+
+    const sonra = await prisma.customer.findUniqueOrThrow({ where: { id: musteri.id } });
+    expect(sonra.fullName).toBe("Aktif Abonman Müşterisi");
+  });
+
+  it("gerekçe yazılmadan silinemez", async () => {
+    const musteri = await prisma.customer.create({
+      data: { fullName: "Gerekçesiz", phone: "5551112233" },
+    });
+    await expect(musteriBilgisiniSil(patron, musteri.id, "  ")).rejects.toMatchObject({
+      code: "GEREKCE_GEREKLI",
+    });
+  });
+
+  it("aynı müşteri iki kez silinemez", async () => {
+    const musteri = await prisma.customer.create({
+      data: { fullName: "İki Kez", phone: "5554443322" },
+    });
+    await musteriBilgisiniSil(patron, musteri.id, "talep");
+    await expect(musteriBilgisiniSil(patron, musteri.id, "talep")).rejects.toMatchObject({
+      code: "MUSTERI_SILINMIS",
+    });
+  });
+
+  it("denetim kaydı üretir ama SİLİNEN BİLGİYİ yazmaz", async () => {
+    const musteri = await prisma.customer.create({
+      data: { fullName: "Denetim Müşterisi", phone: "5559998877", notes: "gizli not" },
+    });
+    await musteriBilgisiniSil(patron, musteri.id, "KVKK talebi");
+
+    const kayit = await prisma.auditLog.findFirstOrThrow({
+      where: { action: AUDIT_ACTIONS.CUSTOMER_ANONYMIZE, entityId: musteri.id },
+    });
+    const tumMetin = JSON.stringify(kayit);
+    expect(tumMetin).not.toContain("Denetim Müşterisi");
+    expect(tumMetin).not.toContain("5559998877");
+    expect(tumMetin).not.toContain("gizli not");
+    expect(kayit.note).toBe("KVKK talebi");
   });
 });

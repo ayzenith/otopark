@@ -32,6 +32,8 @@ export const PERMISSIONS = {
   CUSTOMER_VIEW: "customer.view",
   CUSTOMER_CREATE: "customer.create",
   CUSTOMER_EDIT: "customer.edit",
+  /** KVKK: müşteri bilgisini silebilir. STAFF taban kümesinde YOKTUR. */
+  CUSTOMER_ANONYMIZE: "customer.anonymize",
 
   // Oto yikama
   WASH_CREATE: "wash.create",
@@ -205,6 +207,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   [P.CUSTOMER_VIEW]: "Müşteri bilgilerini görebilir",
   [P.CUSTOMER_CREATE]: "Yeni müşteri ekleyebilir",
   [P.CUSTOMER_EDIT]: "Müşteri bilgilerini düzenleyebilir",
+  [P.CUSTOMER_ANONYMIZE]: "Müşteri bilgilerini silebilir (KVKK)",
   [P.WASH_CREATE]: "Yıkama kaydı açabilir",
   [P.WASH_UPDATE_STATUS]: "Yıkama durumunu değiştirebilir",
   [P.WASH_COLLECT]: "Yıkama tahsilatı yapabilir",

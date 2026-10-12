@@ -12,6 +12,7 @@ import { z } from "zod";
 import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission, runAction, type ActionResult } from "@/server/auth/authz";
 import {
+  musteriBilgisiniSil,
   musteriGuncelle,
   musteriOlustur,
   musteridenAracCoz,
@@ -93,5 +94,35 @@ export async function aracCozAction(girdi: unknown): Promise<ActionResult<{ id: 
     return { id: arac.id };
   });
   if (sonuc.ok) revalidatePath(`/musteriler/${veri.musteriId}`);
+  return sonuc;
+}
+
+const BilgiSilmeSemasi = z.object({
+  musteriId: z.string().min(1),
+  gerekce: z
+    .string()
+    .trim()
+    .min(3, "Silme gerekçesi yazılmalıdır (en az 3 karakter).")
+    .max(300),
+});
+
+/**
+ * KVKK: müşteri bilgisini siler (ad, telefon, e-posta, vergi no, notlar).
+ * Abonman ve tahsilat kayıtları KALIR — finansal geçmiş silinmez.
+ * Ayrı izin ister: `customer.anonymize` (personelin taban kümesinde yoktur).
+ */
+export async function musteriBilgisiniSilAction(
+  girdi: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  const actor = await requirePermission(PERMISSIONS.CUSTOMER_ANONYMIZE);
+  const sonuc = await runAction(async () => {
+    const veri = BilgiSilmeSemasi.parse(girdi);
+    const musteri = await musteriBilgisiniSil(actor, veri.musteriId, veri.gerekce);
+    return { id: musteri.id };
+  });
+  if (sonuc.ok) {
+    revalidatePath("/musteriler");
+    revalidatePath(`/musteriler/${sonuc.data.id}`);
+  }
   return sonuc;
 }

@@ -64,6 +64,9 @@ function dogrulaMusteri(girdi: MusteriGirdisi): void {
   }
 }
 
+/** Bilgisi silinmiş müşterinin ekranda görünen adı. */
+export const SILINMIS_MUSTERI_ADI = "Bilgileri silinmiş müşteri";
+
 export async function musteriOlustur(actor: SessionUser, girdi: MusteriGirdisi) {
   dogrulaMusteri(girdi);
 
@@ -416,4 +419,85 @@ export async function musteriDetay(musteriId: string) {
 
   if (!musteri) throw new IslemHatasi("MUSTERI_YOK", "Müşteri bulunamadı.");
   return musteri;
+}
+
+/**
+ * MÜŞTERİ BİLGİSİNİ SİL (KVKK) — 12.10.2026, kullanıcı kararı.
+ *
+ * Plakalar 6 ayda otomatik maskelenir; MÜŞTERİ bilgisi ise YALNIZCA ELLE
+ * silinir (otomatik süre VERİLMEDİ, varsayılmaz).
+ *
+ * "Silme" = kişisel veriyi temizlemek. Satır silinmez, çünkü abonman ve
+ * tahsilat kayıtları ona bağlıdır (mimari kural 4): finansal geçmiş silinirse
+ * ciro ve kasa raporları çöker. Ad, telefon, e-posta, vergi no ve notlar
+ * temizlenir; abonman tarihleri ve tutarları yerinde kalır.
+ *
+ * ABONMANI SÜRENLERDE ÇALIŞMAZ: devam eden bir abonmanın sahibinin bilgisi
+ * işin kendisidir, veri fazlalığı değildir.
+ */
+export async function musteriBilgisiniSil(
+  actor: SessionUser,
+  musteriId: string,
+  gerekce: string,
+) {
+  const sebep = gerekce.trim();
+  if (sebep.length < 3) {
+    throw new IslemHatasi("GEREKCE_GEREKLI", "Silme gerekçesi yazılmalıdır (en az 3 karakter).");
+  }
+
+  const oncesi = await prisma.customer.findUnique({
+    where: { id: musteriId },
+    include: { subscriptions: { select: { status: true, endDate: true } } },
+  });
+  if (!oncesi) throw new IslemHatasi("MUSTERI_YOK", "Müşteri bulunamadı.");
+
+  if (oncesi.fullName === SILINMIS_MUSTERI_ADI) {
+    throw new IslemHatasi("MUSTERI_SILINMIS", "Bu müşterinin bilgileri daha önce silinmiş.");
+  }
+
+  const suren = oncesi.subscriptions.some(
+    (a) => a.status === "ACTIVE" || a.status === "PENDING" || a.status === "SUSPENDED",
+  );
+  if (suren) {
+    throw new IslemHatasi(
+      "ABONMAN_SURUYOR",
+      "Bu müşterinin devam eden bir abonmanı var. Bilgileri silmek için abonmanın bitmesi ya da iptal edilmesi gerekir.",
+    );
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const sonrasi = await tx.customer.update({
+      where: { id: musteriId },
+      data: {
+        fullName: SILINMIS_MUSTERI_ADI,
+        phone: "",
+        altPhone: null,
+        phoneNormalized: null,
+        altPhoneNormalized: null,
+        email: null,
+        companyName: null,
+        taxId: null,
+        notes: null,
+        isActive: false,
+      },
+    });
+
+    await writeAudit(
+      {
+        action: AUDIT_ACTIONS.CUSTOMER_ANONYMIZE,
+        entityType: "Customer",
+        entityId: musteriId,
+        userId: actor.id,
+        actorLabel: actor.username,
+        // Silinen BİLGİ denetim kaydına yazılmaz; yoksa veri burada yaşamaya
+        // devam eder ve silme anlamsızlaşır. Yalnızca silindiği kaydedilir.
+        before: { bilgiVarMiydi: true, kurumsalMi: oncesi.isCompany },
+        after: { fullName: SILINMIS_MUSTERI_ADI },
+        note: sebep,
+      },
+      tx,
+    );
+
+    return sonrasi;
+  });
 }

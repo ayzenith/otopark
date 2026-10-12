@@ -11,7 +11,13 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Alert, Button, Input } from "@/components/ui";
-import { aracBaglaAction, aracCozAction, musteriGuncelleAction, musteriOlusturAction } from "@/server/actions/musteri";
+import {
+  aracBaglaAction,
+  aracCozAction,
+  musteriBilgisiniSilAction,
+  musteriGuncelleAction,
+  musteriOlusturAction,
+} from "@/server/actions/musteri";
 
 export interface MusteriVarsayilan {
   id?: string;
@@ -288,6 +294,83 @@ export function AracCozButonu({
           {bekliyor ? "…" : "Evet, ayır"}
         </Button>
         <Button size="normal" variant="sade" onClick={() => setOnay(false)}>
+          Vazgeç
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * KVKK — MÜŞTERİ BİLGİSİNİ SİL (yalnızca patron, 12.10.2026).
+ *
+ * İki aşamalı: butona basmak doğrudan silmez, önce gerekçe ister. Geri
+ * alınamayan bir iştir; tek dokunuşla olmaması bilinçlidir.
+ */
+export function MusteriBilgisiSilButonu({
+  musteriId,
+  adSoyad,
+}: {
+  musteriId: string;
+  adSoyad: string;
+}) {
+  const router = useRouter();
+  const [acik, setAcik] = useState(false);
+  const [gerekce, setGerekce] = useState("");
+  const [hata, setHata] = useState<string | null>(null);
+  const [bekliyor, basla] = useTransition();
+
+  if (!acik) {
+    return (
+      <>
+        {hata ? <Alert tur="hata" baslik={hata} className="mb-2" /> : null}
+        <Button size="normal" variant="sade" onClick={() => setAcik(true)} data-test="musteri-bilgi-sil">
+          Müşteri bilgilerini sil (KVKK)
+        </Button>
+      </>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {hata ? <Alert tur="hata" baslik={hata} /> : null}
+      <Alert tur="uyari" baslik="Bu işlem geri alınamaz">
+        <strong>{adSoyad}</strong> müşterisinin adı, telefonu, e-postası, vergi numarası ve
+        notları silinir. Abonman ve tahsilat kayıtları SİLİNMEZ; tutarlar ve tarihler yerinde
+        kalır, yalnızca kimin olduğu bilgisi gider. Devam eden abonmanı olan müşteride
+        çalışmaz.
+      </Alert>
+      <Input
+        etiket="Silme gerekçesi (zorunlu)"
+        value={gerekce}
+        onChange={(e) => setGerekce(e.target.value)}
+        placeholder="Örnek: müşterinin silme talebi"
+        maxLength={300}
+        data-test="musteri-bilgi-sil-gerekce"
+      />
+      <div className="flex flex-wrap gap-2">
+        <Button
+          size="normal"
+          variant="tehlike"
+          disabled={bekliyor || gerekce.trim().length < 3}
+          onClick={() => {
+            setHata(null);
+            basla(async () => {
+              const sonuc = await musteriBilgisiniSilAction({ musteriId, gerekce });
+              if (!sonuc.ok) {
+                setHata(sonuc.error);
+                return;
+              }
+              setAcik(false);
+              setGerekce("");
+              router.refresh();
+            });
+          }}
+          data-test="musteri-bilgi-sil-onayla"
+        >
+          {bekliyor ? "…" : "Evet, bilgileri sil"}
+        </Button>
+        <Button size="normal" variant="sade" onClick={() => { setAcik(false); setHata(null); }}>
           Vazgeç
         </Button>
       </div>

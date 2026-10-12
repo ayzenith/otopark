@@ -316,8 +316,18 @@ anlaşmanın fiyatıdır.
     alınamaz iş, "ayar yoksa çalışmaz" tarafında hata verir.
   · Testler: `tests/integration/plaka-saklama.test.ts` (12).
   · **YAPILMADI:** `AuditLog` içindeki eski plakalar maskelenmiyor (denetim
-    kaydının gövdesine dokunmak onu güvenilmez yapar). Müşteri adı/telefonu
-    için saklama süresi de VERİLMEDİ — varsayma, sor.
+    kaydının gövdesine dokunmak onu güvenilmez yapar).
+- **MÜŞTERİ BİLGİSİ: YALNIZCA ELLE SİLİNİR** (12.10.2026 kullanıcı kararı —
+  otomatik süre YOK, varsayma). `musteriBilgisiniSil` (ad, telefon, e-posta,
+  vergi no, firma, notlar temizlenir; `isActive=false`), satır SİLİNMEZ —
+  abonman ve tahsilat kayıtları ona bağlı (mimari kural 4).
+  · İzin `customer.anonymize` — **STAFF taban kümesinde YOK** (patron).
+  · Gerekçe ZORUNLU; denetim kaydı (`CUSTOMER_ANONYMIZE`) üretir ama
+    **silinen bilgiyi YAZMAZ** (yoksa veri denetim kaydında yaşamaya devam
+    eder). Testle kanıtlı.
+  · **Devam eden abonmanda (ACTIVE/PENDING/SUSPENDED) REDDEDİLİR.**
+  · Ekran: Müşteri detayı → "Kişisel veri" kartı (iki aşamalı, gerekçeli).
+  · Testler `tests/integration/plaka-saklama.test.ts` içinde (toplam 17).
 
 ### Hâlâ belirlenmeyen (VARSAYMA, sor)
 **İç temizlik ve pasta cila: 12.10.2026 kararı — ŞİMDİ EKLENMEYECEK,**
