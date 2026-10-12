@@ -58,6 +58,57 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/**
+ * GOOGLE İÇİN YAPISAL VERİ (LocalBusiness) — 12.10.2026.
+ *
+ * Yalnızca PANELE GİRİLMİŞ bilgiyi yazar; girilmeyen alan hiç yazılmaz
+ * (mimari kural 20 — uydurma yok). Adres ya da mutlak site adresi yoksa
+ * yapısal veri HİÇ çizilmez: eksik bir işletme kartı, hiç kart olmamasından
+ * daha kötüdür.
+ *
+ * Fiyat buraya ASLA girmez: sitedeki fiyat serbest metindir ve tarife
+ * motorundan akmaz (mimari kural 11/20).
+ */
+function YapisalVeri({ kunye }: { kunye: Awaited<ReturnType<typeof siteIcerigi>>["kunye"] }) {
+  const kok = siteKokAdresi();
+  if (!kok || !kunye.adres) return null;
+
+  const veri: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: kunye.isletmeAdi,
+    url: kok,
+    image: `${kok}/logo.png`,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: kunye.adres,
+      addressCountry: "TR",
+    },
+  };
+  if (kunye.telefon) veri.telephone = kunye.telefon;
+  if (kunye.mapsUrl) veri.hasMap = kunye.mapsUrl;
+  // "7/24 AÇIK" serbest metindir; Google'ın anladığı biçim yalnızca gerçekten
+  // kesintisiz çalışıldığında yazılır (işletme kararı: 7/24 kesin).
+  if (kunye.calismaSaatleri?.includes("7/24")) {
+    veri.openingHoursSpecification = {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+      opens: "00:00",
+      closes: "23:59",
+    };
+  }
+  if (kunye.instagram) veri.sameAs = [kunye.instagram];
+
+  return (
+    <script
+      type="application/ld+json"
+      // Veri panelden gelir; JSON.stringify kaçışı yapar, HTML'e script
+      // kapanışı sızmasın diye "<" ayrıca kaçırılır.
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(veri).replace(/</g, "\\u003c") }}
+    />
+  );
+}
+
 export default async function SiteDuzeni({ children }: { children: React.ReactNode }) {
   const { kunye, fiyatlar } = await siteIcerigi();
   const ara = telHref(kunye.telefon);
@@ -72,6 +123,7 @@ export default async function SiteDuzeni({ children }: { children: React.ReactNo
 
   return (
     <div className="site-bro flex min-h-dvh flex-col bg-showroom-50">
+      <YapisalVeri kunye={kunye} />
       <header className="bg-yol-800 text-white">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-8 md:py-4">
           <Link href="/" className="site-basilabilir flex min-h-12 min-w-0 items-center gap-3" aria-label={kunye.isletmeAdi}>

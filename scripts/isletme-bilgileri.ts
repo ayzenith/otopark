@@ -34,6 +34,10 @@ const prisma = new PrismaClient();
 const VERILENLER = {
   /** 06.10.2026: sahibi "numara aynı" dedi — hem arama hem WhatsApp. */
   phone: "0555 056 79 79",
+  /** 12.10.2026: işletme sahibi verdi. Google Maps kaydındaki unvan. */
+  businessName: "LONDRA CAMPING OTOPARK",
+  /** 12.10.2026: işletme sahibi verdi. */
+  addressText: "Ayamama Sok., Ataköy 7-8-9-10. Kısım, 34158 Bakırköy/İstanbul",
   whatsappPhone: "0555 056 79 79",
   mapsUrl: "https://maps.app.goo.gl/rLR4CvWx5VsCNLr5A",
   workingHoursText: "7/24 AÇIK",
@@ -56,6 +60,8 @@ async function main() {
   const mevcut = await prisma.businessSetting.findUnique({ where: { id: "singleton" } });
 
   const yazilacak: Record<string, string> = {};
+  if (bos(mevcut?.businessName)) yazilacak.businessName = VERILENLER.businessName;
+  if (bos(mevcut?.addressText)) yazilacak.addressText = VERILENLER.addressText;
   if (bos(mevcut?.phone)) yazilacak.phone = VERILENLER.phone;
   if (bos(mevcut?.whatsappPhone)) yazilacak.whatsappPhone = VERILENLER.whatsappPhone;
   if (bos(mevcut?.mapsUrl)) yazilacak.mapsUrl = VERILENLER.mapsUrl;
@@ -94,7 +100,6 @@ async function main() {
   for (const s of satirlar) console.log(s);
   console.log(cizgi);
   console.log("  HENÜZ VERİLMEDİ (kasıtlı olarak boş, uydurulmadı):");
-  console.log("    · Açık adres metni (yalnızca harita bağlantısı var)");
   console.log("    · Instagram adresi, logo ve fotoğraflar");
   console.log(cizgi);
   console.log("  Bu bilgiler bundan sonra PANELDEN değiştirilir:");

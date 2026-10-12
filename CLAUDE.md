@@ -70,6 +70,8 @@ dolu alanı ezmez). Kaynak: işletme sahibi, 05.10.2026.
 | Çalışma saatleri | **7/24 AÇIK** — sahibi "bu bilgi kesin olsun, çok önemli" dedi |
 | Hizmetler | Otopark + oto yıkama (ana sayfada madde listesi) |
 | Sitede fiyat | **YAZILMAYACAK** (S19 kapandı). Fiyat satırı girilmediği sürece bölüm çizilmez |
+| Açık adres (12.10.2026) | `Ayamama Sok., Ataköy 7-8-9-10. Kısım, 34158 Bakırköy/İstanbul` |
+| Ticari unvan (12.10.2026) | `LONDRA CAMPING OTOPARK` (Google Maps kaydı) |
 | Ana eylem (CTA) | Ana sayfada ve iletişimde büyük **YOL TARİFİ AL** butonu; telefonda Maps uygulamasını açar |
 
 06-07.10.2026'da ayrıca verilenler (hepsi sitede, uydurma yok):
@@ -90,9 +92,7 @@ Dünya Ticaret Merkezi 6 dk, Fuar Merkezi 7 dk · Nef "hemen arkası" ·
 logo renkleri marka rengidir (pankart kırmızısı değil).
 
 **HÂLÂ VERİLMEYEN — VARSAYMA:**
-- **Açık adres metni** (yalnızca harita bağlantısı var; kısa bağlantı bu
-  konteynerden açılamıyor, adres oradan da okunamadı)
-- Instagram · işletmenin tam ticari unvanı · ek fotoğraflar (şimdilik tek
+- Instagram · ek fotoğraflar (şimdilik tek
   giriş fotoğrafı var; yıkama fotoğrafı YOK)
 - Pasta cila / detaylı iç temizlik / vale gibi ek hizmetler var mı
 
@@ -175,7 +175,8 @@ Tahmini süre: 30–45 dakika. Tam adımlar `ops/VERCEL-SUPABASE.md`'de.
 ## ⚠️ AŞAMA 8 ÖNCESİ SORULACAKLAR
 
 1. **S18 — kalan künye alanları:** yukarıdaki "hâlâ verilmeyen" listesi
-2. **S20 — Teslim ve erişim:** depo/sunucu/yedek kimde olacak?
+2. ~~S20 — Teslim ve erişim~~ ✅ 12.10.2026: **hesaplar (Vercel, Supabase,
+   Turhost, GitHub) KULLANICIDA kalıyor.**
 3. **S12 — KVKK saklama süresi** · **XLSX/PDF için bağımlılık onayı**
 4. ~~Motor yıkama ve karavan yıkama ücreti~~ — 11.10.2026'da ikisi de PASİF yapıldı (aşağıya bak)
 5. ~~`robots: index false`~~ ✅ 12.10.2026: SEO açıldı. `src/lib/site-url.ts`
@@ -186,8 +187,10 @@ Tahmini süre: 30–45 dakika. Tam adımlar `ops/VERCEL-SUPABASE.md`'de.
    `force-dynamic` OLMALI, yoksa kapalı hâli derlemeye gömülür (yaşandı).
    Vercel'de `NEXT_PUBLIC_SITE_URL=https://londracampingtandircioglu.com`
    girilecek. Panel yolları robots'ta Disallow.
-   **LocalBusiness yapısal verisi HÂLÂ YAZILMADI:** açık adres metni ve tam
-   ticari unvan gelmedi — uydurma yok (mimari kural 20).
+   **LocalBusiness yapısal verisi ✅ 12.10.2026:** adres ve unvan işletmeden
+   geldi, `scripts/isletme-bilgileri.ts`'e VERİ olarak eklendi (idempotent),
+   layout `YapisalVeri` bileşeni panelden okur. Adres veya mutlak adres
+   yoksa yapısal veri HİÇ çizilmez. Fiyat yapısal veriye girmez.
    `tests/unit/site-veri-sinirlari.test.ts` izinli modül listesine
    `@/lib/site-url` eklendi.
 
@@ -295,12 +298,18 @@ anlaşmanın fiyatıdır.
   (`personnel.cost.view`; alan bazlı kısıt — izin yoksa sorgulanmaz bile).
 - **Tek POS + nakit, taksit YOK.** Çoklu POS ileride genişletilebilir
   (`PosTerminal` + `Payment.posTerminalId`); şimdi eklenmedi.
-- **KVKK saklama/anonimleştirme otomasyonu ERTELENDİ** (S12). Saklama süresi
-  belirlenmedi, varsayma. Aşama 8'de tekrar sor.
+- **KVKK saklama/anonimleştirme otomasyonu ERTELENDİ** (S12). 12.10.2026'da
+  kullanıcı "otopark kayıtları 2 gün tutulup silinsin, yer kaplamasın" dedi;
+  **BU YAPILMADI ve YAPILMAMALI:** finansal kayıt silinmez (mimari kural 4,
+  DB tetikleyicisi DELETE'i reddeder), silinirse ciro/kasa/denetim raporları
+  çöker. Yer hesabı da gerekçe değil (yaklaşık 100 MB/yıl, ücretsiz plan
+  500 MB). Doğru yol: kayıt KALIR, eski kayıtların PLAKASI anonimleştirilir.
+  Süre hâlâ kullanıcıdan bekleniyor.
 
 ### Hâlâ belirlenmeyen (VARSAYMA, sor)
-Diğer yıkama hizmetleri (iç temizlik, pasta cila…) ·
-S12, S14–S20.
+**İç temizlik ve pasta cila: 12.10.2026 kararı — ŞİMDİ EKLENMEYECEK,**
+ileride panelden eklenecek. Hizmet kaydı oluşturma, fiyat uydurma.
+Kalan: S12 (KVKK saklama süresi — aşağıya bak), S14–S19.
 
 İşletme 04.10.2026'da bu kalemler için **"şu an uydurma, panelden sonradan
 girilebilir bırak"** dedi. Fiyatsız hizmet 0 ₺'ye çevrilmez; personel
