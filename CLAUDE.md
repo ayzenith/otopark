@@ -165,6 +165,9 @@ Tahmini süre: 30–45 dakika. Tam adımlar `ops/VERCEL-SUPABASE.md`'de.
 - Alan adı NXDOMAIN: Turhost NS `cpns1.turhost.com` idi; DNS paneli için
   `dns1/dns2.turhost.com` olmalı (düzeltildi). A `216.198.79.1`, www CNAME
   `cname.vercel-dns.com`. Site yayında.
+- YAVAŞLIK: Vercel fonksiyonları iad1 (ABD), Supabase eu-central-1 idi; her
+  sorgu Atlantiği aşıyordu. `vercel.json` → `"regions": ["fra1"]`. Bölgeyi
+  veritabanından ayırma.
 - Patron parolası unutuldu: Argon2 özeti üretilip kullanıcı Supabase SQL
   Editor'de `passwordHash`, `failedLoginCount=0`, `lockedUntil=NULL`,
   `mustChangePassword=true` güncelledi. Panelde parola sıfırlama YOK.
