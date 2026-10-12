@@ -158,6 +158,17 @@ Kullanıcı yapacaklar:
 
 Tahmini süre: 30–45 dakika. Tam adımlar `ops/VERCEL-SUPABASE.md`'de.
 
+**12.10.2026 canlıda yaşananlar:**
+- Vercel önbellekten ESKİ Prisma istemcisi kullandı (npm kurulum betiklerini
+  çalıştırmıyor) → yeni model derlemede "yok" dendi. `vercel.json` derleme
+  komutu artık `prisma generate && prisma migrate deploy && next build`.
+- Alan adı NXDOMAIN: Turhost NS `cpns1.turhost.com` idi; DNS paneli için
+  `dns1/dns2.turhost.com` olmalı (düzeltildi). A `216.198.79.1`, www CNAME
+  `cname.vercel-dns.com`. Site yayında.
+- Patron parolası unutuldu: Argon2 özeti üretilip kullanıcı Supabase SQL
+  Editor'de `passwordHash`, `failedLoginCount=0`, `lockedUntil=NULL`,
+  `mustChangePassword=true` güncelledi. Panelde parola sıfırlama YOK.
+
 ## ⚠️ AŞAMA 8 ÖNCESİ SORULACAKLAR
 
 1. **S18 — kalan künye alanları:** yukarıdaki "hâlâ verilmeyen" listesi
