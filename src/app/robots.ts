@@ -28,7 +28,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/giris", "/vardiya", "/yonetim", "/araclar", "/yikama", "/abonmanlar", "/musteriler", "/abonmanli-araclar", "/tarife", "/kasa", "/stok"],
+      disallow: ["/api", "/giris", "/vardiya", "/yonetim", "/araclar", "/yikama", "/abonmanlar", "/musteriler", "/abonmanli-araclar", "/tarife", "/kasa", "/stok"],
     },
     sitemap: `${kok}/sitemap.xml`,
     host: kok,

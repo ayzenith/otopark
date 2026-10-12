@@ -298,13 +298,26 @@ anlaşmanın fiyatıdır.
   (`personnel.cost.view`; alan bazlı kısıt — izin yoksa sorgulanmaz bile).
 - **Tek POS + nakit, taksit YOK.** Çoklu POS ileride genişletilebilir
   (`PosTerminal` + `Payment.posTerminalId`); şimdi eklenmedi.
-- **KVKK saklama/anonimleştirme otomasyonu ERTELENDİ** (S12). 12.10.2026'da
-  kullanıcı "otopark kayıtları 2 gün tutulup silinsin, yer kaplamasın" dedi;
-  **BU YAPILMADI ve YAPILMAMALI:** finansal kayıt silinmez (mimari kural 4,
-  DB tetikleyicisi DELETE'i reddeder), silinirse ciro/kasa/denetim raporları
-  çöker. Yer hesabı da gerekçe değil (yaklaşık 100 MB/yıl, ücretsiz plan
-  500 MB). Doğru yol: kayıt KALIR, eski kayıtların PLAKASI anonimleştirilir.
-  Süre hâlâ kullanıcıdan bekleniyor.
+- **KVKK PLAKA SAKLAMA ✅ 12.10.2026 (S12 kapandı): 6 AY, her gece otomatik.**
+  Kullanıcı önce "kayıtlar 2 günde silinsin" dedi; **silme REDDEDİLDİ** ve
+  gerekçesi anlatıldı (mimari kural 4; DB tetikleyicisi DELETE'i reddeder;
+  ciro/kasa/denetim raporları çöker; yer gerekçesi de geçersiz — ~100 MB/yıl,
+  ücretsiz plan 500 MB). Kabul edilen çözüm: **kayıt KALIR, plaka maskelenir.**
+  · `src/server/privacy/retention.ts` — `PLAKA_SAKLAMA_AYI = 6`,
+    `plakayiMaskele` SAF ("34 ABC 123" → "34 •••"), `plakalariTemizle`
+    idempotent, tek işlem, denetim kaydı (`PLATE_ANONYMIZE`) üretir;
+    temizlenecek bir şey yoksa denetim kaydı YAZMAZ.
+  · DOKUNULMAYAN: açık park kaydı, bitmemiş yıkama, müşteriye bağlı/abonmanlı
+    araç kartı (abonmanlar kalacak — kullanıcı kararı), tutar/süre/tahsilat.
+  · `Vehicle.plateNormalized` TEKİL olduğu için maske yetmez: `ANON-<id>`
+    yazılır (geri döndürülemez), marka/renk/not temizlenir.
+  · Uç: `src/app/api/bakim/kvkk/route.ts` + `vercel.json` crons (her gece
+    01:00 UTC). **`CRON_SECRET` girilmemişse uç 503 ile KAPALI** — geri
+    alınamaz iş, "ayar yoksa çalışmaz" tarafında hata verir.
+  · Testler: `tests/integration/plaka-saklama.test.ts` (12).
+  · **YAPILMADI:** `AuditLog` içindeki eski plakalar maskelenmiyor (denetim
+    kaydının gövdesine dokunmak onu güvenilmez yapar). Müşteri adı/telefonu
+    için saklama süresi de VERİLMEDİ — varsayma, sor.
 
 ### Hâlâ belirlenmeyen (VARSAYMA, sor)
 **İç temizlik ve pasta cila: 12.10.2026 kararı — ŞİMDİ EKLENMEYECEK,**
