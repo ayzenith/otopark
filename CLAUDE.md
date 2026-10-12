@@ -32,7 +32,7 @@ dokunma (hâlâ 0 commit). Her aşama sonunda commit + push.
 | 7 | Kurumsal web sitesi: iskelet, içerik, tasarım dili, en kötü veri denemesi | ✅ |
 | **8** | **SIRADAKİ:** devreye alma, gerçek cihaz testleri | ⏳ |
 
-**1202 test geçiyor**, başarısız yok: 321 birim + 494 entegrasyon + 387 E2E
+**1208 test geçiyor**, başarısız yok: 321 birim + 497 entegrasyon + 390 E2E
 (3 ekran boyutu). Her aşamada önce mevcut testleri çalıştır, sonra yenileri
 ekle, sonra hepsini tekrar çalıştır.
 
