@@ -225,8 +225,10 @@ describe("gerçek tarife — olmayan kurallar", () => {
     expect(ucret(1)).toBe(100 * TL);
   });
 
-  it("0 dakikalık park ücretsizdir (yanlış giriş; doğru yol iptaldir)", () => {
-    expect(ucret(0)).toBe(0);
+  // İŞLETME KARARI 12.10.2026: ÜCRETSİZ SÜRE KALKTI. Aynı dakika içinde çıkan
+  // araç da ilk bloğun tamamını öder. Yanlış giriş İPTAL ile düzeltilir.
+  it("0 dakikalık park da ücretlidir (yanlış giriş İPTAL ile düzeltilir)", () => {
+    expect(ucret(0)).toBe(100 * TL);
   });
 
   it("araç sınıfına göre fiyat farkı yoktur: kural geneldir", () => {

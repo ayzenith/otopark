@@ -84,8 +84,10 @@ describe("karavan tarifesi — ilk 24 saat", () => {
     }
   });
 
-  it("0 dakikalık park ücretsizdir (yanlış giriş; doğru yol iptaldir)", () => {
-    expect(ucret(0)).toBe(0);
+  // İŞLETME KARARI 12.10.2026: ÜCRETSİZ SÜRE KALKTI. Aynı dakika içinde çıkan
+  // araç da ilk bloğun tamamını öder. Yanlış giriş İPTAL ile düzeltilir.
+  it("0 dakikalık park da ücretlidir (yanlış giriş İPTAL ile düzeltilir)", () => {
+    expect(ucret(0)).toBe(700 * TL);
   });
 
   it("ücretsiz süre yoktur: 1 dakikalık karavan parkı da 700 TL", () => {

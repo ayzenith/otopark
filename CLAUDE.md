@@ -70,7 +70,7 @@ dolu alanı ezmez). Kaynak: işletme sahibi, 05.10.2026.
 | Çalışma saatleri | **7/24 AÇIK** — sahibi "bu bilgi kesin olsun, çok önemli" dedi |
 | Hizmetler | Otopark + oto yıkama (ana sayfada madde listesi) |
 | Sitede fiyat | **YAZILMAYACAK** (S19 kapandı). Fiyat satırı girilmediği sürece bölüm çizilmez |
-| Açık adres (12.10.2026) | `Ayamama Sok., Ataköy 7-8-9-10. Kısım, 34158 Bakırköy/İstanbul` |
+| Açık adres (12.10.2026, DÜZELTİLDİ) | `Burhan Doğançay Cad., Ataköy 7-8-9-10. Kısım, 34158 Bakırköy/İstanbul` — ilk verilen "Ayamama Sok." YANLIŞTI, konum Burhan Doğançay Caddesi olarak geçiyor |
 | Ticari unvan (12.10.2026) | `LONDRA CAMPING OTOPARK` (Google Maps kaydı) |
 | Ana eylem (CTA) | Ana sayfada ve iletişimde büyük **YOL TARİFİ AL** butonu; telefonda Maps uygulamasını açar |
 
@@ -205,7 +205,17 @@ Bunlar karara bağlandı, tekrar sorma. Ayrıntı: `docs/05` bölüm 0 ve `docs/
 Motor karşılığı: ilk blok 60 dk/100 ₺, saatlik 50 ₺ (başlayan saat tam),
 günlük üst limit 500 ₺, `extraDayBlockPrice` 600 ₺.
 
-- **Gece tarifesi YOK**, **hafta sonu farkı YOK**, **ücretsiz süre YOK**
+- **Gece tarifesi YOK**, **hafta sonu farkı YOK**
+- **ÜCRETSİZ SÜRE YOK — 12.10.2026'da KESİNLEŞTİ.** İşletme "0–15 dakika
+  ücretsizdi, KALKTI, hepsi ücretli, direkt 0–1 saat tarifesi" dedi.
+  Artık **aynı dakika içinde çıkan araç da ilk blok ücretini öder**
+  (otomobil 100 ₺, karavan 700 ₺). `calculate.ts`'te iki yer düzeltildi:
+  (1) ücretsiz süre bloğu yalnızca `ucretsizDakika > 0` ise işler —
+  `0` artık "0 dakika bedava" DEMEK DEĞİL; (2) ücretlendirilecek süre 0
+  çıkarsa 1 dakikaya çekilir (`baslayan_blok_tam`), yoksa `kademeliTutar`
+  0 dönüyordu ve "0 ₺ tahsil edildi" oluyordu.
+  **Yanlış plakayla alınan giriş ücretsiz çıkışla DEĞİL, İPTAL ile düzeltilir**
+  (gerekçe + denetim kaydı). Patron panelden ücretsiz süre girerse yine işler.
 - **Otoparkta araç sınıfına göre fiyat farkı YOK** (tek genel kural)
 - Ek gün bloğu **orantılı bölünmez**: 24 sa = 500 ₺, 24 sa 1 dk = 1.100 ₺,
   48 sa = 1.100 ₺, 48 sa 1 dk = 1.700 ₺. Bu yorum kullanıcıya bildirildi,

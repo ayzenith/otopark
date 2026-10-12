@@ -438,9 +438,20 @@ describe("asgari ücret", () => {
 describe("sınır durumları", () => {
   const s = snapshot({ saatlikUcret: 2500, asgariUcret: 2500 });
 
-  it("sıfır süre (anında çıkış) ücretsizdir", () => {
-    expect(hesapla(0, s).tutar).toBe(0);
+  // İŞLETME KARARI 12.10.2026: ÜCRETSİZ SÜRE KALKTI. Aynı dakika içinde
+  // çıkan araç da ilk blok ücretini öder. Yanlış giriş İPTAL ile düzeltilir.
+  it("sıfır süre (anında çıkış) de ÜCRETLİDİR", () => {
+    // Bu snapshotta başlayan ilk saat 2500; 0 dakika da onu öder.
+    expect(hesapla(0, s).tutar).toBe(2500);
     expect(hesapla(0, s).sureDakika).toBe(0);
+    expect(hesapla(0, s).ucretsizMi).toBe(false);
+  });
+
+  it("patron panelden ücretsiz süre girerse o süre yine işler", () => {
+    const ucretsizli = { ...s, ucretsizDakika: 15 };
+    expect(hesapla(10, ucretsizli).tutar).toBe(0);
+    expect(hesapla(10, ucretsizli).ucretsizMi).toBe(true);
+    expect(hesapla(16, ucretsizli).tutar).toBe(2500);
   });
 
   it("çıkış girişten önceyse süre 0 kabul edilir", () => {
@@ -451,7 +462,8 @@ describe("sınır durumları", () => {
       snapshot: s,
     });
     expect(sonuc.sureDakika).toBe(0);
-    expect(sonuc.tutar).toBe(0);
+    // Ücretsiz süre kalktığı için 0 dakika da ücretlidir.
+    expect(sonuc.tutar).toBe(2500);
   });
 
   it("saniyeler aşağı yuvarlanır", () => {

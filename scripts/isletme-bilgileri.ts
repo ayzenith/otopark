@@ -36,8 +36,8 @@ const VERILENLER = {
   phone: "0555 056 79 79",
   /** 12.10.2026: işletme sahibi verdi. Google Maps kaydındaki unvan. */
   businessName: "LONDRA CAMPING OTOPARK",
-  /** 12.10.2026: işletme sahibi verdi. */
-  addressText: "Ayamama Sok., Ataköy 7-8-9-10. Kısım, 34158 Bakırköy/İstanbul",
+  /** 12.10.2026: işletme sahibi verdi; aynı gün "Ayamama Sok." yanlış çıktı, düzeltildi. */
+  addressText: "Burhan Doğançay Cad., Ataköy 7-8-9-10. Kısım, 34158 Bakırköy/İstanbul",
   whatsappPhone: "0555 056 79 79",
   mapsUrl: "https://maps.app.goo.gl/rLR4CvWx5VsCNLr5A",
   workingHoursText: "7/24 AÇIK",

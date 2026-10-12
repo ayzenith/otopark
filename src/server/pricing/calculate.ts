@@ -59,7 +59,16 @@ export function hesaplaUcret(girdi: HesapGirdisi): UcretSonucu {
     (s.geceSabitUcret ?? 0) === 0;
 
   // --- ADIM 1: UCRETSIZ SURE ---
-  if (sureDakika <= s.ucretsizDakika) {
+  //
+  // ISLETME KARARI 12.10.2026: ÜCRETSİZ SÜRE KALKTI. Araç ne kadar kısa
+  // kalırsa kalsın (1 dakika da, aynı dakika içinde çıksa da) ilk blok
+  // ücreti alınır. Bu yüzden ücretsiz süre YALNIZCA patron panelden
+  // sıfırdan büyük bir değer girerse işler; `ucretsizDakika = 0` artık
+  // "0 dakikalık çıkış bedava" DEMEK DEĞİL.
+  //
+  // Yanlış plakayla alınmış giriş ücretsiz çıkışla değil, İPTAL ile
+  // düzeltilir (gerekçe + denetim kaydı).
+  if (s.ucretsizDakika > 0 && sureDakika <= s.ucretsizDakika) {
     return {
       sureDakika,
       tutar: 0,
@@ -87,6 +96,14 @@ export function hesaplaUcret(girdi: HesapGirdisi): UcretSonucu {
     ucretliDakika = Math.max(0, sureDakika - s.ucretsizDakika);
     uygulananKurallar.push("ucretsiz_sure_dusuldu");
     dokum.push({ aciklama: `Ücretsiz ${s.ucretsizDakika} dk düşüldü`, tutar: 0 });
+  }
+
+  // İŞLETME KARARI 12.10.2026: ücretsiz süre kalktı. Aynı dakika içinde çıkan
+  // araçta ücretlendirilecek süre 0 çıkar; BAŞLAYAN ilk blok tam sayılır,
+  // yoksa "0 ₺ tahsil edildi" olur (mimari kural 10'un ruhu).
+  if (ucretliDakika <= 0) {
+    ucretliDakika = 1;
+    uygulananKurallar.push("baslayan_blok_tam");
   }
 
   // --- ADIM 3-4: GUNLER VE ARTAN SURE ---

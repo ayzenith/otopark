@@ -142,9 +142,9 @@ test.describe("personel işlem akışı", () => {
     await expect(cikisOnay).toContainText(/Tahsilat: T-\d{6}-\d{4}/);
   });
 
-  test("hemen çıkan araçta süre 0 olduğu için ücret alınmaz", async ({ page }, testInfo) => {
-    // Beklenen davranis: sure 0 dakika ise ucret 0'dir ve tahsilat ekrani
-    // yerine tek butonlu "ÇIKIŞI TAMAMLA" gosterilir.
+  test("HEMEN ÇIKAN ARAÇ DA ÜCRET ÖDER (ücretsiz süre kalktı)", async ({ page }, testInfo) => {
+    // İŞLETME KARARI 12.10.2026: ücretsiz süre YOK. Aynı dakika içinde çıkan
+    // araç da ilk blok ücretini öder; tahsilat ekranı çıkar.
     const plaka = plakaUret(testInfo.project.name);
     await page.getByTestId("plaka-girisi").fill(plaka);
     await page.getByTestId("arac-girisi").click();
@@ -154,18 +154,20 @@ test.describe("personel işlem akışı", () => {
     await page.getByTestId("plaka-girisi").fill(plaka);
     await page.getByTestId("cikis-sorgula").click();
     await expect(page.getByTestId("cikis-paneli")).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByTestId("odenecek-tutar")).toContainText("0,00");
-    await expect(page.getByTestId("cikisi-tamamla")).toBeVisible();
+    // İlk blok ücreti (fixture: 40 ₺). "0,00" ARTIK ÇIKMAZ.
+    await expect(page.getByTestId("odenecek-tutar")).toContainText("40,00");
+    await expect(page.getByTestId("nakit")).toBeVisible();
 
-    await page.getByTestId("cikisi-tamamla").click();
+    await page.getByTestId("nakit").click();
     const onay = page.getByTestId("cikis-onay");
     await expect(onay).toBeVisible({ timeout: 15_000 });
-    await expect(onay).toContainText("ÇIKIŞ TAMAMLANDI");
+    await expect(onay).toContainText("TAHSİL EDİLDİ");
+    await expect(page.getByTestId("onay-tutar")).toContainText("40,00");
   });
 
   test("KURUM ANLAŞMASI: süre ne olursa olsun sabit ücret alınır", async ({ page }, testInfo) => {
-    // Az önce giren aracın ücreti 0'dır; anlaşma seçilince anlaşmanın sabit
-    // ücreti alınır (işletme kararı: "süre fark etmez").
+    // Az önce giren araç normalde ilk blok ücretini öder; anlaşma seçilince
+    // anlaşmanın sabit ücreti geçerli olur (işletme kararı: "süre fark etmez").
     const plaka = plakaUret(testInfo.project.name);
     await page.getByTestId("plaka-girisi").fill(plaka);
     await page.getByTestId("arac-girisi").click();

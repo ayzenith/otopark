@@ -38,9 +38,10 @@ export const E2E_TARIFE = {
 /**
  * ONCEDEN PARK EDILMIS ARAC.
  *
- * Yeni giris yapan aracin suresi 0 dakikadir, dolayisiyla ucreti de 0 olur.
- * Ucret gosterimini ve tahsilati gercek bir tutarla test edebilmek icin
- * 3 saat 12 dakika once girmis bir arac hazirlanir.
+ * Yeni giris yapan aracin suresi 0 dakikadir; 12.10.2026'dan beri o da ILK
+ * BLOK ucretini oder (ucretsiz sure kalkti). Saatlik kademeyi ve dokumu
+ * gercek bir tutarla test edebilmek icin 3 saat 12 dakika once girmis bir
+ * arac hazirlanir.
  *   Beklenen ucret: ilk 60 dk 40 ₺ + ceil(132/60)=3 × 25 ₺ = 115 ₺
  */
 export const E2E_PARK_SURESI_DAKIKA = 192;
