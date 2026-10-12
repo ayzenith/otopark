@@ -210,11 +210,11 @@ sessizce otomobil fiyatı uygulanmaz (testli).
 sunucu `YIKAMA_SINIF_KAPALI` ile reddeder, panel ve fiyat tablosu göstermez).
 Panelden açma düğmesi YOK — açılacaksa geliştirici gerekir.
 
-### Otopark kapasitesi (S3, 04.10.2026)
-**SINIR YOK.** `totalCapacity = 0` bırakıldı ("tanımlı değil"): doluluk
-hesaplanmaz, kapasite çubuğu çizilmez, giriş **hiçbir zaman** engellenmez.
-Kapasite mantığı koddan kaldırılmadı; patron bir sayı girerse kendiliğinden
-devreye girer. **Aktif etme.**
+### Otopark kapasitesi (12.10.2026 — S3 güncellendi)
+**KAPASİTE 200 ARAÇ** (kullanıcı kararı). Migration `20261012010000_kapasite_200`
+yalnızca değer 0 ise 200 yazar. Patron Yönetim → İşletme ayarlarından değiştirir.
+Doluluk/kapasite çubuğu artık görünür; dolunca personel onay ister, giriş
+yine alınabilir. E2E `global-setup` kapasiteyi 0'a çeker (testler sınırsız varsayar).
 
 ### Oto yıkama
 **Araç tipine göre fiyatlandırma YALNIZCA yıkamada var.** Başlangıç:
@@ -224,6 +224,8 @@ Otomobil 600 ₺, SUV 700 ₺, Motosiklet 400 ₺ (İç Dış Yıkama).
 "Geri aç" ile açabilir. (Not: `fiyatlar:kur` taze kurulumda onu aktif yazar;
 migration yalnızca bir kez pasife çeker.)
 **Abonmanın yıkamada indirimi YOK.**
+**Yıkamada dakika/tahmini süre GÖSTERİLMEZ** (12.10.2026): panel ve patron
+formundan kaldırıldı; `estimatedMinutes` sütunu DB'de duruyor, kullanılmıyor.
 
 ### Kurum anlaşmaları (11.10.2026)
 Otoparkın kurumlarla **sabit fiyat** anlaşması var: **Üniversite öğrencisi,

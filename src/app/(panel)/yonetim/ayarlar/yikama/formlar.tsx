@@ -111,7 +111,6 @@ export function FiyatIzgarasi({
               </div>
               <div className="text-xs text-slate-400">
                 {h.kod}
-                {h.tahminiDakika ? ` · ~${h.tahminiDakika} dk` : ""}
               </div>
             </div>
 
@@ -229,14 +228,7 @@ export function HizmetEkleFormu() {
         data-test="hizmet-kod"
       />
       <Input name="aciklama" etiket="Açıklama (isteğe bağlı)" maxLength={300} />
-      <div className="grid grid-cols-2 gap-3">
-        <Input
-          name="tahminiDakika"
-          etiket="Tahmini süre (dk)"
-          type="number"
-          min={0}
-          max={1440}
-        />
+      <div className="grid grid-cols-1 gap-3">
         <Input name="siraNo" etiket="Sıra no" type="number" min={0} max={1000} defaultValue={0} />
       </div>
       <label className="flex min-h-12 items-center gap-3 rounded-xl border-2 border-slate-300 bg-white px-3">

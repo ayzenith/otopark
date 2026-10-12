@@ -302,11 +302,6 @@ export function YikamaPaneli({
                             {isaretli ? "✓ " : ""}
                             {h.ad}
                           </span>
-                          {h.tahminiDakika ? (
-                            <span className="block text-xs text-slate-500">
-                              ~{h.tahminiDakika} dk
-                            </span>
-                          ) : null}
                         </span>
                         <span className="rakam shrink-0 font-bold text-lacivert-800">
                           {h.fiyatKurus === null ? (

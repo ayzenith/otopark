@@ -83,7 +83,6 @@ export default async function YikamaAyarlariSayfasi() {
                     <div className="font-bold text-lacivert-700">{h.ad}</div>
                     <div className="text-xs text-slate-400">
                       {h.kod}
-                      {h.tahminiDakika ? ` · ~${h.tahminiDakika} dk` : ""}
                       {h.siteGorunur ? " · sitede görünür" : ""}
                     </div>
                   </div>
